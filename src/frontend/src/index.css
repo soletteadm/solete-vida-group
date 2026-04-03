@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Playfair Display - Serif headings (Google Fonts primary, local fallback) */
+@font-face {
+  font-family: "PlayfairDisplay";
+  src: local("Playfair Display"), url("/assets/fonts/PlayfairDisplay.woff2")
+    format("woff2");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* DM Sans - Body and UI text (Google Fonts primary, local fallback) */
+@font-face {
+  font-family: "DMSans";
+  src: local("DM Sans"), url("/assets/fonts/DMSans.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+
+    /* === Solete Vida Group Color Palette === */
+    /* Primary Coral: #D26B52 -> oklch(0.598 0.131 32.5) */
+    --coral: 0.598 0.131 32.5;
+    /* Deep Navy: #1F2E3D -> oklch(0.245 0.046 235) */
+    --navy: 0.245 0.046 235;
+    /* Charcoal text: #2B2B2B -> oklch(0.22 0 0) */
+    --charcoal: 0.22 0 0;
+    /* Body gray: #555555 -> oklch(0.41 0 0) */
+    --body-gray: 0.41 0 0;
+    /* Warm beige: #F3EDE3 -> oklch(0.944 0.018 70) */
+    --beige: 0.944 0.018 70;
+    /* Card white: #FFFFFF */
+    --card-white: 1 0 0;
+    /* Dividers/borders: #E6DCCF -> oklch(0.893 0.022 68) */
+    --divider: 0.893 0.022 68;
+
+    /* Semantic tokens */
+    --background: 0.944 0.018 70;
+    --foreground: 0.22 0 0;
+    --card: 1 0 0;
+    --card-foreground: 0.22 0 0;
+    --popover: 1 0 0;
+    --popover-foreground: 0.22 0 0;
+    --primary: 0.598 0.131 32.5;
+    --primary-foreground: 1 0 0;
+    --secondary: 0.245 0.046 235;
+    --secondary-foreground: 1 0 0;
+    --muted: 0.893 0.022 68;
+    --muted-foreground: 0.41 0 0;
+    --accent: 0.893 0.022 68;
+    --accent-foreground: 0.22 0 0;
+    --destructive: 0.577 0.245 27.325;
+    --destructive-foreground: 1 0 0;
+    --border: 0.893 0.022 68;
+    --input: 0.893 0.022 68;
+    --ring: 0.598 0.131 32.5;
+    --chart-1: 0.598 0.131 32.5;
+    --chart-2: 0.245 0.046 235;
+    --chart-3: 0.41 0 0;
+    --chart-4: 0.828 0.189 84.429;
+    --chart-5: 0.769 0.188 70.08;
+    --sidebar: 0.245 0.046 235;
+    --sidebar-foreground: 1 0 0;
+    --sidebar-primary: 0.598 0.131 32.5;
+    --sidebar-primary-foreground: 1 0 0;
+    --sidebar-accent: 0.3 0.046 235;
+    --sidebar-accent-foreground: 1 0 0;
+    --sidebar-border: 0.35 0.046 235;
+    --sidebar-ring: 0.598 0.131 32.5;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "DMSans", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "PlayfairDisplay", Georgia, serif;
+  }
+}
+
+@layer utilities {
+  .font-serif {
+    font-family: "PlayfairDisplay", Georgia, serif;
+  }
+
+  .font-sans {
+    font-family: "DMSans", system-ui, sans-serif;
+  }
+
+  .text-coral {
+    color: oklch(var(--coral));
+  }
+
+  .bg-coral {
+    background-color: oklch(var(--coral));
+  }
+
+  .bg-navy {
+    background-color: oklch(var(--navy));
+  }
+
+  .text-navy {
+    color: oklch(var(--navy));
+  }
+
+  .bg-beige {
+    background-color: oklch(var(--beige));
+  }
+
+  .border-coral {
+    border-color: oklch(var(--coral));
+  }
+
+  .border-divider {
+    border-color: oklch(var(--divider));
+  }
+
+  .text-body-gray {
+    color: oklch(var(--body-gray));
+  }
+
+  .hero-gradient {
+    background: linear-gradient(
+      160deg,
+      oklch(0.18 0.06 235) 0%,
+      oklch(0.22 0.08 215) 30%,
+      oklch(0.35 0.09 210) 55%,
+      oklch(0.55 0.12 50) 80%,
+      oklch(0.65 0.14 40) 100%
+    );
+  }
+
+  .hero-overlay {
+    background: linear-gradient(
+      to bottom,
+      rgba(20, 30, 48, 0.5) 0%,
+      rgba(20, 30, 48, 0.35) 40%,
+      rgba(20, 30, 48, 0.55) 100%
+    );
+  }
+}
