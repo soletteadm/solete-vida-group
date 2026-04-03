@@ -85,6 +85,7 @@ export interface TranslationMap {
     title: string;
     profile: string;
     adminPanel: string;
+    users: string;
     principalId: string;
     name: string;
     email: string;
@@ -108,6 +109,12 @@ export interface TranslationMap {
     updateRole: string;
     removeUser: string;
     removing: string;
+    blockUser: string;
+    blocking: string;
+    userBlocked: string;
+    userBlockError: string;
+    confirmBlock: string;
+    confirmBlockMsg: string;
     principal: string;
     role: string;
     name: string;
@@ -234,6 +241,7 @@ export const translations: Record<Language, TranslationMap> = {
       title: "My Pages",
       profile: "Profile",
       adminPanel: "Admin Panel",
+      users: "Users",
       principalId: "Principal ID",
       name: "Full Name",
       email: "Email Address",
@@ -256,6 +264,13 @@ export const translations: Record<Language, TranslationMap> = {
       updateRole: "Update Role",
       removeUser: "Remove",
       removing: "Removing...",
+      blockUser: "Block",
+      blocking: "Blocking...",
+      userBlocked: "User blocked",
+      userBlockError: "Failed to block user",
+      confirmBlock: "Block User",
+      confirmBlockMsg:
+        "This will restrict the user to guest-level access. You can unblock them by changing their role.",
       principal: "Principal ID",
       role: "Role",
       name: "Name",
@@ -382,6 +397,7 @@ export const translations: Record<Language, TranslationMap> = {
       title: "Mis Páginas",
       profile: "Perfil",
       adminPanel: "Panel de Administración",
+      users: "Usuarios",
       principalId: "ID Principal",
       name: "Nombre Completo",
       email: "Correo Electrónico",
@@ -404,6 +420,13 @@ export const translations: Record<Language, TranslationMap> = {
       updateRole: "Actualizar Rol",
       removeUser: "Eliminar",
       removing: "Eliminando...",
+      blockUser: "Bloquear",
+      blocking: "Bloqueando...",
+      userBlocked: "Usuario bloqueado",
+      userBlockError: "Error al bloquear usuario",
+      confirmBlock: "Bloquear Usuario",
+      confirmBlockMsg:
+        "Esto restringirá al usuario a acceso de nivel invitado. Puedes desbloquearlo cambiando su rol.",
       principal: "ID Principal",
       role: "Rol",
       name: "Nombre",
@@ -530,6 +553,7 @@ export const translations: Record<Language, TranslationMap> = {
       title: "Mina Sidor",
       profile: "Profil",
       adminPanel: "Administratörspanel",
+      users: "Användare",
       principalId: "Huvud-ID",
       name: "Fullständigt Namn",
       email: "E-postadress",
@@ -552,6 +576,13 @@ export const translations: Record<Language, TranslationMap> = {
       updateRole: "Uppdatera Roll",
       removeUser: "Ta Bort",
       removing: "Tar bort...",
+      blockUser: "Blockera",
+      blocking: "Blockerar...",
+      userBlocked: "Användare blockerad",
+      userBlockError: "Misslyckades att blockera användare",
+      confirmBlock: "Blockera Användare",
+      confirmBlockMsg:
+        "Detta begränsar användaren till gästnivåtillgång. Du kan avblockera dem genom att ändra deras roll.",
       principal: "Huvud-ID",
       role: "Roll",
       name: "Namn",

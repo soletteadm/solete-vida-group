@@ -33,6 +33,7 @@ import { useTypedActor } from "@/hooks/useTypedActor";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   AlertTriangle,
+  Ban,
   Loader2,
   Plus,
   RefreshCw,
@@ -75,6 +76,10 @@ export default function MyPagesAdmin() {
   // Remove confirm
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
+
+  // Block confirm
+  const [blockTarget, setBlockTarget] = useState<string | null>(null);
+  const [blocking, setBlocking] = useState(false);
 
   // Role update
   const [updatingRole, setUpdatingRole] = useState<string | null>(null);
@@ -167,10 +172,35 @@ export default function MyPagesAdmin() {
     }
   };
 
+  const handleBlockConfirm = async () => {
+    if (!actor || !blockTarget) return;
+    setBlocking(true);
+    try {
+      const result = await actor.blockUser(blockTarget);
+      if ("ok" in result) {
+        toast.success(t.admin.userBlocked);
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.principal.toString() === blockTarget
+              ? { ...u, role: { guest: null } }
+              : u,
+          ),
+        );
+      } else {
+        toast.error(result.err);
+      }
+    } catch {
+      toast.error(t.admin.userBlockError);
+    } finally {
+      setBlocking(false);
+      setBlockTarget(null);
+    }
+  };
+
   const getRoleBadgeClass = (roleStr: string) => {
     if (roleStr === "admin") return "border-coral text-coral";
     if (roleStr === "user") return "border-blue-400 text-blue-600";
-    return "border-muted-foreground text-muted-foreground";
+    return "border-amber-400 text-amber-600";
   };
 
   return (
@@ -314,6 +344,7 @@ export default function MyPagesAdmin() {
                         ? user.profile.value.name
                         : "\u2014";
                     const isUpdating = updatingRole === principalStr;
+                    const isBlocked = roleStr === "guest";
 
                     return (
                       <TableRow
@@ -370,16 +401,29 @@ export default function MyPagesAdmin() {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setRemoveTarget(principalStr)}
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10 font-sans text-xs"
-                            data-ocid={`admin.delete_button.${idx + 1}`}
-                          >
-                            <Trash2 className="w-3.5 h-3.5 mr-1" />
-                            {t.admin.removeUser}
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setBlockTarget(principalStr)}
+                              disabled={isBlocked}
+                              className="text-amber-600 hover:text-amber-600 hover:bg-amber-50 font-sans text-xs"
+                              data-ocid={`admin.secondary_button.${idx + 1}`}
+                            >
+                              <Ban className="w-3.5 h-3.5 mr-1" />
+                              {t.admin.blockUser}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setRemoveTarget(principalStr)}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10 font-sans text-xs"
+                              data-ocid={`admin.delete_button.${idx + 1}`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5 mr-1" />
+                              {t.admin.removeUser}
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -390,6 +434,47 @@ export default function MyPagesAdmin() {
           )}
         </CardContent>
       </Card>
+
+      {/* Block User Dialog */}
+      <AlertDialog
+        open={!!blockTarget}
+        onOpenChange={(open) => !open && setBlockTarget(null)}
+      >
+        <AlertDialogContent data-ocid="admin.dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-serif text-navy flex items-center gap-2">
+              <Ban className="w-5 h-5 text-amber-600" />
+              {t.admin.confirmBlock}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="font-sans text-sm text-muted-foreground">
+              {t.admin.confirmBlockMsg}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              className="font-sans"
+              data-ocid="admin.cancel_button"
+            >
+              {t.admin.cancel}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBlockConfirm}
+              disabled={blocking}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-sans"
+              data-ocid="admin.confirm_button"
+            >
+              {blocking ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                  {t.admin.blocking}
+                </>
+              ) : (
+                t.admin.confirmBlock
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Remove User Dialog */}
       <AlertDialog

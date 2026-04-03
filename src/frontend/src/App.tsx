@@ -8,7 +8,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import HomePage from "@/pages/HomePage";
 import MyPagesAdmin from "@/pages/MyPagesAdmin";
 import MyPagesProfile from "@/pages/MyPagesProfile";
-import { Shield, User } from "lucide-react";
+import { User, Users } from "lucide-react";
 import { useState } from "react";
 
 type Page = "home" | "myPages";
@@ -113,8 +113,8 @@ function AppContent() {
                       className="font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-coral data-[state=active]:text-white"
                       data-ocid="mypages.tab"
                     >
-                      <Shield className="w-4 h-4" />
-                      {t.myPages.adminPanel}
+                      <Users className="w-4 h-4" />
+                      {t.myPages.users}
                     </TabsTrigger>
                   )}
                 </TabsList>

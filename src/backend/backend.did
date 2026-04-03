@@ -1,0 +1,35 @@
+type UserRole = variant { admin; user; guest };
+
+type UserProfile = record {
+  name: text;
+  email: text;
+  phone: text;
+  registeredAt: int;
+};
+
+type UserAccessEntry = record {
+  principal: principal;
+  role: UserRole;
+};
+
+type UserListEntry = record {
+  principal: principal;
+  role: UserRole;
+  profile: opt UserProfile;
+};
+
+type CallResult = variant { ok; err: text };
+
+service : {
+  getMyRole: () -> (UserRole) query;
+  getMyProfile: () -> (opt UserProfile) query;
+  updateMyProfile: (text, text, text) -> (CallResult);
+  listUsers: () -> (vec UserListEntry) query;
+  addUser: (text, UserRole) -> (CallResult);
+  updateUserRole: (text, UserRole) -> (CallResult);
+  removeUser: (text) -> (CallResult);
+  blockUser: (text) -> (CallResult);
+  admin_addUserAccess: (text, UserRole) -> ();
+  admin_updateUserAccess: (text, UserRole) -> ();
+  admin_getUserAccess: () -> (vec UserAccessEntry) query;
+}

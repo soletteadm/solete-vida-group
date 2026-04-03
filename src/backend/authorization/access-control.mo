@@ -1,6 +1,7 @@
+import List "mo:core/List";
 import Map "mo:core/Map";
-import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Text "mo:core/Text";
 
 module {
   public type UserRole = {
@@ -14,28 +15,10 @@ module {
     userRoles : Map.Map<Principal, UserRole>;
   };
 
-  // Hardcoded permanent admin principal IDs
-  let admin_controllers : [Text] = [
+  private let admin_controllers : [Text] = [
     "atewe-etgil-mre73-twlmx-z2o2f-goui6-glmiq-qulqx-osud5-xdxsn-aqe",
     "gfd5w-iksaw-xr3aq-jij26-nwcfb-rvpze-rdxzq-sucdq-pm543-eg6jp-jqe",
-    "4vcqd-odjhq-5ufar-22ohg-mkxwk-gclrs-sdxvy-wfela-a6nax-xi3ol-bae",
   ];
-
-  // Helper: compare principal text for robustness
-  func principalTextMatches(p : Principal, target : Text) : Bool {
-    let pText = p.toText();
-    pText == target;
-  };
-
-  // Check if a principal is a hardcoded admin controller
-  public func isHardcodedAdmin(caller : Principal) : Bool {
-    for (adminText in admin_controllers.vals()) {
-      if (principalTextMatches(caller, adminText)) {
-        return true;
-      };
-    };
-    false;
-  };
 
   public func initState() : AccessControlState {
     {
@@ -62,8 +45,6 @@ module {
 
   public func getUserRole(state : AccessControlState, caller : Principal) : UserRole {
     if (caller.isAnonymous()) { return #guest };
-    // Hardcoded admins are always #admin regardless of role map
-    if (isHardcodedAdmin(caller)) { return #admin };
     switch (state.userRoles.get(caller)) {
       case (?role) { role };
       case (null) {
@@ -87,11 +68,24 @@ module {
   };
 
   public func isAdmin(state : AccessControlState, caller : Principal) : Bool {
-    // Check hardcoded admins first, then role map
-    if (isHardcodedAdmin(caller)) { return true };
-    switch (state.userRoles.get(caller)) {
-      case (? #admin) { true };
-      case (_) { false };
+    let callerPrincipalText = caller.toText();
+    if (isAdminController(callerPrincipalText)) {
+      return true;
     };
+    getUserRole(state, caller) == #admin;
+  };
+
+  func trimText(text : Text) : Text {
+    text.replace(#text(" "), "").replace(#text("\t"), "");
+  };
+
+  func isAdminController(callerPrincipalText : Text) : Bool {
+    let trimmedCaller = trimText(callerPrincipalText);
+    List.fromArray<Text>(admin_controllers).any(
+      func(adminController : Text) : Bool {
+        let trimmedAdmin = trimText(adminController);
+        trimmedCaller == trimmedAdmin;
+      },
+    );
   };
 };

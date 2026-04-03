@@ -38,6 +38,7 @@ export interface backendInterface {
     addUser(principalText: string, role: UserRole): Promise<CallResult>;
     updateUserRole(principalText: string, newRole: UserRole): Promise<CallResult>;
     removeUser(principalText: string): Promise<CallResult>;
+    blockUser(principalText: string): Promise<CallResult>;
     admin_addUserAccess(principalText: string, role: UserRole): Promise<void>;
     admin_updateUserAccess(principalText: string, role: UserRole): Promise<void>;
     admin_getUserAccess(): Promise<UserAccessEntry[]>;
