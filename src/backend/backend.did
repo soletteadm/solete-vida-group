@@ -19,16 +19,18 @@ type UserListEntry = record {
 };
 
 type CallResult = variant { ok; err: text };
+type ListUsersResult = variant { ok: vec UserListEntry; err: text };
 
 service : {
   getMyRole: () -> (UserRole) query;
   getMyProfile: () -> (opt UserProfile) query;
   updateMyProfile: (text, text, text) -> (CallResult);
-  listUsers: () -> (vec UserListEntry) query;
+  listUsers: () -> (ListUsersResult);
   addUser: (text, UserRole) -> (CallResult);
   updateUserRole: (text, UserRole) -> (CallResult);
   removeUser: (text) -> (CallResult);
   blockUser: (text) -> (CallResult);
+  updateUserProfile: (text, text, text, text) -> (CallResult);
   admin_addUserAccess: (text, UserRole) -> ();
   admin_updateUserAccess: (text, UserRole) -> ();
   admin_getUserAccess: () -> (vec UserAccessEntry) query;

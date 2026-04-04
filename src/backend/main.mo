@@ -63,7 +63,19 @@ actor {
     if (isAdminController(callerPrincipalText)) {
       return true;
     };
-    AccessControl.getUserRole(accessControlState, caller) == #admin;
+    switch (accessControlState.userRoles.get(caller)) {
+      case (?#admin) { true };
+      case (_) { false };
+    };
+  };
+
+  // Safe role lookup: never traps. Returns #guest for unknown principals.
+  func getCallerRole(caller : Principal) : UserRole {
+    if (caller.isAnonymous()) { return #guest };
+    switch (accessControlState.userRoles.get(caller)) {
+      case (?role) { role };
+      case (null) { #guest };
+    };
   };
 
   func requireAdmin(caller : Principal) {
@@ -75,17 +87,51 @@ actor {
   // ---- Public APIs (for frontend) ----
 
   public query ({ caller }) func getMyRole() : async UserRole {
-    AccessControl.getUserRole(accessControlState, caller);
+    getCallerRole(caller);
   };
 
   public query ({ caller }) func getMyProfile() : async ?UserProfile {
     userProfiles.get(caller);
   };
 
+  // updateMyProfile: upsert behaviour -- always create if not exists, update if exists.
+  // Admin principals are always allowed. Guest principals can create but not update.
+  // When a new profile is created, the caller is registered in userRoles as #guest
+  // (first-login default) so they appear in listUsers.
   public shared ({ caller }) func updateMyProfile(name : Text, email : Text, phone : Text) : async { #ok; #err : Text } {
-    let role = AccessControl.getUserRole(accessControlState, caller);
+    // Admins: always allow upsert
+    if (isAdmin(caller)) {
+      switch (userProfiles.get(caller)) {
+        case (?existing) {
+          userProfiles.add(caller, {
+            name = name;
+            email = email;
+            phone = phone;
+            registeredAt = existing.registeredAt;
+          });
+        };
+        case (null) {
+          userProfiles.add(caller, {
+            name = name;
+            email = email;
+            phone = phone;
+            registeredAt = Time.now();
+          });
+          // Register admin in userRoles if not already there
+          switch (accessControlState.userRoles.get(caller)) {
+            case (null) { accessControlState.userRoles.add(caller, #admin) };
+            case (?_) {};
+          };
+        };
+      };
+      return #ok;
+    };
+
+    // Use safe role lookup (never traps -- unknown users treated as guests)
+    let role = getCallerRole(caller);
     switch (role) {
       case (#guest) {
+        // Guests can create a profile but cannot update an existing one
         switch (userProfiles.get(caller)) {
           case (?_) {
             return #err("Guests cannot update an existing profile.");
@@ -97,11 +143,14 @@ actor {
               phone = phone;
               registeredAt = Time.now();
             });
+            // Register the new user in userRoles as #guest (first-login default)
+            accessControlState.userRoles.add(caller, #guest);
             return #ok;
           };
         };
       };
       case (_) {
+        // #user or #admin: upsert
         switch (userProfiles.get(caller)) {
           case (?existing) {
             userProfiles.add(caller, {
@@ -118,6 +167,11 @@ actor {
               phone = phone;
               registeredAt = Time.now();
             });
+            // Ensure they are in userRoles
+            switch (accessControlState.userRoles.get(caller)) {
+              case (null) { accessControlState.userRoles.add(caller, #user) };
+              case (?_) {};
+            };
           };
         };
         return #ok;
@@ -125,17 +179,39 @@ actor {
     };
   };
 
-  public query ({ caller }) func listUsers() : async [UserListEntry] {
-    requireAdmin(caller);
-    accessControlState.userRoles.entries().toArray().map(
-      func(pair : (Principal, UserRole)) : UserListEntry {
+  // listUsers: returns ALL known users -- those in userRoles AND those who only
+  // have a profile (self-registered via updateMyProfile). Backend is the single
+  // source of truth; no user data is stored in the frontend.
+  public shared ({ caller }) func listUsers() : async { #ok : [UserListEntry]; #err : Text } {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can list users.");
+    };
+
+    // Collect all principals from both maps (deduped via a temporary map)
+    var allPrincipals : Map.Map<Principal, Bool> = Map.empty<Principal, Bool>();
+
+    for ((p, _) in accessControlState.userRoles.entries()) {
+      allPrincipals.add(p, true);
+    };
+    for ((p, _) in userProfiles.entries()) {
+      allPrincipals.add(p, true);
+    };
+
+    let entries = allPrincipals.entries().toArray().map(
+      func(pair : (Principal, Bool)) : UserListEntry {
+        let p = pair.0;
+        let role = switch (accessControlState.userRoles.get(p)) {
+          case (?r) { r };
+          case (null) { #guest }; // has a profile but no explicit role -> treat as guest
+        };
         {
-          principal = pair.0;
-          role = pair.1;
-          profile = userProfiles.get(pair.0);
+          principal = p;
+          role = role;
+          profile = userProfiles.get(p);
         };
       },
     );
+    return #ok(entries);
   };
 
   public shared ({ caller }) func addUser(principalText : Text, role : UserRole) : async { #ok; #err : Text } {
@@ -168,13 +244,9 @@ actor {
       return #err("Unauthorized: Only admins can update user roles.");
     };
     let p = Principal.fromText(principalText);
-    switch (accessControlState.userRoles.get(p)) {
-      case (null) { return #err("User not found.") };
-      case (?_) {
-        accessControlState.userRoles.add(p, newRole);
-        return #ok;
-      };
-    };
+    // Allow role update even if user is only in userProfiles (not yet in userRoles)
+    accessControlState.userRoles.add(p, newRole);
+    return #ok;
   };
 
   public shared ({ caller }) func removeUser(principalText : Text) : async { #ok; #err : Text } {
@@ -192,13 +264,35 @@ actor {
       return #err("Unauthorized: Only admins can block users.");
     };
     let p = Principal.fromText(principalText);
-    switch (accessControlState.userRoles.get(p)) {
-      case (null) { return #err("User not found.") };
-      case (?_) {
-        accessControlState.userRoles.add(p, #guest);
-        return #ok;
+    accessControlState.userRoles.add(p, #guest);
+    return #ok;
+  };
+
+
+  public shared ({ caller }) func updateUserProfile(principalText : Text, name : Text, email : Text, phone : Text) : async { #ok; #err : Text } {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can update user profiles.");
+    };
+    let p = Principal.fromText(principalText);
+    switch (userProfiles.get(p)) {
+      case (?existing) {
+        userProfiles.add(p, {
+          name = name;
+          email = email;
+          phone = phone;
+          registeredAt = existing.registeredAt;
+        });
+      };
+      case (null) {
+        userProfiles.add(p, {
+          name = name;
+          email = email;
+          phone = phone;
+          registeredAt = Time.now();
+        });
       };
     };
+    return #ok;
   };
 
   // --> Admin operations, USED ONLY WITH CANDID UI, DO NOT USE admin_* operations in front-end

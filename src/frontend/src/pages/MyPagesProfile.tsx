@@ -47,8 +47,8 @@ export default function MyPagesProfile({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
-  const canEdit = isAdmin || isUser || (isGuest && !profile);
-  const isReadOnly = isGuest && !!profile;
+  const canEdit = isAdmin || isUser;
+  const isReadOnly = isGuest;
 
   useEffect(() => {
     if (!actor || isFetching) return;
@@ -82,7 +82,12 @@ export default function MyPagesProfile({
   }, [actor, isFetching]);
 
   const handleSave = async () => {
-    if (!actor) return;
+    if (!actor) {
+      toast.error(
+        "Cannot save: backend connection not ready. Please refresh the page and try again.",
+      );
+      return;
+    }
     setSaving(true);
     try {
       const result = await actor.updateMyProfile(name, email, phone);
@@ -99,10 +104,31 @@ export default function MyPagesProfile({
               },
         );
       } else {
-        toast.error(result.err);
+        // Backend returned an error variant -- show the exact message from the backend
+        const errMsg = result.err || "Unknown backend error";
+        toast.error(`Failed to save profile: ${errMsg}`, {
+          duration: 8000,
+          description: `Principal: ${principalText ?? "unknown"} | Role: ${roleLabel}`,
+        });
       }
-    } catch {
-      toast.error(t.myPages.profileError);
+    } catch (err: unknown) {
+      // JavaScript/network error -- show full details
+      let detail = "Unknown error";
+      if (err instanceof Error) {
+        detail = err.message;
+      } else if (typeof err === "string") {
+        detail = err;
+      } else {
+        try {
+          detail = JSON.stringify(err);
+        } catch {
+          detail = String(err);
+        }
+      }
+      toast.error(`Failed to save profile: ${detail}`, {
+        duration: 10000,
+        description: `Principal: ${principalText ?? "unknown"} | Role: ${roleLabel}`,
+      });
     } finally {
       setSaving(false);
     }
@@ -122,17 +148,17 @@ export default function MyPagesProfile({
       <Card className="border border-divider shadow-card">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-coral/10 flex items-center justify-center">
-              <User className="w-6 h-6 text-coral" />
+            <div className="w-12 h-12 rounded-full bg-gold/15 flex items-center justify-center">
+              <User className="w-6 h-6 text-gold" />
             </div>
             <div>
-              <CardTitle className="font-serif text-xl text-navy">
+              <CardTitle className="font-serif text-xl text-foreground">
                 {t.myPages.editProfile}
               </CardTitle>
               <div className="flex items-center gap-2 mt-1">
                 <Badge
                   variant="outline"
-                  className="border-coral text-coral text-xs capitalize font-sans"
+                  className="border-gold text-gold text-xs capitalize font-sans"
                 >
                   {t.common[roleLabel as keyof typeof t.common] || roleLabel}
                 </Badge>
@@ -193,7 +219,7 @@ export default function MyPagesProfile({
       {/* Profile form */}
       <Card className="border border-divider shadow-card">
         <CardHeader>
-          <CardTitle className="font-serif text-lg text-navy">
+          <CardTitle className="font-serif text-lg text-foreground">
             {isReadOnly ? (
               <span className="flex items-center gap-2">
                 <Lock className="w-4 h-4 text-muted-foreground" />
@@ -278,7 +304,7 @@ export default function MyPagesProfile({
                   <Button
                     onClick={handleSave}
                     disabled={saving || isFetching}
-                    className="bg-coral hover:bg-coral/90 text-white font-sans rounded-full px-6"
+                    className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full px-6"
                     data-ocid="profile.submit_button"
                   >
                     {saving ? (

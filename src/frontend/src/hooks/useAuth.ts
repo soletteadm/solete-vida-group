@@ -1,9 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Option, UserProfile, UserRole } from "../backend.d";
+import type { UserRole } from "../backend.d";
 import { useInternetIdentity } from "./useInternetIdentity";
 import { useTypedActor } from "./useTypedActor";
 
 export type AuthRole = UserRole | null;
+
+// Mirror of admin_controllers in main.mo — principals that always have admin access
+const ADMIN_CONTROLLERS: string[] = [
+  "atewe-etgil-mre73-twlmx-z2o2f-goui6-glmiq-qulqx-osud5-xdxsn-aqe",
+  "gfd5w-iksaw-xr3aq-jij26-nwcfb-rvpze-rdxzq-sucdq-pm543-eg6jp-jqe",
+  "4vcqd-odjhq-5ufar-22ohg-mkxwk-gclrs-sdxvy-wfela-a6nax-xi3ol-bae",
+  "wr56f-togr5-jngaa-pssu5-64x54-cglpb-47kpa-swrr4-wayex-nfunu-xae",
+];
+
+function isAdminController(principalText: string | null): boolean {
+  if (!principalText) return false;
+  const trimmed = principalText.trim();
+  return ADMIN_CONTROLLERS.some((p) => p.trim() === trimmed);
+}
 
 export interface AuthState {
   isLoggedIn: boolean;
@@ -46,6 +60,10 @@ export function useAuth(): AuthState {
 
   const isLoggedIn = !!identity && !identity.getPrincipal().isAnonymous();
 
+  const principalText = isLoggedIn
+    ? (identity?.getPrincipal().toString() ?? null)
+    : null;
+
   useEffect(() => {
     if (!actor || !isLoggedIn || isFetching) {
       if (!isLoggedIn) setRole(null);
@@ -74,9 +92,10 @@ export function useAuth(): AuthState {
     clear();
   }, [clear]);
 
-  const principalText = isLoggedIn
-    ? (identity?.getPrincipal().toString() ?? null)
-    : null;
+  // isAdmin: true if the backend role is admin OR if the principal is in admin_controllers
+  const isAdminByRole = isAdminRole(role);
+  const isAdminByController = isAdminController(principalText);
+  const isAdmin = isAdminByRole || isAdminByController;
 
   return {
     isLoggedIn,
@@ -86,9 +105,9 @@ export function useAuth(): AuthState {
     principalText,
     login,
     logout,
-    isAdmin: isAdminRole(role),
+    isAdmin,
     isUser: isUserRole(role),
     isGuest: isGuestRole(role),
-    roleLabel: getRoleLabel(role),
+    roleLabel: isAdmin ? "admin" : getRoleLabel(role),
   };
 }

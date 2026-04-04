@@ -10,7 +10,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -35,7 +42,7 @@ import {
   AlertTriangle,
   Ban,
   Loader2,
-  Plus,
+  Pencil,
   RefreshCw,
   Trash2,
   Users,
@@ -68,11 +75,6 @@ export default function MyPagesAdmin() {
   const [users, setUsers] = useState<UserListEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Add user form
-  const [addPrincipal, setAddPrincipal] = useState("");
-  const [addRole, setAddRole] = useState<string>("user");
-  const [adding, setAdding] = useState(false);
-
   // Remove confirm
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
@@ -84,14 +86,37 @@ export default function MyPagesAdmin() {
   // Role update
   const [updatingRole, setUpdatingRole] = useState<string | null>(null);
 
+  // Edit user profile dialog
+  const [editTarget, setEditTarget] = useState<UserListEntry | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editRole, setEditRole] = useState("guest");
+  const [saving, setSaving] = useState(false);
+
   const fetchUsers = useCallback(async () => {
     if (!actor || isFetching) return;
     setLoading(true);
+    console.log("[fetchUsers] Fetching users, actor available:", !!actor);
     try {
-      const list = await actor.listUsers();
-      setUsers(list);
-    } catch {
+      const result = await actor.listUsers();
+      console.log("[fetchUsers] listUsers result:", JSON.stringify(result));
+      if ("ok" in result) {
+        setUsers(result.ok);
+        console.log("[fetchUsers] Users loaded:", result.ok.length);
+      } else {
+        console.error("[fetchUsers] listUsers returned err:", result.err);
+        toast.error(result.err || t.common.error);
+        setUsers([]);
+      }
+    } catch (err) {
+      console.error("[fetchUsers] Unexpected error:", err);
+      console.error("[fetchUsers] Error details:", {
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+      });
       toast.error(t.common.error);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -101,28 +126,16 @@ export default function MyPagesAdmin() {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleAddUser = async () => {
-    if (!actor || !addPrincipal.trim()) return;
-    setAdding(true);
-    try {
-      const result = await actor.addUser(
-        addPrincipal.trim(),
-        roleToObj(addRole),
-      );
-      if ("ok" in result) {
-        toast.success(t.admin.userAdded);
-        setAddPrincipal("");
-        setAddRole("user");
-        await fetchUsers();
-      } else {
-        toast.error(result.err);
-      }
-    } catch {
-      toast.error(t.admin.userAddError);
-    } finally {
-      setAdding(false);
-    }
-  };
+  // Pre-fill edit form when editTarget changes
+  useEffect(() => {
+    if (!editTarget) return;
+    const profile =
+      editTarget.profile.__kind__ === "Some" ? editTarget.profile.value : null;
+    setEditName(profile?.name ?? "");
+    setEditEmail(profile?.email ?? "");
+    setEditPhone(profile?.phone ?? "");
+    setEditRole(objToRoleStr(editTarget.role));
+  }, [editTarget]);
 
   const handleUpdateRole = async (principalText: string, newRole: string) => {
     if (!actor) return;
@@ -197,8 +210,104 @@ export default function MyPagesAdmin() {
     }
   };
 
+  const handleSaveEdit = async () => {
+    if (!actor || !editTarget) return;
+    setSaving(true);
+    const principalStr = editTarget.principal.toString();
+    const originalRole = objToRoleStr(editTarget.role);
+
+    console.log("[handleSaveEdit] Starting save for principal:", principalStr);
+    console.log("[handleSaveEdit] Payload:", {
+      name: editName,
+      email: editEmail,
+      phone: editPhone,
+      role: editRole,
+      originalRole,
+    });
+    console.log("[handleSaveEdit] actor available:", !!actor);
+    console.log(
+      "[handleSaveEdit] actor.updateUserProfile available:",
+      typeof (actor as any).updateUserProfile,
+    );
+
+    try {
+      console.log("[handleSaveEdit] Calling updateUserProfile...");
+      const profileResult = await actor.updateUserProfile(
+        principalStr,
+        editName,
+        editEmail,
+        editPhone,
+      );
+      console.log(
+        "[handleSaveEdit] updateUserProfile result:",
+        JSON.stringify(profileResult),
+      );
+
+      if ("err" in profileResult) {
+        console.error(
+          "[handleSaveEdit] Profile update failed with err:",
+          profileResult.err,
+        );
+        toast.error(`Failed to update profile: ${profileResult.err}`, {
+          description: `Principal: ${principalStr}`,
+        });
+        setSaving(false);
+        return;
+      }
+
+      if (editRole !== originalRole) {
+        console.log(
+          "[handleSaveEdit] Role changed from",
+          originalRole,
+          "to",
+          editRole,
+          "- calling updateUserRole...",
+        );
+        const roleResult = await actor.updateUserRole(
+          principalStr,
+          roleToObj(editRole),
+        );
+        console.log(
+          "[handleSaveEdit] updateUserRole result:",
+          JSON.stringify(roleResult),
+        );
+        if ("err" in roleResult) {
+          console.error(
+            "[handleSaveEdit] Role update failed with err:",
+            roleResult.err,
+          );
+          toast.error(`Failed to update role: ${roleResult.err}`, {
+            description: `Principal: ${principalStr}`,
+          });
+          setSaving(false);
+          return;
+        }
+      }
+
+      console.log("[handleSaveEdit] Save successful");
+      toast.success(t.admin.profileUpdated);
+      setEditTarget(null);
+      await fetchUsers();
+    } catch (err) {
+      console.error("[handleSaveEdit] Unexpected error:", err);
+      console.error("[handleSaveEdit] Error details:", {
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        raw: err,
+      });
+      toast.error(
+        `Failed to update profile: ${err instanceof Error ? err.message : String(err)}`,
+        {
+          description: `Principal: ${principalStr}`,
+        },
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const getRoleBadgeClass = (roleStr: string) => {
-    if (roleStr === "admin") return "border-coral text-coral";
+    if (roleStr === "admin") return "border-gold text-gold";
     if (roleStr === "user") return "border-blue-400 text-blue-600";
     return "border-amber-400 text-amber-600";
   };
@@ -208,10 +317,12 @@ export default function MyPagesAdmin() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-coral/10 flex items-center justify-center">
-            <Users className="w-5 h-5 text-coral" />
+          <div className="w-10 h-10 rounded-full bg-gold/15 flex items-center justify-center">
+            <Users className="w-5 h-5 text-gold" />
           </div>
-          <h2 className="font-serif text-xl text-navy">{t.admin.title}</h2>
+          <h2 className="font-serif text-xl text-foreground">
+            {t.admin.title}
+          </h2>
         </div>
         <Button
           variant="ghost"
@@ -227,74 +338,6 @@ export default function MyPagesAdmin() {
           {t.common.retry}
         </Button>
       </div>
-
-      {/* Add User Form */}
-      <Card className="border border-divider shadow-card">
-        <CardHeader className="pb-3">
-          <CardTitle className="font-serif text-base text-navy flex items-center gap-2">
-            <Plus className="w-4 h-4 text-coral" />
-            {t.admin.addUser}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 space-y-1.5">
-              <Label
-                htmlFor="add-principal"
-                className="font-sans text-xs font-medium text-muted-foreground"
-              >
-                {t.admin.principal}
-              </Label>
-              <Input
-                id="add-principal"
-                value={addPrincipal}
-                onChange={(e) => setAddPrincipal(e.target.value)}
-                placeholder={t.admin.enterPrincipal}
-                className="font-sans text-sm font-mono"
-                data-ocid="admin.input"
-              />
-            </div>
-            <div className="sm:w-40 space-y-1.5">
-              <Label className="font-sans text-xs font-medium text-muted-foreground">
-                {t.admin.role}
-              </Label>
-              <Select value={addRole} onValueChange={setAddRole}>
-                <SelectTrigger
-                  className="font-sans text-sm"
-                  data-ocid="admin.select"
-                >
-                  <SelectValue placeholder={t.admin.selectRole} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">{t.common.admin}</SelectItem>
-                  <SelectItem value="user">{t.common.user}</SelectItem>
-                  <SelectItem value="guest">{t.common.guest}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="sm:self-end">
-              <Button
-                onClick={handleAddUser}
-                disabled={adding || !addPrincipal.trim()}
-                className="w-full sm:w-auto bg-coral hover:bg-coral/90 text-white font-sans rounded-full"
-                data-ocid="admin.primary_button"
-              >
-                {adding ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-                    {t.admin.adding}
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4 mr-1.5" />
-                    {t.admin.addUserBtn}
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Users Table */}
       <Card className="border border-divider shadow-card">
@@ -405,6 +448,15 @@ export default function MyPagesAdmin() {
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={() => setEditTarget(user)}
+                              className="text-muted-foreground hover:text-foreground hover:bg-muted font-sans text-xs"
+                              data-ocid={`admin.edit_button.${idx + 1}`}
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => setBlockTarget(principalStr)}
                               disabled={isBlocked}
                               className="text-amber-600 hover:text-amber-600 hover:bg-amber-50 font-sans text-xs"
@@ -435,6 +487,135 @@ export default function MyPagesAdmin() {
         </CardContent>
       </Card>
 
+      {/* Edit User Profile Dialog */}
+      <Dialog
+        open={!!editTarget}
+        onOpenChange={(open) => !open && setEditTarget(null)}
+      >
+        <DialogContent
+          className="sm:max-w-md font-sans"
+          data-ocid="admin.dialog"
+        >
+          <DialogHeader>
+            <DialogTitle className="font-serif text-foreground flex items-center gap-2">
+              <Pencil className="w-4 h-4 text-gold" />
+              {t.admin.editUserProfile}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {/* Principal (read-only) */}
+            <div className="space-y-1.5">
+              <Label className="font-sans text-xs font-medium text-muted-foreground">
+                {t.admin.principal}
+              </Label>
+              <p className="font-mono text-xs text-muted-foreground bg-muted/40 rounded px-3 py-2 break-all">
+                {editTarget?.principal.toString()}
+              </p>
+            </div>
+
+            {/* Name */}
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="edit-name"
+                className="font-sans text-xs font-medium text-muted-foreground"
+              >
+                {t.admin.name}
+              </Label>
+              <Input
+                id="edit-name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="font-sans text-sm"
+                data-ocid="admin.input"
+              />
+            </div>
+
+            {/* Email */}
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="edit-email"
+                className="font-sans text-xs font-medium text-muted-foreground"
+              >
+                {t.admin.email}
+              </Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                className="font-sans text-sm"
+                data-ocid="admin.input"
+              />
+            </div>
+
+            {/* Phone */}
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="edit-phone"
+                className="font-sans text-xs font-medium text-muted-foreground"
+              >
+                {t.admin.phone}
+              </Label>
+              <Input
+                id="edit-phone"
+                type="tel"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                className="font-sans text-sm"
+                data-ocid="admin.input"
+              />
+            </div>
+
+            {/* Role */}
+            <div className="space-y-1.5">
+              <Label className="font-sans text-xs font-medium text-muted-foreground">
+                {t.admin.role}
+              </Label>
+              <Select value={editRole} onValueChange={setEditRole}>
+                <SelectTrigger
+                  className="font-sans text-sm"
+                  data-ocid="admin.select"
+                >
+                  <SelectValue placeholder={t.admin.selectRole} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">{t.common.admin}</SelectItem>
+                  <SelectItem value="user">{t.common.user}</SelectItem>
+                  <SelectItem value="guest">{t.common.guest}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setEditTarget(null)}
+              className="font-sans"
+              data-ocid="admin.cancel_button"
+            >
+              {t.admin.cancel}
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={saving}
+              className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full"
+              data-ocid="admin.save_button"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                  {t.myPages.saving}
+                </>
+              ) : (
+                t.myPages.save
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Block User Dialog */}
       <AlertDialog
         open={!!blockTarget}
@@ -442,7 +623,7 @@ export default function MyPagesAdmin() {
       >
         <AlertDialogContent data-ocid="admin.dialog">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-serif text-navy flex items-center gap-2">
+            <AlertDialogTitle className="font-serif text-foreground flex items-center gap-2">
               <Ban className="w-5 h-5 text-amber-600" />
               {t.admin.confirmBlock}
             </AlertDialogTitle>
@@ -483,7 +664,7 @@ export default function MyPagesAdmin() {
       >
         <AlertDialogContent data-ocid="admin.dialog">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-serif text-navy flex items-center gap-2">
+            <AlertDialogTitle className="font-serif text-foreground flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-destructive" />
               {t.admin.confirmRemove}
             </AlertDialogTitle>

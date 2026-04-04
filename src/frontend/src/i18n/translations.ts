@@ -25,18 +25,24 @@ export interface TranslationMap {
     body: string;
     cta: string;
   };
+  // Customers section
+  customers: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+  };
   // Services section
   services: {
     title: string;
-    advisory: {
+    systemDesign: {
       title: string;
       description: string;
     };
-    investment: {
+    systemAnalysis: {
       title: string;
       description: string;
     };
-    management: {
+    systemImpl: {
       title: string;
       description: string;
     };
@@ -119,6 +125,7 @@ export interface TranslationMap {
     role: string;
     name: string;
     email: string;
+    phone: string;
     actions: string;
     noUsers: string;
     userAdded: string;
@@ -133,6 +140,9 @@ export interface TranslationMap {
     confirm: string;
     selectRole: string;
     enterPrincipal: string;
+    editUserProfile: string;
+    profileUpdated: string;
+    profileUpdateError: string;
   };
   // Common
   common: {
@@ -166,25 +176,31 @@ export const translations: Record<Language, TranslationMap> = {
     about: {
       eyebrow: "About Us",
       title: "Who We Are",
-      body: "Solete Vida Group S.L. is a premier business consultancy and investment group based in the heart of the Mediterranean. With decades of combined expertise, we bridge local market knowledge with international business acumen — providing our clients with unparalleled access to opportunities in Spain and beyond. We are committed to delivering excellence, integrity, and sustainable growth in every venture we undertake.",
+      body: "Solete Vida Group S.L. has been working with IT development since 1998. With over two decades of experience, we bridge local market knowledge with international business acumen — providing our clients with unparalleled access to opportunities in Spain and beyond. We are committed to delivering excellence, integrity, and sustainable growth in every venture we undertake.",
       cta: "More About Us",
+    },
+    customers: {
+      eyebrow: "Our Journey",
+      title: "Clients We Have Served",
+      subtitle:
+        "Over the decades, we have had the privilege of working with leading organizations across Sweden and Europe.",
     },
     services: {
       title: "Our Services",
-      advisory: {
-        title: "Business Advisory",
+      systemDesign: {
+        title: "System Design",
         description:
-          "Strategic guidance and expert counsel for businesses seeking to establish or expand their presence in the Mediterranean market.",
+          "We architect robust, scalable IT solutions tailored to your business needs, leveraging modern technologies including ICP blockchain for future-ready development.",
       },
-      investment: {
-        title: "Investment Solutions",
+      systemAnalysis: {
+        title: "System Analysis",
         description:
-          "Curated investment opportunities in real estate, ventures, and private equity across Spain and the wider Mediterranean region.",
+          "In-depth analysis of your existing systems and processes to identify opportunities for improvement, efficiency, and digital transformation.",
       },
-      management: {
-        title: "Portfolio Management",
+      systemImpl: {
+        title: "System Implementation & Test",
         description:
-          "Comprehensive management solutions to protect, grow, and optimize your business and investment portfolios.",
+          "End-to-end implementation and rigorous testing of IT systems, ensuring quality, reliability, and seamless delivery — with ICP blockchain as a target for future development.",
       },
     },
     whyChoose: {
@@ -232,7 +248,8 @@ export const translations: Record<Language, TranslationMap> = {
         "Solete Vida Group S.L. — Your trusted partner for Mediterranean business excellence and investment opportunities.",
       menu: "Navigation",
       contactTitle: "Contact Us",
-      address: "Calle de la Prosperidad 42, 28002 Madrid, Spain",
+      address:
+        "Polígono 2 Parcela 206, Urbanización Buganvilla, 03750 Pedreguer (La Sella), Spain",
       email: "info@soletvida.com",
       phone: "+34 91 123 4567",
       copyright: "© {year} Solete Vida Group S.L. All rights reserved.",
@@ -275,6 +292,7 @@ export const translations: Record<Language, TranslationMap> = {
       role: "Role",
       name: "Name",
       email: "Email",
+      phone: "Phone",
       actions: "Actions",
       noUsers: "No users registered yet.",
       userAdded: "User added successfully!",
@@ -290,6 +308,9 @@ export const translations: Record<Language, TranslationMap> = {
       confirm: "Remove User",
       selectRole: "Select role",
       enterPrincipal: "Enter principal ID",
+      editUserProfile: "Edit User Profile",
+      profileUpdated: "Profile updated successfully!",
+      profileUpdateError: "Failed to update profile.",
     },
     common: {
       loading: "Loading...",
@@ -321,25 +342,31 @@ export const translations: Record<Language, TranslationMap> = {
     about: {
       eyebrow: "Sobre Nosotros",
       title: "Quiénes Somos",
-      body: "Solete Vida Group S.L. es un grupo líder de consultoría empresarial e inversión ubicado en el corazón del Mediterráneo. Con décadas de experiencia combinada, conectamos el conocimiento del mercado local con la perspicacia empresarial internacional, proporcionando a nuestros clientes un acceso incomparable a oportunidades en España y más allá.",
+      body: "Solete Vida Group S.L. ha trabajado en el desarrollo de TI desde 1998. Con más de dos décadas de experiencia, conectamos el conocimiento del mercado local con la perspicacia empresarial internacional, proporcionando a nuestros clientes un acceso incomparable a oportunidades en España y más allá.",
       cta: "Más Sobre Nosotros",
+    },
+    customers: {
+      eyebrow: "Nuestro Camino",
+      title: "Clientes que Hemos Atendido",
+      subtitle:
+        "A lo largo de las décadas, hemos tenido el privilegio de trabajar con organizaciones líderes en Suecia y Europa.",
     },
     services: {
       title: "Nuestros Servicios",
-      advisory: {
-        title: "Asesoría Empresarial",
+      systemDesign: {
+        title: "Diseño de Sistemas",
         description:
-          "Orientación estratégica y asesoramiento experto para empresas que buscan establecer o ampliar su presencia en el mercado mediterráneo.",
+          "Diseñamos soluciones de TI robustas y escalables adaptadas a sus necesidades empresariales, aprovechando tecnologías modernas incluida la blockchain ICP para un desarrollo preparado para el futuro.",
       },
-      investment: {
-        title: "Soluciones de Inversión",
+      systemAnalysis: {
+        title: "Análisis de Sistemas",
         description:
-          "Oportunidades de inversión seleccionadas en bienes raíces, empresas y capital privado en España y la región mediterránea.",
+          "Análisis exhaustivo de sus sistemas y procesos existentes para identificar oportunidades de mejora, eficiencia y transformación digital.",
       },
-      management: {
-        title: "Gestión de Carteras",
+      systemImpl: {
+        title: "Implementación y Prueba de Sistemas",
         description:
-          "Soluciones integrales de gestión para proteger, hacer crecer y optimizar sus carteras empresariales y de inversión.",
+          "Implementación integral y pruebas rigurosas de sistemas de TI, garantizando calidad, fiabilidad y entrega fluida — con la blockchain ICP como objetivo para el desarrollo futuro.",
       },
     },
     whyChoose: {
@@ -387,7 +414,8 @@ export const translations: Record<Language, TranslationMap> = {
         "Solete Vida Group S.L. — Su socio de confianza para la excelencia empresarial mediterránea y oportunidades de inversión.",
       menu: "Navegación",
       contactTitle: "Contáctenos",
-      address: "Calle de la Prosperidad 42, 28002 Madrid, España",
+      address:
+        "Polígono 2 Parcela 206, Urbanización Buganvilla, 03750 Pedreguer (La Sella), España",
       email: "info@soletvida.com",
       phone: "+34 91 123 4567",
       copyright:
@@ -431,6 +459,7 @@ export const translations: Record<Language, TranslationMap> = {
       role: "Rol",
       name: "Nombre",
       email: "Correo",
+      phone: "Teléfono",
       actions: "Acciones",
       noUsers: "No hay usuarios registrados.",
       userAdded: "¡Usuario añadido con éxito!",
@@ -446,6 +475,9 @@ export const translations: Record<Language, TranslationMap> = {
       confirm: "Eliminar Usuario",
       selectRole: "Seleccionar rol",
       enterPrincipal: "Ingrese el ID principal",
+      editUserProfile: "Editar Perfil de Usuario",
+      profileUpdated: "¡Perfil actualizado con éxito!",
+      profileUpdateError: "Error al actualizar el perfil.",
     },
     common: {
       loading: "Cargando...",
@@ -477,25 +509,31 @@ export const translations: Record<Language, TranslationMap> = {
     about: {
       eyebrow: "Om Oss",
       title: "Vilka Vi Är",
-      body: "Solete Vida Group S.L. är en ledande affärskonsult- och investeringsgrupp belägen i hjärtat av Medelhavsregionen. Med decennier av kombinerad expertis överbryggar vi lokal marknadskännedom med internationell affärsskarphet — och ger våra kunder oöverträffad tillgång till möjligheter i Spanien och bortom.",
+      body: "Solete Vida Group S.L. har arbetat med IT-utveckling sedan 1998. Med över två decenniers erfarenhet överbryggar vi lokal marknadskännedom med internationell affärsskarphet — och ger våra kunder oöverträffad tillgång till möjligheter i Spanien och bortom.",
       cta: "Mer Om Oss",
+    },
+    customers: {
+      eyebrow: "Vår Resa",
+      title: "Kunder Vi Har Betjänat",
+      subtitle:
+        "Under decennierna har vi haft förmånen att arbeta med ledande organisationer i Sverige och Europa.",
     },
     services: {
       title: "Våra Tjänster",
-      advisory: {
-        title: "Affärsrådgivning",
+      systemDesign: {
+        title: "Systemdesign",
         description:
-          "Strategisk vägledning och expertis för företag som vill etablera eller expandera sin närvaro på den mediterrana marknaden.",
+          "Vi utformar robusta och skalbara IT-lösningar anpassade efter dina affärsbehov, med moderna teknologier inklusive ICP blockchain för framtidssäker utveckling.",
       },
-      investment: {
-        title: "Investeringslösningar",
+      systemAnalysis: {
+        title: "Systemanalys",
         description:
-          "Utvald investeringsmöjligheter inom fastigheter, ventures och private equity i Spanien och bredare Medelhavsregionen.",
+          "Djupgående analys av dina befintliga system och processer för att identifiera möjligheter till förbättring, effektivisering och digital transformation.",
       },
-      management: {
-        title: "Portföljförvaltning",
+      systemImpl: {
+        title: "Systemimplementering & Test",
         description:
-          "Heltäckande förvaltningslösningar för att skydda, växa och optimera dina affärs- och investeringsportföljer.",
+          "Heltäckande implementering och rigorös testning av IT-system, med fokus på kvalitet, tillförlitlighet och sömlös leverans — med ICP blockchain som mål för framtida utveckling.",
       },
     },
     whyChoose: {
@@ -543,7 +581,8 @@ export const translations: Record<Language, TranslationMap> = {
         "Solete Vida Group S.L. — Din betrodda partner för medelhavsk affärsexcellens och investeringsmöjligheter.",
       menu: "Navigation",
       contactTitle: "Kontakta Oss",
-      address: "Calle de la Prosperidad 42, 28002 Madrid, Spanien",
+      address:
+        "Polígono 2 Parcela 206, Urbanización Buganvilla, 03750 Pedreguer (La Sella), Spanien",
       email: "info@soletvida.com",
       phone: "+34 91 123 4567",
       copyright:
@@ -587,6 +626,7 @@ export const translations: Record<Language, TranslationMap> = {
       role: "Roll",
       name: "Namn",
       email: "E-post",
+      phone: "Telefon",
       actions: "Åtgärder",
       noUsers: "Inga användare registrerade ännu.",
       userAdded: "Användare tillagd!",
@@ -602,6 +642,9 @@ export const translations: Record<Language, TranslationMap> = {
       confirm: "Ta Bort Användare",
       selectRole: "Välj roll",
       enterPrincipal: "Ange huvud-ID",
+      editUserProfile: "Redigera Användarprofil",
+      profileUpdated: "Profilen uppdaterades!",
+      profileUpdateError: "Kunde inte uppdatera profilen.",
     },
     common: {
       loading: "Laddar...",

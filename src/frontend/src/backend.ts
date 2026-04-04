@@ -73,15 +73,18 @@ export interface UserListEntry {
 }
 
 export type CallResult = { ok: null } | { err: string };
+export type ListUsersResult = { ok: UserListEntry[] } | { err: string };
 
 export interface backendInterface {
     getMyRole(): Promise<UserRole>;
     getMyProfile(): Promise<Option<UserProfile>>;
     updateMyProfile(name: string, email: string, phone: string): Promise<CallResult>;
-    listUsers(): Promise<UserListEntry[]>;
+    listUsers(): Promise<ListUsersResult>;
     addUser(principalText: string, role: UserRole): Promise<CallResult>;
     updateUserRole(principalText: string, newRole: UserRole): Promise<CallResult>;
     removeUser(principalText: string): Promise<CallResult>;
+    blockUser(principalText: string): Promise<CallResult>;
+    updateUserProfile(principalText: string, name: string, email: string, phone: string): Promise<CallResult>;
     admin_addUserAccess(principalText: string, role: UserRole): Promise<void>;
     admin_updateUserAccess(principalText: string, role: UserRole): Promise<void>;
     admin_getUserAccess(): Promise<UserAccessEntry[]>;
@@ -157,16 +160,20 @@ export class Backend implements backendInterface {
         } catch(e) { if (this.processError) return this.processError(e); throw e; }
     }
 
-    async listUsers(): Promise<UserListEntry[]> {
+    async listUsers(): Promise<ListUsersResult> {
         try {
-            const result = await this.actor.listUsers() as any[];
-            return result.map((entry: any) => ({
+            const result = await this.actor.listUsers() as any;
+            if ('err' in result) {
+                return { err: result.err as string };
+            }
+            const entries = (result.ok as any[]).map((entry: any) => ({
                 principal: entry.principal,
                 role: this._mapRole(entry.role),
                 profile: entry.profile && entry.profile.length > 0 && entry.profile[0] != null
                     ? some(entry.profile[0] as UserProfile)
                     : none(),
             }));
+            return { ok: entries };
         } catch(e) { if (this.processError) return this.processError(e); throw e; }
     }
 
@@ -191,6 +198,22 @@ export class Backend implements backendInterface {
     async removeUser(principalText: string): Promise<CallResult> {
         try {
             const result = await this.actor.removeUser(principalText) as any;
+            if ('ok' in result) return { ok: null };
+            return { err: result.err as string };
+        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    }
+
+    async blockUser(principalText: string): Promise<CallResult> {
+        try {
+            const result = await this.actor.blockUser(principalText) as any;
+            if ('ok' in result) return { ok: null };
+            return { err: result.err as string };
+        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    }
+
+    async updateUserProfile(principalText: string, name: string, email: string, phone: string): Promise<CallResult> {
+        try {
+            const result = await this.actor.updateUserProfile(principalText, name, email, phone) as any;
             if ('ok' in result) return { ok: null };
             return { err: result.err as string };
         } catch(e) { if (this.processError) return this.processError(e); throw e; }

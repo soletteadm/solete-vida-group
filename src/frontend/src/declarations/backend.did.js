@@ -33,14 +33,21 @@ const CallResult = IDL.Variant({
   err: IDL.Text,
 });
 
+const ListUsersResult = IDL.Variant({
+  ok: IDL.Vec(UserListEntry),
+  err: IDL.Text,
+});
+
 export const idlService = IDL.Service({
   getMyRole: IDL.Func([], [UserRole], ['query']),
   getMyProfile: IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   updateMyProfile: IDL.Func([IDL.Text, IDL.Text, IDL.Text], [CallResult], []),
-  listUsers: IDL.Func([], [IDL.Vec(UserListEntry)], ['query']),
+  listUsers: IDL.Func([], [ListUsersResult], []),
   addUser: IDL.Func([IDL.Text, UserRole], [CallResult], []),
   updateUserRole: IDL.Func([IDL.Text, UserRole], [CallResult], []),
   removeUser: IDL.Func([IDL.Text], [CallResult], []),
+  blockUser: IDL.Func([IDL.Text], [CallResult], []),
+  updateUserProfile: IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Text], [CallResult], []),
   admin_addUserAccess: IDL.Func([IDL.Text, UserRole], [], []),
   admin_updateUserAccess: IDL.Func([IDL.Text, UserRole], [], []),
   admin_getUserAccess: IDL.Func([], [IDL.Vec(UserAccessEntry)], ['query']),
@@ -78,14 +85,21 @@ export const idlFactory = ({ IDL }) => {
     err: IDL.Text,
   });
 
+  const ListUsersResult = IDL.Variant({
+    ok: IDL.Vec(UserListEntry),
+    err: IDL.Text,
+  });
+
   return IDL.Service({
     getMyRole: IDL.Func([], [UserRole], ['query']),
     getMyProfile: IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     updateMyProfile: IDL.Func([IDL.Text, IDL.Text, IDL.Text], [CallResult], []),
-    listUsers: IDL.Func([], [IDL.Vec(UserListEntry)], ['query']),
+    listUsers: IDL.Func([], [ListUsersResult], []),
     addUser: IDL.Func([IDL.Text, UserRole], [CallResult], []),
     updateUserRole: IDL.Func([IDL.Text, UserRole], [CallResult], []),
     removeUser: IDL.Func([IDL.Text], [CallResult], []),
+    blockUser: IDL.Func([IDL.Text], [CallResult], []),
+    updateUserProfile: IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Text], [CallResult], []),
     admin_addUserAccess: IDL.Func([IDL.Text, UserRole], [], []),
     admin_updateUserAccess: IDL.Func([IDL.Text, UserRole], [], []),
     admin_getUserAccess: IDL.Func([], [IDL.Vec(UserAccessEntry)], ['query']),

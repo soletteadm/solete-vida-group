@@ -84,10 +84,10 @@ function AppContent() {
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
               {/* Page title */}
               <div className="mb-8">
-                <h1 className="font-serif text-3xl font-semibold text-navy">
+                <h1 className="font-serif text-3xl font-semibold text-foreground">
                   {t.myPages.title}
                 </h1>
-                <div className="mt-1.5 w-10 h-0.5 bg-coral" />
+                <div className="mt-1.5 w-10 h-0.5 bg-gold" />
               </div>
 
               <Tabs
@@ -96,12 +96,12 @@ function AppContent() {
                 className="space-y-6"
               >
                 <TabsList
-                  className="bg-white border border-divider shadow-card h-auto p-1 rounded-lg"
+                  className="bg-card border border-divider shadow-card h-auto p-1 rounded-lg"
                   data-ocid="mypages.tab"
                 >
                   <TabsTrigger
                     value="profile"
-                    className="font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-coral data-[state=active]:text-white"
+                    className="font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black"
                     data-ocid="mypages.tab"
                   >
                     <User className="w-4 h-4" />
@@ -110,7 +110,7 @@ function AppContent() {
                   {auth.isAdmin && (
                     <TabsTrigger
                       value="admin"
-                      className="font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-coral data-[state=active]:text-white"
+                      className="font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black"
                       data-ocid="mypages.tab"
                     >
                       <Users className="w-4 h-4" />

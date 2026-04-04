@@ -58,16 +58,16 @@ export default function Navbar({
         {/* Logo */}
         <button
           type="button"
-          className="flex items-center gap-2.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral rounded-md"
+          className="flex items-center gap-2.5 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded-md"
           onClick={() => onNavigate("home")}
           aria-label="Solete Vida Group - Go to homepage"
           data-ocid="nav.link"
         >
-          <div className="w-9 h-9 bg-coral rounded-full flex items-center justify-center flex-shrink-0">
-            <Sun className="w-5 h-5 text-white" />
+          <div className="w-9 h-9 bg-black rounded-full flex items-center justify-center flex-shrink-0">
+            <Sun className="w-5 h-5 text-gold" />
           </div>
           <div className="leading-tight">
-            <span className="block font-serif font-semibold text-navy text-base tracking-tight">
+            <span className="block font-serif font-semibold text-foreground text-base tracking-tight">
               Solete Vida
             </span>
             <span className="block font-sans text-xs text-muted-foreground tracking-wide uppercase">
@@ -83,7 +83,7 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={() => handleNavClick(link.section)}
-                className="px-4 py-2 text-sm font-sans font-medium text-foreground hover:text-coral transition-colors rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral"
+                className="px-4 py-2 text-sm font-sans font-medium text-foreground hover:text-gold transition-colors rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
                 data-ocid="nav.link"
               >
                 {link.label}
@@ -95,10 +95,10 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={handleMyPages}
-                className={`px-4 py-2 text-sm font-sans font-medium transition-colors rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coral ${
+                className={`px-4 py-2 text-sm font-sans font-medium transition-colors rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
                   currentPage === "myPages"
-                    ? "text-coral"
-                    : "text-foreground hover:text-coral"
+                    ? "text-gold"
+                    : "text-foreground hover:text-gold"
                 }`}
                 data-ocid="nav.link"
               >
@@ -120,9 +120,9 @@ export default function Navbar({
                 <button
                   type="button"
                   onClick={() => setLang(l)}
-                  className={`text-xs font-sans font-semibold uppercase tracking-wide px-1 py-0.5 rounded transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-coral ${
+                  className={`text-xs font-sans font-semibold uppercase tracking-wide px-1 py-0.5 rounded transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold ${
                     lang === l
-                      ? "text-coral"
+                      ? "text-gold"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                   aria-pressed={lang === l}
@@ -144,7 +144,7 @@ export default function Navbar({
             <div className="flex items-center gap-2">
               <Badge
                 variant="outline"
-                className="border-coral text-coral text-xs capitalize font-sans"
+                className="border-gold text-gold text-xs capitalize font-sans"
               >
                 {roleLabel}
               </Badge>
@@ -164,7 +164,7 @@ export default function Navbar({
               size="sm"
               onClick={onLogin}
               disabled={isLoading}
-              className="bg-coral hover:bg-coral/90 text-white font-sans rounded-full px-5 text-sm"
+              className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full px-5 text-sm"
               data-ocid="nav.primary_button"
             >
               {isLoading ? (
@@ -199,10 +199,10 @@ export default function Navbar({
               {/* Mobile header */}
               <div className="flex items-center justify-between px-6 py-5 border-b border-divider">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 bg-coral rounded-full flex items-center justify-center">
-                    <Sun className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+                    <Sun className="w-4 h-4 text-gold" />
                   </div>
-                  <span className="font-serif font-semibold text-navy text-sm">
+                  <span className="font-serif font-semibold text-foreground text-sm">
                     Solete Vida
                   </span>
                 </div>
@@ -215,7 +215,7 @@ export default function Navbar({
                     key={link.key}
                     type="button"
                     onClick={() => handleNavClick(link.section)}
-                    className="w-full text-left px-4 py-3 text-sm font-sans font-medium text-foreground hover:text-coral hover:bg-beige rounded-lg transition-colors"
+                    className="w-full text-left px-4 py-3 text-sm font-sans font-medium text-foreground hover:text-gold hover:bg-beige rounded-lg transition-colors"
                     data-ocid="nav.link"
                   >
                     {link.label}
@@ -225,7 +225,7 @@ export default function Navbar({
                   <button
                     type="button"
                     onClick={handleMyPages}
-                    className="w-full text-left px-4 py-3 text-sm font-sans font-medium text-coral hover:bg-beige rounded-lg transition-colors flex items-center gap-2"
+                    className="w-full text-left px-4 py-3 text-sm font-sans font-medium text-gold hover:bg-beige rounded-lg transition-colors flex items-center gap-2"
                     data-ocid="nav.link"
                   >
                     <User className="w-4 h-4" />
@@ -244,7 +244,7 @@ export default function Navbar({
                         onClick={() => setLang(l)}
                         className={`text-xs font-sans font-semibold uppercase tracking-wide px-1.5 py-1 rounded transition-colors ${
                           lang === l
-                            ? "text-coral bg-coral/10"
+                            ? "text-gold bg-gold/15"
                             : "text-muted-foreground hover:text-foreground"
                         }`}
                         aria-pressed={lang === l}
@@ -265,7 +265,7 @@ export default function Navbar({
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="outline"
-                        className="border-coral text-coral text-xs capitalize"
+                        className="border-gold text-gold text-xs capitalize"
                       >
                         {roleLabel}
                       </Badge>
@@ -288,7 +288,7 @@ export default function Navbar({
                       onLogin();
                     }}
                     disabled={isLoading}
-                    className="w-full bg-coral hover:bg-coral/90 text-white font-sans rounded-full text-sm"
+                    className="w-full bg-gold hover:bg-gold/90 text-black font-sans rounded-full text-sm"
                     data-ocid="nav.primary_button"
                   >
                     {isLoading ? (

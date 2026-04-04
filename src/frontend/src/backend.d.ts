@@ -29,16 +29,18 @@ export interface UserListEntry {
 }
 
 export type CallResult = { ok: null } | { err: string };
+export type ListUsersResult = { ok: UserListEntry[] } | { err: string };
 
 export interface backendInterface {
     getMyRole(): Promise<UserRole>;
     getMyProfile(): Promise<Option<UserProfile>>;
     updateMyProfile(name: string, email: string, phone: string): Promise<CallResult>;
-    listUsers(): Promise<UserListEntry[]>;
+    listUsers(): Promise<ListUsersResult>;
     addUser(principalText: string, role: UserRole): Promise<CallResult>;
     updateUserRole(principalText: string, newRole: UserRole): Promise<CallResult>;
     removeUser(principalText: string): Promise<CallResult>;
     blockUser(principalText: string): Promise<CallResult>;
+    updateUserProfile(principalText: string, name: string, email: string, phone: string): Promise<CallResult>;
     admin_addUserAccess(principalText: string, role: UserRole): Promise<void>;
     admin_updateUserAccess(principalText: string, role: UserRole): Promise<void>;
     admin_getUserAccess(): Promise<UserAccessEntry[]>;

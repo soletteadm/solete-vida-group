@@ -25,8 +25,8 @@ export default {
         ring: "oklch(var(--ring) / <alpha-value>)",
         background: "oklch(var(--background))",
         foreground: "oklch(var(--foreground))",
-        coral: "oklch(var(--coral))",
-        navy: "oklch(var(--navy))",
+        gold: "oklch(var(--gold) / <alpha-value>)",
+        black: "oklch(var(--black) / <alpha-value>)",
         beige: "oklch(var(--beige))",
         primary: {
           DEFAULT: "oklch(var(--primary) / <alpha-value>)",
@@ -81,8 +81,8 @@ export default {
       },
       boxShadow: {
         xs: "0 1px 2px 0 rgba(0,0,0,0.05)",
-        card: "0 2px 12px 0 rgba(31,46,61,0.08), 0 1px 3px 0 rgba(31,46,61,0.06)",
-        nav: "0 2px 8px 0 rgba(31,46,61,0.08)",
+        card: "0 2px 12px 0 rgba(20,16,12,0.08), 0 1px 3px 0 rgba(20,16,12,0.06)",
+        nav: "0 2px 8px 0 rgba(20,16,12,0.08)",
       },
       keyframes: {
         "accordion-down": {

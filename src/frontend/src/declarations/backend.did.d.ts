@@ -27,15 +27,18 @@ export interface UserListEntry {
 }
 
 export type CallResult = { 'ok': null } | { 'err': string };
+export type ListUsersResult = { 'ok': UserListEntry[] } | { 'err': string };
 
 export interface _SERVICE {
   'getMyRole': ActorMethod<[], UserRole>;
   'getMyProfile': ActorMethod<[], [] | [UserProfile]>;
   'updateMyProfile': ActorMethod<[string, string, string], CallResult>;
-  'listUsers': ActorMethod<[], UserListEntry[]>;
+  'listUsers': ActorMethod<[], ListUsersResult>;
   'addUser': ActorMethod<[string, UserRole], CallResult>;
   'updateUserRole': ActorMethod<[string, UserRole], CallResult>;
   'removeUser': ActorMethod<[string], CallResult>;
+  'blockUser': ActorMethod<[string], CallResult>;
+  'updateUserProfile': ActorMethod<[string, string, string, string], CallResult>;
   'admin_addUserAccess': ActorMethod<[string, UserRole], undefined>;
   'admin_updateUserAccess': ActorMethod<[string, UserRole], undefined>;
   'admin_getUserAccess': ActorMethod<[], UserAccessEntry[]>;

@@ -1,7 +1,6 @@
-import List "mo:core/List";
 import Map "mo:core/Map";
+import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
-import Text "mo:core/Text";
 
 module {
   public type UserRole = {
@@ -14,11 +13,6 @@ module {
     var adminAssigned : Bool;
     userRoles : Map.Map<Principal, UserRole>;
   };
-
-  private let admin_controllers : [Text] = [
-    "atewe-etgil-mre73-twlmx-z2o2f-goui6-glmiq-qulqx-osud5-xdxsn-aqe",
-    "gfd5w-iksaw-xr3aq-jij26-nwcfb-rvpze-rdxzq-sucdq-pm543-eg6jp-jqe",
-  ];
 
   public func initState() : AccessControlState {
     {
@@ -68,24 +62,6 @@ module {
   };
 
   public func isAdmin(state : AccessControlState, caller : Principal) : Bool {
-    let callerPrincipalText = caller.toText();
-    if (isAdminController(callerPrincipalText)) {
-      return true;
-    };
     getUserRole(state, caller) == #admin;
-  };
-
-  func trimText(text : Text) : Text {
-    text.replace(#text(" "), "").replace(#text("\t"), "");
-  };
-
-  func isAdminController(callerPrincipalText : Text) : Bool {
-    let trimmedCaller = trimText(callerPrincipalText);
-    List.fromArray<Text>(admin_controllers).any(
-      func(adminController : Text) : Bool {
-        let trimmedAdmin = trimText(adminController);
-        trimmedCaller == trimmedAdmin;
-      },
-    );
   };
 };
