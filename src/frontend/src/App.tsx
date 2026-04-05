@@ -1,24 +1,58 @@
 import Footer from "@/components/Footer";
+import HolidaySplash from "@/components/HolidaySplash";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
+import { useTypedActor } from "@/hooks/useTypedActor";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import HomePage from "@/pages/HomePage";
 import MyPagesAdmin from "@/pages/MyPagesAdmin";
+import MyPagesCalendar from "@/pages/MyPagesCalendar";
 import MyPagesProfile from "@/pages/MyPagesProfile";
-import { User, Users } from "lucide-react";
-import { useState } from "react";
+import { CalendarDays, User, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import type { HolidayKey } from "./backend.d";
 
 type Page = "home" | "myPages";
-type MyPagesTab = "profile" | "admin";
+type MyPagesTab = "profile" | "admin" | "calendar";
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>("home");
   const [myPagesTab, setMyPagesTab] = useState<MyPagesTab>("profile");
+  const [activeHoliday, setActiveHoliday] = useState<HolidayKey>("none");
+  const [showSplash, setShowSplash] = useState(false);
   const { t } = useLanguage();
   const auth = useAuth();
+  const { actor, isFetching } = useTypedActor();
+
+  // Fetch active holiday on page load
+  useEffect(() => {
+    if (!actor || isFetching) return;
+    const fetchHoliday = async () => {
+      try {
+        const h = await actor.getActiveHoliday();
+        const key: HolidayKey =
+          "easter" in h
+            ? "easter"
+            : "christmas" in h
+              ? "christmas"
+              : "newyear" in h
+                ? "newyear"
+                : "midsommar" in h
+                  ? "midsommar"
+                  : "none";
+        if (key !== "none") {
+          setActiveHoliday(key);
+          setShowSplash(true);
+        }
+      } catch {
+        // ignore -- holiday splash is non-critical
+      }
+    };
+    fetchHoliday();
+  }, [actor, isFetching]);
 
   const handleNavigate = (section: string) => {
     if (
@@ -60,6 +94,14 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Holiday Splash Screen */}
+      {showSplash && activeHoliday !== "none" && (
+        <HolidaySplash
+          holiday={activeHoliday}
+          onDismiss={() => setShowSplash(false)}
+        />
+      )}
+
       <Navbar
         isLoggedIn={auth.isLoggedIn}
         isLoading={auth.isLoading}
@@ -117,6 +159,16 @@ function AppContent() {
                       {t.myPages.users}
                     </TabsTrigger>
                   )}
+                  {auth.isAdmin && (
+                    <TabsTrigger
+                      value="calendar"
+                      className="font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black"
+                      data-ocid="mypages.calendar.tab"
+                    >
+                      <CalendarDays className="w-4 h-4" />
+                      {t.myPages.calendar}
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
                 <TabsContent value="profile">
@@ -132,6 +184,12 @@ function AppContent() {
                 {auth.isAdmin && (
                   <TabsContent value="admin">
                     <MyPagesAdmin />
+                  </TabsContent>
+                )}
+
+                {auth.isAdmin && (
+                  <TabsContent value="calendar">
+                    <MyPagesCalendar />
                   </TabsContent>
                 )}
               </Tabs>

@@ -9,6 +9,8 @@ export interface None {
 export type Option<T> = Some<T> | None;
 
 export type UserRole = { admin: null } | { user: null } | { guest: null };
+export type Holiday = { none: null } | { easter: null } | { christmas: null } | { newyear: null } | { midsommar: null };
+export type HolidayKey = "none" | "easter" | "christmas" | "newyear" | "midsommar";
 
 export interface UserProfile {
     name: string;
@@ -41,6 +43,8 @@ export interface backendInterface {
     removeUser(principalText: string): Promise<CallResult>;
     blockUser(principalText: string): Promise<CallResult>;
     updateUserProfile(principalText: string, name: string, email: string, phone: string): Promise<CallResult>;
+    getActiveHoliday(): Promise<Holiday>;
+    setActiveHoliday(holiday: Holiday): Promise<CallResult>;
     admin_addUserAccess(principalText: string, role: UserRole): Promise<void>;
     admin_updateUserAccess(principalText: string, role: UserRole): Promise<void>;
     admin_getUserAccess(): Promise<UserAccessEntry[]>;

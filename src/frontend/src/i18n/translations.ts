@@ -92,6 +92,7 @@ export interface TranslationMap {
     profile: string;
     adminPanel: string;
     users: string;
+    calendar: string;
     principalId: string;
     name: string;
     email: string;
@@ -143,6 +144,19 @@ export interface TranslationMap {
     editUserProfile: string;
     profileUpdated: string;
     profileUpdateError: string;
+  };
+  // Calendar / Holidays
+  calendar: {
+    title: string;
+    highHolidays: string;
+    subtitle: string;
+    easter: string;
+    christmas: string;
+    newyear: string;
+    midsommar: string;
+    saved: string;
+    saveError: string;
+    noHoliday: string;
   };
   // Common
   common: {
@@ -259,6 +273,7 @@ export const translations: Record<Language, TranslationMap> = {
       profile: "Profile",
       adminPanel: "Admin Panel",
       users: "Users",
+      calendar: "Calendar",
       principalId: "Principal ID",
       name: "Full Name",
       email: "Email Address",
@@ -311,6 +326,18 @@ export const translations: Record<Language, TranslationMap> = {
       editUserProfile: "Edit User Profile",
       profileUpdated: "Profile updated successfully!",
       profileUpdateError: "Failed to update profile.",
+    },
+    calendar: {
+      title: "Calendar",
+      highHolidays: "High Holidays",
+      subtitle: "Activate a holiday to show a splash screen on page load.",
+      easter: "Easter",
+      christmas: "Christmas Eve",
+      newyear: "New Year's Eve",
+      midsommar: "Midsummer",
+      saved: "Holiday saved!",
+      saveError: "Failed to save holiday.",
+      noHoliday: "No holiday active",
     },
     common: {
       loading: "Loading...",
@@ -426,6 +453,7 @@ export const translations: Record<Language, TranslationMap> = {
       profile: "Perfil",
       adminPanel: "Panel de Administración",
       users: "Usuarios",
+      calendar: "Calendario",
       principalId: "ID Principal",
       name: "Nombre Completo",
       email: "Correo Electrónico",
@@ -478,6 +506,19 @@ export const translations: Record<Language, TranslationMap> = {
       editUserProfile: "Editar Perfil de Usuario",
       profileUpdated: "¡Perfil actualizado con éxito!",
       profileUpdateError: "Error al actualizar el perfil.",
+    },
+    calendar: {
+      title: "Calendario",
+      highHolidays: "Festividades",
+      subtitle:
+        "Activa una festividad para mostrar una pantalla de presentación al cargar la página.",
+      easter: "Pascua",
+      christmas: "Nochebuena",
+      newyear: "Nochevieja",
+      midsommar: "Midsommar",
+      saved: "¡Festividad guardada!",
+      saveError: "Error al guardar la festividad.",
+      noHoliday: "Ninguna festividad activa",
     },
     common: {
       loading: "Cargando...",
@@ -593,6 +634,7 @@ export const translations: Record<Language, TranslationMap> = {
       profile: "Profil",
       adminPanel: "Administratörspanel",
       users: "Användare",
+      calendar: "Kalender",
       principalId: "Huvud-ID",
       name: "Fullständigt Namn",
       email: "E-postadress",
@@ -645,6 +687,19 @@ export const translations: Record<Language, TranslationMap> = {
       editUserProfile: "Redigera Användarprofil",
       profileUpdated: "Profilen uppdaterades!",
       profileUpdateError: "Kunde inte uppdatera profilen.",
+    },
+    calendar: {
+      title: "Kalender",
+      highHolidays: "Höga Tider",
+      subtitle:
+        "Aktivera en högtid för att visa en splash screen vid sidstart.",
+      easter: "Påsk",
+      christmas: "Julafton",
+      newyear: "Nyårsafton",
+      midsommar: "Midsommar",
+      saved: "Högtid sparad!",
+      saveError: "Kunde inte spara högtid.",
+      noHoliday: "Ingen högtid aktiv",
     },
     common: {
       loading: "Laddar...",

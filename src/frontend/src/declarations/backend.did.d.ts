@@ -7,6 +7,7 @@ import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
 export type UserRole = { 'admin': null } | { 'user': null } | { 'guest': null };
+export type Holiday = { 'none': null } | { 'easter': null } | { 'christmas': null } | { 'newyear': null } | { 'midsommar': null };
 
 export interface UserProfile {
   'name': string;
@@ -39,6 +40,8 @@ export interface _SERVICE {
   'removeUser': ActorMethod<[string], CallResult>;
   'blockUser': ActorMethod<[string], CallResult>;
   'updateUserProfile': ActorMethod<[string, string, string, string], CallResult>;
+  'getActiveHoliday': ActorMethod<[], Holiday>;
+  'setActiveHoliday': ActorMethod<[Holiday], CallResult>;
   'admin_addUserAccess': ActorMethod<[string, UserRole], undefined>;
   'admin_updateUserAccess': ActorMethod<[string, UserRole], undefined>;
   'admin_getUserAccess': ActorMethod<[], UserAccessEntry[]>;

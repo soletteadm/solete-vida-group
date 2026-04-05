@@ -30,10 +30,19 @@ actor {
     profile : ?UserProfile;
   };
 
+  type Holiday = {
+    #none;
+    #easter;
+    #christmas;
+    #newyear;
+    #midsommar;
+  };
+
   // ---- State ----
 
   var accessControlState : AccessControl.AccessControlState = AccessControl.initState();
   var userProfiles : Map.Map<Principal, UserProfile> = Map.empty<Principal, UserProfile>();
+  stable var activeHoliday : Holiday = #none;
 
   // ---- Local admin logic (independent of AccessControl.isAdmin) ----
 
@@ -82,6 +91,20 @@ actor {
     if (not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can perform this action.");
     };
+  };
+
+  // ---- Holiday APIs ----
+
+  public query func getActiveHoliday() : async Holiday {
+    activeHoliday;
+  };
+
+  public shared ({ caller }) func setActiveHoliday(holiday : Holiday) : async { #ok; #err : Text } {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can set holidays.");
+    };
+    activeHoliday := holiday;
+    return #ok;
   };
 
   // ---- Public APIs (for frontend) ----

@@ -10,6 +10,14 @@ const UserRole = IDL.Variant({
   guest: IDL.Null,
 });
 
+const Holiday = IDL.Variant({
+  none: IDL.Null,
+  easter: IDL.Null,
+  christmas: IDL.Null,
+  newyear: IDL.Null,
+  midsommar: IDL.Null,
+});
+
 const UserProfile = IDL.Record({
   name: IDL.Text,
   email: IDL.Text,
@@ -48,6 +56,8 @@ export const idlService = IDL.Service({
   removeUser: IDL.Func([IDL.Text], [CallResult], []),
   blockUser: IDL.Func([IDL.Text], [CallResult], []),
   updateUserProfile: IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Text], [CallResult], []),
+  getActiveHoliday: IDL.Func([], [Holiday], ['query']),
+  setActiveHoliday: IDL.Func([Holiday], [CallResult], []),
   admin_addUserAccess: IDL.Func([IDL.Text, UserRole], [], []),
   admin_updateUserAccess: IDL.Func([IDL.Text, UserRole], [], []),
   admin_getUserAccess: IDL.Func([], [IDL.Vec(UserAccessEntry)], ['query']),
@@ -60,6 +70,14 @@ export const idlFactory = ({ IDL }) => {
     admin: IDL.Null,
     user: IDL.Null,
     guest: IDL.Null,
+  });
+
+  const Holiday = IDL.Variant({
+    none: IDL.Null,
+    easter: IDL.Null,
+    christmas: IDL.Null,
+    newyear: IDL.Null,
+    midsommar: IDL.Null,
   });
 
   const UserProfile = IDL.Record({
@@ -100,6 +118,8 @@ export const idlFactory = ({ IDL }) => {
     removeUser: IDL.Func([IDL.Text], [CallResult], []),
     blockUser: IDL.Func([IDL.Text], [CallResult], []),
     updateUserProfile: IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Text], [CallResult], []),
+    getActiveHoliday: IDL.Func([], [Holiday], ['query']),
+    setActiveHoliday: IDL.Func([Holiday], [CallResult], []),
     admin_addUserAccess: IDL.Func([IDL.Text, UserRole], [], []),
     admin_updateUserAccess: IDL.Func([IDL.Text, UserRole], [], []),
     admin_getUserAccess: IDL.Func([], [IDL.Vec(UserAccessEntry)], ['query']),

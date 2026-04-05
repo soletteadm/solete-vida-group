@@ -53,6 +53,8 @@ function record_opt_to_undefined<T>(arg: T | null): T | undefined {
 }
 
 export type UserRole = { admin: null } | { user: null } | { guest: null };
+export type Holiday = { none: null } | { easter: null } | { christmas: null } | { newyear: null } | { midsommar: null };
+export type HolidayKey = "none" | "easter" | "christmas" | "newyear" | "midsommar";
 
 export interface UserProfile {
     name: string;
@@ -85,6 +87,8 @@ export interface backendInterface {
     removeUser(principalText: string): Promise<CallResult>;
     blockUser(principalText: string): Promise<CallResult>;
     updateUserProfile(principalText: string, name: string, email: string, phone: string): Promise<CallResult>;
+    getActiveHoliday(): Promise<Holiday>;
+    setActiveHoliday(holiday: Holiday): Promise<CallResult>;
     admin_addUserAccess(principalText: string, role: UserRole): Promise<void>;
     admin_updateUserAccess(principalText: string, role: UserRole): Promise<void>;
     admin_getUserAccess(): Promise<UserAccessEntry[]>;
@@ -219,6 +223,22 @@ export class Backend implements backendInterface {
         } catch(e) { if (this.processError) return this.processError(e); throw e; }
     }
 
+    async getActiveHoliday(): Promise<Holiday> {
+        try {
+            const result = await this.actor.getActiveHoliday() as any;
+            return this._mapHoliday(result);
+        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    }
+
+    async setActiveHoliday(holiday: Holiday): Promise<CallResult> {
+        try {
+            const candidHoliday = this._toCandidHoliday(holiday);
+            const result = await this.actor.setActiveHoliday(candidHoliday) as any;
+            if ('ok' in result) return { ok: null };
+            return { err: result.err as string };
+        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    }
+
     async admin_addUserAccess(principalText: string, role: UserRole): Promise<void> {
         try {
             await this.actor.admin_addUserAccess(principalText, this._toCandidRole(role));
@@ -251,6 +271,22 @@ export class Backend implements backendInterface {
         if ('admin' in role) return { admin: null };
         if ('user' in role) return { user: null };
         return { guest: null };
+    }
+
+    private _mapHoliday(r: any): Holiday {
+        if ('easter' in r) return { easter: null };
+        if ('christmas' in r) return { christmas: null };
+        if ('newyear' in r) return { newyear: null };
+        if ('midsommar' in r) return { midsommar: null };
+        return { none: null };
+    }
+
+    private _toCandidHoliday(holiday: Holiday): any {
+        if ('easter' in holiday) return { easter: null };
+        if ('christmas' in holiday) return { christmas: null };
+        if ('newyear' in holiday) return { newyear: null };
+        if ('midsommar' in holiday) return { midsommar: null };
+        return { none: null };
     }
 }
 
