@@ -10,13 +10,14 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import HomePage from "@/pages/HomePage";
 import MyPagesAdmin from "@/pages/MyPagesAdmin";
 import MyPagesCalendar from "@/pages/MyPagesCalendar";
+import MyPagesContacts from "@/pages/MyPagesContacts";
 import MyPagesProfile from "@/pages/MyPagesProfile";
-import { CalendarDays, User, Users } from "lucide-react";
+import { CalendarDays, MessageSquare, User, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { HolidayKey } from "./backend.d";
 
 type Page = "home" | "myPages";
-type MyPagesTab = "profile" | "admin" | "calendar";
+type MyPagesTab = "profile" | "admin" | "calendar" | "contacts";
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>("home");
@@ -169,6 +170,16 @@ function AppContent() {
                       {t.myPages.calendar}
                     </TabsTrigger>
                   )}
+                  {auth.isAdmin && (
+                    <TabsTrigger
+                      value="contacts"
+                      className="font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black"
+                      data-ocid="mypages.contacts.tab"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      {t.myPages.contacts}
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
                 <TabsContent value="profile">
@@ -190,6 +201,12 @@ function AppContent() {
                 {auth.isAdmin && (
                   <TabsContent value="calendar">
                     <MyPagesCalendar />
+                  </TabsContent>
+                )}
+
+                {auth.isAdmin && (
+                  <TabsContent value="contacts">
+                    <MyPagesContacts />
                   </TabsContent>
                 )}
               </Tabs>

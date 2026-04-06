@@ -93,6 +93,7 @@ export interface TranslationMap {
     adminPanel: string;
     users: string;
     calendar: string;
+    contacts: string;
     principalId: string;
     name: string;
     email: string;
@@ -157,6 +158,78 @@ export interface TranslationMap {
     saved: string;
     saveError: string;
     noHoliday: string;
+    active: string;
+    clickToClose: string;
+    // Splash greetings
+    easterGreeting: string;
+    christmasGreeting: string;
+    newyearGreeting: string;
+    midsommarGreeting: string;
+  };
+  // Contact Form
+  contactForm: {
+    title: string;
+    subtitle: string;
+    name: string;
+    email: string;
+    message: string;
+    messagePlaceholder: string;
+    charsRemaining: string;
+    charsLimit: string;
+    submit: string;
+    submitting: string;
+    successTitle: string;
+    successMsg: string;
+    errorTitle: string;
+    unsafeWarning: string;
+    sendAnother: string;
+  };
+  // Admin contacts management
+  adminContacts: {
+    title: string;
+    subtitle: string;
+    noMessages: string;
+    name: string;
+    email: string;
+    message: string;
+    status: string;
+    submitted: string;
+    actions: string;
+    active: string;
+    notactive: string;
+    setActive: string;
+    setNotactive: string;
+    delete: string;
+    deleteSelected: string;
+    deleteConfirmTitle: string;
+    deleteConfirmMsg: string;
+    bulkDeleteConfirmMsg: string;
+    block: string;
+    unblock: string;
+    blockConfirmTitle: string;
+    blockConfirmMsg: string;
+    unblockConfirmMsg: string;
+    blocked: string;
+    viewDetails: string;
+    senderInfo: string;
+    principalId: string;
+    noPrincipal: string;
+    deviceId: string;
+    noDeviceId: string;
+    senderBlocked: string;
+    cancel: string;
+    confirm: string;
+    statusUpdated: string;
+    statusUpdateError: string;
+    deleted: string;
+    deleteError: string;
+    blockedSender: string;
+    blockError: string;
+    unblockedSender: string;
+    unblockError: string;
+    selectAll: string;
+    refresh: string;
+    loading: string;
   };
   // Common
   common: {
@@ -274,6 +347,7 @@ export const translations: Record<Language, TranslationMap> = {
       adminPanel: "Admin Panel",
       users: "Users",
       calendar: "Calendar",
+      contacts: "Contacts",
       principalId: "Principal ID",
       name: "Full Name",
       email: "Email Address",
@@ -338,6 +412,76 @@ export const translations: Record<Language, TranslationMap> = {
       saved: "Holiday saved!",
       saveError: "Failed to save holiday.",
       noHoliday: "No holiday active",
+      active: "Active",
+      clickToClose: "Click to close",
+      easterGreeting: "Happy Easter! 🐣",
+      christmasGreeting: "Merry Christmas! 🎄",
+      newyearGreeting: "Happy New Year! 🎆",
+      midsommarGreeting: "Happy Midsummer! 🌸",
+    },
+    contactForm: {
+      title: "Contact Us",
+      subtitle: "Send us a message and we'll get back to you.",
+      name: "Full Name",
+      email: "Email Address",
+      message: "Message",
+      messagePlaceholder: "Write your message here... (max 500 characters)",
+      charsRemaining: "{n} characters remaining",
+      charsLimit: "500 character limit",
+      submit: "Send Message",
+      submitting: "Sending...",
+      successTitle: "Message Sent!",
+      successMsg: "Thank you! We'll get back to you soon.",
+      errorTitle: "Failed to send",
+      unsafeWarning: "Message contains invalid characters (< or >).",
+      sendAnother: "Send Another Message",
+    },
+    adminContacts: {
+      title: "Contact Messages",
+      subtitle: "Manage incoming contact form submissions.",
+      noMessages: "No messages yet.",
+      name: "Name",
+      email: "Email",
+      message: "Message",
+      status: "Status",
+      submitted: "Submitted",
+      actions: "Actions",
+      active: "Active",
+      notactive: "Not Active",
+      setActive: "Set Active",
+      setNotactive: "Set Not Active",
+      delete: "Delete",
+      deleteSelected: "Delete Selected ({n})",
+      deleteConfirmTitle: "Delete Message",
+      deleteConfirmMsg: "Are you sure you want to delete this message?",
+      bulkDeleteConfirmMsg:
+        "Are you sure you want to delete {n} selected messages?",
+      block: "Block Sender",
+      unblock: "Unblock Sender",
+      blockConfirmTitle: "Block Sender",
+      blockConfirmMsg: "Block this sender from submitting new messages?",
+      unblockConfirmMsg: "Unblock this sender?",
+      blocked: "Blocked",
+      viewDetails: "View Details",
+      senderInfo: "Sender Information",
+      principalId: "Principal ID",
+      noPrincipal: "Anonymous (no principal)",
+      deviceId: "Device ID",
+      noDeviceId: "Not available",
+      senderBlocked: "Sender is blocked",
+      cancel: "Cancel",
+      confirm: "Confirm",
+      statusUpdated: "Status updated.",
+      statusUpdateError: "Failed to update status.",
+      deleted: "Message deleted.",
+      deleteError: "Failed to delete.",
+      blockedSender: "Sender blocked.",
+      blockError: "Failed to block sender.",
+      unblockedSender: "Sender unblocked.",
+      unblockError: "Failed to unblock.",
+      selectAll: "Select all",
+      refresh: "Refresh",
+      loading: "Loading messages...",
     },
     common: {
       loading: "Loading...",
@@ -454,6 +598,7 @@ export const translations: Record<Language, TranslationMap> = {
       adminPanel: "Panel de Administración",
       users: "Usuarios",
       calendar: "Calendario",
+      contacts: "Contactos",
       principalId: "ID Principal",
       name: "Nombre Completo",
       email: "Correo Electrónico",
@@ -519,6 +664,77 @@ export const translations: Record<Language, TranslationMap> = {
       saved: "¡Festividad guardada!",
       saveError: "Error al guardar la festividad.",
       noHoliday: "Ninguna festividad activa",
+      active: "Activa",
+      clickToClose: "Haz clic para cerrar",
+      easterGreeting: "¡Felices Pascuas! 🐣",
+      christmasGreeting: "¡Feliz Navidad! 🎄",
+      newyearGreeting: "¡Feliz Año Nuevo! 🎆",
+      midsommarGreeting: "¡Feliz Midsommar! 🌸",
+    },
+    contactForm: {
+      title: "Contáctenos",
+      subtitle: "Envíenos un mensaje y le responderemos pronto.",
+      name: "Nombre Completo",
+      email: "Correo Electrónico",
+      message: "Mensaje",
+      messagePlaceholder: "Escriba su mensaje aquí... (máx. 500 caracteres)",
+      charsRemaining: "{n} caracteres restantes",
+      charsLimit: "Límite de 500 caracteres",
+      submit: "Enviar Mensaje",
+      submitting: "Enviando...",
+      successTitle: "¡Mensaje Enviado!",
+      successMsg: "¡Gracias! Le responderemos pronto.",
+      errorTitle: "Error al enviar",
+      unsafeWarning: "El mensaje contiene caracteres inválidos (< o >).",
+      sendAnother: "Enviar Otro Mensaje",
+    },
+    adminContacts: {
+      title: "Mensajes de Contacto",
+      subtitle: "Gestionar los envíos del formulario de contacto.",
+      noMessages: "Aún no hay mensajes.",
+      name: "Nombre",
+      email: "Correo",
+      message: "Mensaje",
+      status: "Estado",
+      submitted: "Enviado",
+      actions: "Acciones",
+      active: "Activo",
+      notactive: "No Activo",
+      setActive: "Marcar Activo",
+      setNotactive: "Marcar No Activo",
+      delete: "Eliminar",
+      deleteSelected: "Eliminar Seleccionados ({n})",
+      deleteConfirmTitle: "Eliminar Mensaje",
+      deleteConfirmMsg: "¿Está seguro de que desea eliminar este mensaje?",
+      bulkDeleteConfirmMsg:
+        "¿Está seguro de que desea eliminar {n} mensajes seleccionados?",
+      block: "Bloquear Remitente",
+      unblock: "Desbloquear Remitente",
+      blockConfirmTitle: "Bloquear Remitente",
+      blockConfirmMsg:
+        "¿Bloquear a este remitente para que no envíe nuevos mensajes?",
+      unblockConfirmMsg: "¿Desbloquear a este remitente?",
+      blocked: "Bloqueado",
+      viewDetails: "Ver Detalles",
+      senderInfo: "Información del Remitente",
+      principalId: "ID Principal",
+      noPrincipal: "Anónimo (sin principal)",
+      deviceId: "ID de Dispositivo",
+      noDeviceId: "No disponible",
+      senderBlocked: "El remitente está bloqueado",
+      cancel: "Cancelar",
+      confirm: "Confirmar",
+      statusUpdated: "Estado actualizado.",
+      statusUpdateError: "Error al actualizar el estado.",
+      deleted: "Mensaje eliminado.",
+      deleteError: "Error al eliminar.",
+      blockedSender: "Remitente bloqueado.",
+      blockError: "Error al bloquear remitente.",
+      unblockedSender: "Remitente desbloqueado.",
+      unblockError: "Error al desbloquear.",
+      selectAll: "Seleccionar todo",
+      refresh: "Actualizar",
+      loading: "Cargando mensajes...",
     },
     common: {
       loading: "Cargando...",
@@ -635,6 +851,7 @@ export const translations: Record<Language, TranslationMap> = {
       adminPanel: "Administratörspanel",
       users: "Användare",
       calendar: "Kalender",
+      contacts: "Kontakter",
       principalId: "Huvud-ID",
       name: "Fullständigt Namn",
       email: "E-postadress",
@@ -700,6 +917,77 @@ export const translations: Record<Language, TranslationMap> = {
       saved: "Högtid sparad!",
       saveError: "Kunde inte spara högtid.",
       noHoliday: "Ingen högtid aktiv",
+      active: "Aktiv",
+      clickToClose: "Klicka för att stänga",
+      easterGreeting: "Glad Påsk! 🐣",
+      christmasGreeting: "God Jul! 🎄",
+      newyearGreeting: "Gott Nytt År! 🎆",
+      midsommarGreeting: "Glad Midsommar! 🌸",
+    },
+    contactForm: {
+      title: "Kontakta Oss",
+      subtitle: "Skicka ett meddelande så återkommer vi snart.",
+      name: "Fullständigt Namn",
+      email: "E-postadress",
+      message: "Meddelande",
+      messagePlaceholder: "Skriv ditt meddelande här... (max 500 tecken)",
+      charsRemaining: "{n} tecken kvar",
+      charsLimit: "500 teckens gräns",
+      submit: "Skicka Meddelande",
+      submitting: "Skickar...",
+      successTitle: "Meddelande Skickat!",
+      successMsg: "Tack! Vi återkommer snart.",
+      errorTitle: "Misslyckades att skicka",
+      unsafeWarning: "Meddelandet innehåller ogiltiga tecken (< eller >).",
+      sendAnother: "Skicka Ett Till",
+    },
+    adminContacts: {
+      title: "Kontaktmeddelanden",
+      subtitle: "Hantera inkommande formulärskickning.",
+      noMessages: "Inga meddelanden ännu.",
+      name: "Namn",
+      email: "E-post",
+      message: "Meddelande",
+      status: "Status",
+      submitted: "Skickat",
+      actions: "Åtgärder",
+      active: "Aktiv",
+      notactive: "Ej Aktiv",
+      setActive: "Sätt Aktiv",
+      setNotactive: "Sätt Ej Aktiv",
+      delete: "Radera",
+      deleteSelected: "Radera Valda ({n})",
+      deleteConfirmTitle: "Radera Meddelande",
+      deleteConfirmMsg: "Är du säker på att du vill radera detta meddelande?",
+      bulkDeleteConfirmMsg:
+        "Är du säker på att du vill radera {n} valda meddelanden?",
+      block: "Blockera Avsändare",
+      unblock: "Avblockera Avsändare",
+      blockConfirmTitle: "Blockera Avsändare",
+      blockConfirmMsg:
+        "Blockera denna avsändare från att skicka nya meddelanden?",
+      unblockConfirmMsg: "Avblockera denna avsändare?",
+      blocked: "Blockerad",
+      viewDetails: "Visa Detaljer",
+      senderInfo: "Avsändarinformation",
+      principalId: "Huvud-ID",
+      noPrincipal: "Anonym (inget huvud-ID)",
+      deviceId: "Enhets-ID",
+      noDeviceId: "Ej tillgängligt",
+      senderBlocked: "Avsändaren är blockerad",
+      cancel: "Avbryt",
+      confirm: "Bekräfta",
+      statusUpdated: "Status uppdaterad.",
+      statusUpdateError: "Kunde inte uppdatera status.",
+      deleted: "Meddelande raderat.",
+      deleteError: "Kunde inte radera.",
+      blockedSender: "Avsändare blockerad.",
+      blockError: "Kunde inte blockera avsändare.",
+      unblockedSender: "Avsändare avblockerad.",
+      unblockError: "Kunde inte avblockera.",
+      selectAll: "Välj alla",
+      refresh: "Uppdatera",
+      loading: "Laddar meddelanden...",
     },
     common: {
       loading: "Laddar...",

@@ -18,8 +18,25 @@ type UserListEntry = record {
   profile: opt UserProfile;
 };
 
+type ContactStatus = variant { active; notactive };
+
+type ContactMessage = record {
+  id: text;
+  name: text;
+  email: text;
+  message: text;
+  submittedAt: int;
+  status: ContactStatus;
+  senderPrincipal: opt text;
+  deviceId: opt text;
+  senderBlocked: bool;
+};
+
 type CallResult = variant { ok; err: text };
+type SubmitContactResult = variant { ok: text; err: text };
 type ListUsersResult = variant { ok: vec UserListEntry; err: text };
+type ListContactResult = variant { ok: vec ContactMessage; err: text };
+type ListBlockedResult = variant { ok: vec text; err: text };
 
 service : {
   getMyRole: () -> (UserRole) query;
@@ -31,6 +48,16 @@ service : {
   removeUser: (text) -> (CallResult);
   blockUser: (text) -> (CallResult);
   updateUserProfile: (text, text, text, text) -> (CallResult);
+  getActiveHoliday: () -> (variant { none; easter; christmas; newyear; midsommar }) query;
+  setActiveHoliday: (variant { none; easter; christmas; newyear; midsommar }) -> (CallResult);
+  submitContact: (text, text, text) -> (SubmitContactResult);
+  listContactMessages: () -> (ListContactResult);
+  updateContactStatus: (text, ContactStatus) -> (CallResult);
+  deleteContactMessage: (text) -> (CallResult);
+  deleteContactMessages: (vec text) -> (CallResult);
+  blockContactSender: (text) -> (CallResult);
+  unblockContactSender: (text) -> (CallResult);
+  getBlockedSenders: () -> (ListBlockedResult);
   admin_addUserAccess: (text, UserRole) -> ();
   admin_updateUserAccess: (text, UserRole) -> ();
   admin_getUserAccess: () -> (vec UserAccessEntry) query;

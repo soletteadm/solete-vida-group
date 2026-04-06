@@ -8,6 +8,7 @@ import type { Principal } from '@icp-sdk/core/principal';
 
 export type UserRole = { 'admin': null } | { 'user': null } | { 'guest': null };
 export type Holiday = { 'none': null } | { 'easter': null } | { 'christmas': null } | { 'newyear': null } | { 'midsommar': null };
+export type ContactStatus = { 'active': null } | { 'notactive': null };
 
 export interface UserProfile {
   'name': string;
@@ -27,8 +28,23 @@ export interface UserListEntry {
   'profile': [] | [UserProfile];
 }
 
+export interface ContactMessage {
+  'id': string;
+  'name': string;
+  'email': string;
+  'message': string;
+  'submittedAt': bigint;
+  'status': ContactStatus;
+  'senderPrincipal': [] | [string];
+  'deviceId': [] | [string];
+  'senderBlocked': boolean;
+}
+
 export type CallResult = { 'ok': null } | { 'err': string };
+export type SubmitContactResult = { 'ok': string } | { 'err': string };
 export type ListUsersResult = { 'ok': UserListEntry[] } | { 'err': string };
+export type ListContactResult = { 'ok': ContactMessage[] } | { 'err': string };
+export type ListBlockedResult = { 'ok': string[] } | { 'err': string };
 
 export interface _SERVICE {
   'getMyRole': ActorMethod<[], UserRole>;
@@ -42,6 +58,14 @@ export interface _SERVICE {
   'updateUserProfile': ActorMethod<[string, string, string, string], CallResult>;
   'getActiveHoliday': ActorMethod<[], Holiday>;
   'setActiveHoliday': ActorMethod<[Holiday], CallResult>;
+  'submitContact': ActorMethod<[string, string, string], SubmitContactResult>;
+  'listContactMessages': ActorMethod<[], ListContactResult>;
+  'updateContactStatus': ActorMethod<[string, ContactStatus], CallResult>;
+  'deleteContactMessage': ActorMethod<[string], CallResult>;
+  'deleteContactMessages': ActorMethod<[string[]], CallResult>;
+  'blockContactSender': ActorMethod<[string], CallResult>;
+  'unblockContactSender': ActorMethod<[string], CallResult>;
+  'getBlockedSenders': ActorMethod<[], ListBlockedResult>;
   'admin_addUserAccess': ActorMethod<[string, UserRole], undefined>;
   'admin_updateUserAccess': ActorMethod<[string, UserRole], undefined>;
   'admin_getUserAccess': ActorMethod<[], UserAccessEntry[]>;

@@ -55,6 +55,7 @@ function record_opt_to_undefined<T>(arg: T | null): T | undefined {
 export type UserRole = { admin: null } | { user: null } | { guest: null };
 export type Holiday = { none: null } | { easter: null } | { christmas: null } | { newyear: null } | { midsommar: null };
 export type HolidayKey = "none" | "easter" | "christmas" | "newyear" | "midsommar";
+export type ContactStatus = { active: null } | { notactive: null };
 
 export interface UserProfile {
     name: string;
@@ -74,8 +75,23 @@ export interface UserListEntry {
     profile: Option<UserProfile>;
 }
 
+export interface ContactMessage {
+    id: string;
+    name: string;
+    email: string;
+    message: string;
+    submittedAt: bigint;
+    status: ContactStatus;
+    senderPrincipal: Option<string>;
+    deviceId: Option<string>;
+    senderBlocked: boolean;
+}
+
 export type CallResult = { ok: null } | { err: string };
+export type SubmitContactResult = { ok: string } | { err: string };
 export type ListUsersResult = { ok: UserListEntry[] } | { err: string };
+export type ListContactResult = { ok: ContactMessage[] } | { err: string };
+export type ListBlockedResult = { ok: string[] } | { err: string };
 
 export interface backendInterface {
     getMyRole(): Promise<UserRole>;
@@ -89,6 +105,14 @@ export interface backendInterface {
     updateUserProfile(principalText: string, name: string, email: string, phone: string): Promise<CallResult>;
     getActiveHoliday(): Promise<Holiday>;
     setActiveHoliday(holiday: Holiday): Promise<CallResult>;
+    submitContact(name: string, email: string, message: string): Promise<SubmitContactResult>;
+    listContactMessages(): Promise<ListContactResult>;
+    updateContactStatus(id: string, status: ContactStatus): Promise<CallResult>;
+    deleteContactMessage(id: string): Promise<CallResult>;
+    deleteContactMessages(ids: string[]): Promise<CallResult>;
+    blockContactSender(principalText: string): Promise<CallResult>;
+    unblockContactSender(principalText: string): Promise<CallResult>;
+    getBlockedSenders(): Promise<ListBlockedResult>;
     admin_addUserAccess(principalText: string, role: UserRole): Promise<void>;
     admin_updateUserAccess(principalText: string, role: UserRole): Promise<void>;
     admin_getUserAccess(): Promise<UserAccessEntry[]>;
@@ -239,6 +263,86 @@ export class Backend implements backendInterface {
         } catch(e) { if (this.processError) return this.processError(e); throw e; }
     }
 
+    async submitContact(name: string, email: string, message: string): Promise<SubmitContactResult> {
+        try {
+            const result = await this.actor.submitContact(name, email, message) as any;
+            if ('ok' in result) return { ok: result.ok as string };
+            return { err: result.err as string };
+        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    }
+
+    async listContactMessages(): Promise<ListContactResult> {
+        try {
+            const result = await this.actor.listContactMessages() as any;
+            if ('err' in result) return { err: result.err as string };
+            const messages = (result.ok as any[]).map((msg: any) => ({
+                id: msg.id as string,
+                name: msg.name as string,
+                email: msg.email as string,
+                message: msg.message as string,
+                submittedAt: msg.submittedAt as bigint,
+                status: this._mapContactStatus(msg.status),
+                senderPrincipal: msg.senderPrincipal && msg.senderPrincipal.length > 0 && msg.senderPrincipal[0] != null
+                    ? some(msg.senderPrincipal[0] as string)
+                    : none(),
+                deviceId: msg.deviceId && msg.deviceId.length > 0 && msg.deviceId[0] != null
+                    ? some(msg.deviceId[0] as string)
+                    : none(),
+                senderBlocked: msg.senderBlocked as boolean,
+            }));
+            return { ok: messages };
+        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    }
+
+    async updateContactStatus(id: string, status: ContactStatus): Promise<CallResult> {
+        try {
+            const candidStatus = this._toCandidContactStatus(status);
+            const result = await this.actor.updateContactStatus(id, candidStatus) as any;
+            if ('ok' in result) return { ok: null };
+            return { err: result.err as string };
+        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    }
+
+    async deleteContactMessage(id: string): Promise<CallResult> {
+        try {
+            const result = await this.actor.deleteContactMessage(id) as any;
+            if ('ok' in result) return { ok: null };
+            return { err: result.err as string };
+        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    }
+
+    async deleteContactMessages(ids: string[]): Promise<CallResult> {
+        try {
+            const result = await this.actor.deleteContactMessages(ids) as any;
+            if ('ok' in result) return { ok: null };
+            return { err: result.err as string };
+        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    }
+
+    async blockContactSender(principalText: string): Promise<CallResult> {
+        try {
+            const result = await this.actor.blockContactSender(principalText) as any;
+            if ('ok' in result) return { ok: null };
+            return { err: result.err as string };
+        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    }
+
+    async unblockContactSender(principalText: string): Promise<CallResult> {
+        try {
+            const result = await this.actor.unblockContactSender(principalText) as any;
+            if ('ok' in result) return { ok: null };
+            return { err: result.err as string };
+        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    }
+
+    async getBlockedSenders(): Promise<ListBlockedResult> {
+        try {
+            const result = await this.actor.getBlockedSenders() as any;
+            if ('err' in result) return { err: result.err as string };
+            return { ok: result.ok as string[] };
+        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    }
+
     async admin_addUserAccess(principalText: string, role: UserRole): Promise<void> {
         try {
             await this.actor.admin_addUserAccess(principalText, this._toCandidRole(role));
@@ -287,6 +391,16 @@ export class Backend implements backendInterface {
         if ('newyear' in holiday) return { newyear: null };
         if ('midsommar' in holiday) return { midsommar: null };
         return { none: null };
+    }
+
+    private _mapContactStatus(r: any): ContactStatus {
+        if ('active' in r) return { active: null };
+        return { notactive: null };
+    }
+
+    private _toCandidContactStatus(status: ContactStatus): any {
+        if ('active' in status) return { active: null };
+        return { notactive: null };
     }
 }
 

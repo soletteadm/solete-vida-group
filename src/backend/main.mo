@@ -5,6 +5,8 @@ import Principal "mo:core/Principal";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
+import Nat "mo:core/Nat";
+import Int "mo:core/Int";
 
 actor {
 
@@ -38,11 +40,32 @@ actor {
     #midsommar;
   };
 
+  type ContactStatus = {
+    #active;
+    #notactive;
+  };
+
+  type ContactMessage = {
+    id : Text;
+    name : Text;
+    email : Text;
+    message : Text;
+    submittedAt : Int;
+    status : ContactStatus;
+    senderPrincipal : ?Text;
+    deviceId : ?Text;
+    senderBlocked : Bool;
+  };
+
   // ---- State ----
 
   var accessControlState : AccessControl.AccessControlState = AccessControl.initState();
   var userProfiles : Map.Map<Principal, UserProfile> = Map.empty<Principal, UserProfile>();
-  stable var activeHoliday : Holiday = #none;
+  var activeHoliday : Holiday = #none;
+
+  var contactMessages : Map.Map<Text, ContactMessage> = Map.empty<Text, ContactMessage>();
+  var blockedSenders : Map.Map<Text, Bool> = Map.empty<Text, Bool>();
+  var contactIdCounter : Nat = 0;
 
   // ---- Local admin logic (independent of AccessControl.isAdmin) ----
 
@@ -93,6 +116,20 @@ actor {
     };
   };
 
+  // Simple HTML/script tag sanitization -- removes <script>, <iframe>, and HTML tags
+  func sanitizeText(input : Text) : Text {
+    // Replace < and > to neutralize any HTML/script injection
+    let step1 = input.replace(#text("<"), "&lt;");
+    let step2 = step1.replace(#text(">"), "&gt;");
+    step2;
+  };
+
+  func textLength(t : Text) : Nat {
+    var count : Nat = 0;
+    for (_ in t.chars()) { count += 1 };
+    count;
+  };
+
   // ---- Holiday APIs ----
 
   public query func getActiveHoliday() : async Holiday {
@@ -105,6 +142,155 @@ actor {
     };
     activeHoliday := holiday;
     return #ok;
+  };
+
+  // ---- Contact Form APIs ----
+
+  public shared ({ caller }) func submitContact(name : Text, email : Text, message : Text) : async { #ok : Text; #err : Text } {
+    // Check if sender is blocked
+    let callerText = caller.toText();
+    if (not caller.isAnonymous()) {
+      switch (blockedSenders.get(callerText)) {
+        case (?true) { return #err("You are blocked from submitting contact messages.") };
+        case (_) {};
+      };
+    };
+
+    // Validate inputs
+    let trimmedName = name.trim(#text(" "));
+    let trimmedEmail = email.trim(#text(" "));
+    let trimmedMessage = message.trim(#text(" "));
+
+    if (textLength(trimmedName) == 0) {
+      return #err("Name is required.");
+    };
+    if (textLength(trimmedName) > 100) {
+      return #err("Name must be 100 characters or less.");
+    };
+    if (textLength(trimmedEmail) == 0) {
+      return #err("Email is required.");
+    };
+    if (textLength(trimmedEmail) > 200) {
+      return #err("Email must be 200 characters or less.");
+    };
+    if (textLength(trimmedMessage) == 0) {
+      return #err("Message is required.");
+    };
+    if (textLength(trimmedMessage) > 500) {
+      return #err("Message must be 500 characters or less.");
+    };
+
+    // Sanitize inputs
+    let safeName = sanitizeText(trimmedName);
+    let safeEmail = sanitizeText(trimmedEmail);
+    let safeMessage = sanitizeText(trimmedMessage);
+
+    // Generate ID
+    contactIdCounter += 1;
+    let id = "msg-" # contactIdCounter.toText() # "-" # Time.now().toText();
+
+    let senderPrincipal : ?Text = if (caller.isAnonymous()) { null } else { ?callerText };
+
+    let msg : ContactMessage = {
+      id = id;
+      name = safeName;
+      email = safeEmail;
+      message = safeMessage;
+      submittedAt = Time.now();
+      status = #active;
+      senderPrincipal = senderPrincipal;
+      deviceId = null;
+      senderBlocked = false;
+    };
+
+    contactMessages.add(id, msg);
+    return #ok(id);
+  };
+
+  public shared ({ caller }) func listContactMessages() : async { #ok : [ContactMessage]; #err : Text } {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can list contact messages.");
+    };
+    let msgs = contactMessages.entries().toArray().map(
+      func(pair : (Text, ContactMessage)) : ContactMessage {
+        let msg = pair.1;
+        // Reflect current blocked status
+        let isBlocked = switch (msg.senderPrincipal) {
+          case (?p) {
+            switch (blockedSenders.get(p)) {
+              case (?true) { true };
+              case (_) { false };
+            };
+          };
+          case (null) { false };
+        };
+        { msg with senderBlocked = isBlocked };
+      }
+    );
+    return #ok(msgs);
+  };
+
+  public shared ({ caller }) func updateContactStatus(id : Text, status : ContactStatus) : async { #ok; #err : Text } {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can update contact status.");
+    };
+    switch (contactMessages.get(id)) {
+      case (null) { return #err("Message not found.") };
+      case (?msg) {
+        contactMessages.add(id, { msg with status = status });
+        return #ok;
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteContactMessage(id : Text) : async { #ok; #err : Text } {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can delete contact messages.");
+    };
+    contactMessages.remove(id);
+    return #ok;
+  };
+
+  public shared ({ caller }) func deleteContactMessages(ids : [Text]) : async { #ok; #err : Text } {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can delete contact messages.");
+    };
+    for (id in ids.vals()) {
+      contactMessages.remove(id);
+    };
+    return #ok;
+  };
+
+  public shared ({ caller }) func blockContactSender(principalText : Text) : async { #ok; #err : Text } {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can block senders.");
+    };
+    blockedSenders.add(principalText, true);
+    // Also demote to guest in userRoles if they exist
+    let p = Principal.fromText(principalText);
+    switch (accessControlState.userRoles.get(p)) {
+      case (?_) { accessControlState.userRoles.add(p, #guest) };
+      case (null) {};
+    };
+    return #ok;
+  };
+
+  public shared ({ caller }) func unblockContactSender(principalText : Text) : async { #ok; #err : Text } {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can unblock senders.");
+    };
+    blockedSenders.remove(principalText);
+    return #ok;
+  };
+
+  public shared ({ caller }) func getBlockedSenders() : async { #ok : [Text]; #err : Text } {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can view blocked senders.");
+    };
+    let blocked = blockedSenders.entries().toArray().map(
+      func(pair : (Text, Bool)) : Text { pair.0 }
+    );
+    return #ok(blocked);
   };
 
   // ---- Public APIs (for frontend) ----

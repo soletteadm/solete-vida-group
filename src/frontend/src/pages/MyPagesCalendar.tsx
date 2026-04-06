@@ -130,9 +130,7 @@ export default function MyPagesCalendar() {
                     </Label>
                     {isActive && (
                       <span className="text-xs font-medium text-gold bg-gold/20 px-2 py-0.5 rounded-full">
-                        {t.calendar.noHoliday === "Ingen högtid aktiv"
-                          ? "Aktiv"
-                          : "Active"}
+                        {t.calendar.active}
                       </span>
                     )}
                   </div>
@@ -157,7 +155,7 @@ export default function MyPagesCalendar() {
         {activeHoliday === "none" ? (
           <p className="italic">{t.calendar.noHoliday}</p>
         ) : (
-          <p>✅ {holidays.find((h) => h.key === activeHoliday)?.label}</p>
+          <p>\u2705 {holidays.find((h) => h.key === activeHoliday)?.label}</p>
         )}
       </div>
     </div>

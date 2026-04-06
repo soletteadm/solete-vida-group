@@ -1,18 +1,26 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useTypedActor } from "@/hooks/useTypedActor";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   CheckCircle,
   ChevronDown,
   Globe,
   Layers,
+  Loader2,
   MapPin,
   Network,
   Search,
+  SendHorizonal,
   Shield,
   Star,
 } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface HomePageProps {
   onLogin: () => void;
@@ -498,54 +506,290 @@ export default function HomePage({ onLogin, isLoggedIn }: HomePageProps) {
       </section>
 
       {/* ============ CONTACT SECTION ============ */}
-      <section
-        id="contact"
-        className="bg-black py-20 lg:py-28"
-        aria-labelledby="contact-heading"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <ContactSection isLoggedIn={isLoggedIn} onLogin={onLogin} />
+    </main>
+  );
+}
+
+// ---- Contact Form Sub-component ----
+function ContactSection({
+  isLoggedIn,
+  onLogin,
+}: {
+  isLoggedIn: boolean;
+  onLogin: () => void;
+}) {
+  const { t } = useLanguage();
+  const { actor } = useTypedActor();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const MAX_CHARS = 500;
+  const charsLeft = MAX_CHARS - message.length;
+  const hasUnsafe =
+    name.includes("<") ||
+    name.includes(">") ||
+    email.includes("<") ||
+    email.includes(">") ||
+    message.includes("<") ||
+    message.includes(">");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (hasUnsafe || !actor) return;
+    setSubmitting(true);
+    try {
+      const result = await actor.submitContact(
+        name.trim(),
+        email.trim(),
+        message.trim(),
+      );
+      if ("ok" in result) {
+        setSubmitted(true);
+      } else {
+        toast.error(`${t.contactForm.errorTitle}: ${result.err}`);
+      }
+    } catch (err: any) {
+      toast.error(
+        `${t.contactForm.errorTitle}: ${err?.message ?? String(err)}`,
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleReset = () => {
+    setName("");
+    setEmail("");
+    setMessage("");
+    setSubmitted(false);
+  };
+
+  return (
+    <section
+      id="contact"
+      className="bg-black py-20 lg:py-28"
+      aria-labelledby="contact-heading"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="space-y-6 max-w-2xl mx-auto"
+            className="text-center mb-10"
           >
             <p className="font-sans text-xs font-semibold uppercase tracking-[0.25em] text-gold">
               {t.nav.contact}
             </p>
             <h2
               id="contact-heading"
-              className="font-serif text-3xl lg:text-4xl font-semibold text-white"
+              className="font-serif text-3xl lg:text-4xl font-semibold text-white mt-3"
             >
-              Ready to Start Your Journey?
+              {t.contactForm.title}
             </h2>
-            <p className="font-sans text-base text-white/70 leading-relaxed">
-              Connect with our team to explore how Solete Vida Group can help
-              you achieve your Mediterranean business goals.
+            <p className="font-sans text-base text-white/70 leading-relaxed mt-3">
+              {t.contactForm.subtitle}
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-              <a
-                href="mailto:info@soletvida.com"
-                className="inline-flex items-center justify-center px-8 py-3 bg-gold hover:bg-gold/90 text-black font-sans text-sm font-medium rounded-full transition-colors"
-                data-ocid="contact.primary_button"
+          </motion.div>
+
+          <AnimatePresence mode="wait">
+            {submitted ? (
+              <motion.div
+                key="success"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.35 }}
+                className="text-center py-14 px-8 rounded-2xl border border-gold/30 bg-white/5"
+                data-ocid="contact.success_state"
               >
-                {t.about.cta}
-              </a>
-              {!isLoggedIn && (
+                <div className="flex justify-center mb-5">
+                  <div className="w-16 h-16 rounded-full bg-gold/20 flex items-center justify-center">
+                    <CheckCircle className="w-8 h-8 text-gold" />
+                  </div>
+                </div>
+                <h3 className="font-serif text-2xl font-semibold text-white mb-2">
+                  {t.contactForm.successTitle}
+                </h3>
+                <p className="font-sans text-white/70 mb-8">
+                  {t.contactForm.successMsg}
+                </p>
                 <Button
+                  onClick={handleReset}
                   variant="outline"
-                  onClick={onLogin}
-                  className="border-white/30 bg-transparent text-white hover:bg-white/10 font-sans rounded-full px-8"
+                  className="border-gold/50 bg-transparent text-gold hover:bg-gold/10 font-sans rounded-full px-8"
                   data-ocid="contact.secondary_button"
                 >
-                  {t.nav.clientLogin}
+                  {t.contactForm.sendAnother}
                 </Button>
-              )}
-            </div>
-          </motion.div>
+              </motion.div>
+            ) : (
+              <motion.form
+                key="form"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35 }}
+                onSubmit={handleSubmit}
+                className="space-y-6 rounded-2xl border border-white/10 bg-white/5 p-8"
+                data-ocid="contact.panel"
+              >
+                {/* Name */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="contact-name"
+                    className="font-sans text-sm text-white/80"
+                  >
+                    {t.contactForm.name}
+                  </Label>
+                  <Input
+                    id="contact-name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    maxLength={120}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-gold focus:ring-gold/30"
+                    placeholder="Jane Smith"
+                    data-ocid="contact.input"
+                  />
+                  {(name.includes("<") || name.includes(">")) && (
+                    <p
+                      className="text-xs text-red-400 mt-1"
+                      data-ocid="contact.error_state"
+                    >
+                      {t.contactForm.unsafeWarning}
+                    </p>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="contact-email"
+                    className="font-sans text-sm text-white/80"
+                  >
+                    {t.contactForm.email}
+                  </Label>
+                  <Input
+                    id="contact-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    maxLength={200}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-gold focus:ring-gold/30"
+                    placeholder="jane@example.com"
+                    data-ocid="contact.input"
+                  />
+                  {(email.includes("<") || email.includes(">")) && (
+                    <p
+                      className="text-xs text-red-400 mt-1"
+                      data-ocid="contact.error_state"
+                    >
+                      {t.contactForm.unsafeWarning}
+                    </p>
+                  )}
+                </div>
+
+                {/* Message */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="contact-message"
+                    className="font-sans text-sm text-white/80"
+                  >
+                    {t.contactForm.message}
+                  </Label>
+                  <Textarea
+                    id="contact-message"
+                    value={message}
+                    onChange={(e) => {
+                      if (e.target.value.length <= MAX_CHARS) {
+                        setMessage(e.target.value);
+                      }
+                    }}
+                    required
+                    rows={5}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-gold focus:ring-gold/30 resize-none"
+                    placeholder={t.contactForm.messagePlaceholder}
+                    data-ocid="contact.textarea"
+                  />
+                  <div className="flex items-center justify-between">
+                    <div>
+                      {message.includes("<") || message.includes(">") ? (
+                        <p
+                          className="text-xs text-red-400"
+                          data-ocid="contact.error_state"
+                        >
+                          {t.contactForm.unsafeWarning}
+                        </p>
+                      ) : null}
+                    </div>
+                    <span
+                      className={`font-sans text-xs tabular-nums ${
+                        charsLeft < 50
+                          ? charsLeft < 20
+                            ? "text-red-400 font-semibold"
+                            : "text-amber-400"
+                          : "text-white/50"
+                      }`}
+                    >
+                      {t.contactForm.charsRemaining.replace(
+                        "{n}",
+                        String(charsLeft),
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <Button
+                    type="submit"
+                    disabled={
+                      submitting ||
+                      hasUnsafe ||
+                      !message.trim() ||
+                      !name.trim() ||
+                      !email.trim()
+                    }
+                    className="flex-1 bg-gold hover:bg-gold/90 text-black font-sans font-medium rounded-full px-8 disabled:opacity-50"
+                    data-ocid="contact.submit_button"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t.contactForm.submitting}
+                      </>
+                    ) : (
+                      <>
+                        <SendHorizonal className="mr-2 h-4 w-4" />
+                        {t.contactForm.submit}
+                      </>
+                    )}
+                  </Button>
+                  {!isLoggedIn && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={onLogin}
+                      className="border-white/30 bg-transparent text-white hover:bg-white/10 font-sans rounded-full px-8"
+                      data-ocid="contact.secondary_button"
+                    >
+                      {t.nav.clientLogin}
+                    </Button>
+                  )}
+                </div>
+              </motion.form>
+            )}
+          </AnimatePresence>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
   );
 }

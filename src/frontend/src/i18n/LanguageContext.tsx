@@ -22,14 +22,26 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(
 );
 
 const STORAGE_KEY = "solete_language";
+const SUPPORTED: Language[] = ["en", "es", "sv"];
+
+function detectBrowserLanguage(): Language {
+  const browserLangs = navigator.languages ?? [navigator.language];
+  for (const lang of browserLangs) {
+    const code = lang.slice(0, 2).toLowerCase() as Language;
+    if (SUPPORTED.includes(code)) {
+      return code;
+    }
+  }
+  return "en";
+}
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Language>(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as Language | null;
-    if (stored && (stored === "en" || stored === "es" || stored === "sv")) {
+    if (stored && SUPPORTED.includes(stored)) {
       return stored;
     }
-    return "en";
+    return detectBrowserLanguage();
   });
 
   const setLang = useCallback((newLang: Language) => {

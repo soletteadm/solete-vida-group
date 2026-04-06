@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { HolidayKey } from "../backend.d";
+import { useLanguage } from "../i18n/LanguageContext";
 
 interface HolidaySplashProps {
   holiday: HolidayKey;
@@ -18,10 +19,9 @@ interface Particle {
   opacity: number;
 }
 
-const HOLIDAY_CONFIG: Record<
+const HOLIDAY_VISUALS: Record<
   Exclude<HolidayKey, "none">,
   {
-    greeting: string;
     emojis: string[];
     background: string;
     textColor: string;
@@ -29,7 +29,6 @@ const HOLIDAY_CONFIG: Record<
   }
 > = {
   easter: {
-    greeting: "Glad P\u00e5sk! \ud83d\udc23",
     emojis: [
       "\ud83e\udd5a",
       "\ud83d\udc23",
@@ -43,7 +42,6 @@ const HOLIDAY_CONFIG: Record<
     rise: false,
   },
   christmas: {
-    greeting: "God Jul! \ud83c\udf84",
     emojis: [
       "\u2744\ufe0f",
       "\ud83c\udf84",
@@ -57,7 +55,6 @@ const HOLIDAY_CONFIG: Record<
     rise: false,
   },
   newyear: {
-    greeting: "Gott Nytt \u00c5r! \ud83c\udf86",
     emojis: [
       "\u2728",
       "\ud83c\udf89",
@@ -71,7 +68,6 @@ const HOLIDAY_CONFIG: Record<
     rise: true,
   },
   midsommar: {
-    greeting: "Glad Midsommar! \ud83c\udf38",
     emojis: [
       "\ud83c\udf38",
       "\u2600\ufe0f",
@@ -90,13 +86,23 @@ export default function HolidaySplash({
   holiday,
   onDismiss,
 }: HolidaySplashProps) {
+  const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const particlesRef = useRef<Particle[]>([]);
   const [visible, setVisible] = useState(false);
   const [dismissing, setDismissing] = useState(false);
 
-  const config = HOLIDAY_CONFIG[holiday as Exclude<HolidayKey, "none">];
+  const visuals = HOLIDAY_VISUALS[holiday as Exclude<HolidayKey, "none">];
+
+  const greetingMap: Record<Exclude<HolidayKey, "none">, string> = {
+    easter: t.calendar.easterGreeting,
+    christmas: t.calendar.christmasGreeting,
+    newyear: t.calendar.newyearGreeting,
+    midsommar: t.calendar.midsommarGreeting,
+  };
+
+  const greeting = greetingMap[holiday as Exclude<HolidayKey, "none">];
 
   const handleDismiss = useCallback(() => {
     if (dismissing) return;
@@ -128,7 +134,7 @@ export default function HolidaySplash({
   // Canvas animation
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !config) return;
+    if (!canvas || !visuals) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -143,7 +149,7 @@ export default function HolidaySplash({
     const count = 70;
     particlesRef.current = Array.from({ length: count }, () => ({
       x: Math.random() * window.innerWidth,
-      y: config.rise
+      y: visuals.rise
         ? window.innerHeight + Math.random() * window.innerHeight
         : -Math.random() * window.innerHeight,
       size: 16 + Math.random() * 24,
@@ -151,7 +157,7 @@ export default function HolidaySplash({
       drift: (Math.random() - 0.5) * 1.5,
       rotation: Math.random() * Math.PI * 2,
       rotationSpeed: (Math.random() - 0.5) * 0.05,
-      emoji: config.emojis[Math.floor(Math.random() * config.emojis.length)],
+      emoji: visuals.emojis[Math.floor(Math.random() * visuals.emojis.length)],
       opacity: 0.6 + Math.random() * 0.4,
     }));
 
@@ -167,7 +173,7 @@ export default function HolidaySplash({
         ctx.fillText(p.emoji, -p.size / 2, p.size / 2);
         ctx.restore();
 
-        if (config.rise) {
+        if (visuals.rise) {
           p.y -= p.speed;
           p.x += p.drift;
           p.opacity = Math.max(0, p.opacity - 0.002);
@@ -198,9 +204,9 @@ export default function HolidaySplash({
       cancelAnimationFrame(animationRef.current);
       window.removeEventListener("resize", resize);
     };
-  }, [config]);
+  }, [visuals]);
 
-  if (!config) return null;
+  if (!visuals) return null;
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: full-viewport overlay needs div positioning
@@ -208,7 +214,7 @@ export default function HolidaySplash({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={config.greeting}
+      aria-label={greeting}
       data-ocid="holiday.splash"
       onClick={handleDismiss}
       onKeyDown={handleKeyDown}
@@ -216,7 +222,7 @@ export default function HolidaySplash({
         position: "fixed",
         inset: 0,
         zIndex: 9999,
-        background: config.background,
+        background: visuals.background,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -247,21 +253,21 @@ export default function HolidaySplash({
           style={{
             fontSize: "clamp(2rem, 8vw, 4.5rem)",
             fontWeight: 700,
-            color: config.textColor,
+            color: visuals.textColor,
             textShadow: "0 2px 12px rgba(0,0,0,0.25)",
             margin: 0,
             fontFamily: "Georgia, serif",
             letterSpacing: "0.02em",
           }}
         >
-          {config.greeting}
+          {greeting}
         </p>
       </div>
       <p
         style={{
           position: "absolute",
           bottom: "2rem",
-          color: config.textColor,
+          color: visuals.textColor,
           opacity: 0.7,
           fontSize: "0.9rem",
           fontFamily: "sans-serif",
@@ -269,7 +275,7 @@ export default function HolidaySplash({
           margin: 0,
         }}
       >
-        Klicka f\u00f6r att st\u00e4nga
+        {t.calendar.clickToClose}
       </p>
     </div>
   );
