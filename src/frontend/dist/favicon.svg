@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Black circle background -->
+  <circle cx="256" cy="256" r="256" fill="#000000"/>
+  <!-- Gold sun icon (Lucide Sun, centered, scaled to ~55% of circle) -->
+  <!-- Sun center and rays, proportionally scaled: center=256, radius=~56, ray tips ~140 from center -->
+  <g stroke="#C9A84C" stroke-width="28" stroke-linecap="round" fill="none">
+    <!-- Center circle -->
+    <circle cx="256" cy="256" r="72" fill="#C9A84C" stroke="none"/>
+    <!-- Rays: 8 directions -->
+    <!-- Top -->
+    <line x1="256" y1="96" x2="256" y2="148"/>
+    <!-- Top-right -->
+    <line x1="361" y1="151" x2="324" y2="188"/>
+    <!-- Right -->
+    <line x1="416" y1="256" x2="364" y2="256"/>
+    <!-- Bottom-right -->
+    <line x1="361" y1="361" x2="324" y2="324"/>
+    <!-- Bottom -->
+    <line x1="256" y1="416" x2="256" y2="364"/>
+    <!-- Bottom-left -->
+    <line x1="151" y1="361" x2="188" y2="324"/>
+    <!-- Left -->
+    <line x1="96" y1="256" x2="148" y2="256"/>
+    <!-- Top-left -->
+    <line x1="151" y1="151" x2="188" y2="188"/>
+  </g>
+</svg>
