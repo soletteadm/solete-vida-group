@@ -154,7 +154,7 @@ export default function HomePage({ onLogin, isLoggedIn }: HomePageProps) {
             transition={{ duration: 0.7, ease: "easeOut" }}
           >
             <p className="font-sans text-xs tracking-[0.25em] uppercase text-white/70 mb-4">
-              Est. 1998 &nbsp;·&nbsp; Madrid, España
+              EST. 2025 &nbsp;·&nbsp; ALICANTE, SPAIN
             </p>
             <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white uppercase tracking-wide leading-tight mb-6">
               {t.hero.title}
@@ -229,7 +229,7 @@ export default function HomePage({ onLogin, isLoggedIn }: HomePageProps) {
                     </div>
                     <div className="space-y-3">
                       <p className="font-sans text-xs uppercase tracking-[0.2em] text-gold font-semibold">
-                        Madrid, España
+                        Alicante, Spain
                       </p>
                       <h3 className="font-serif text-2xl font-semibold text-foreground">
                         Solete Vida Group S.L.

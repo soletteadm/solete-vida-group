@@ -63,13 +63,29 @@ function formatDate(nanos: bigint): string {
 }
 
 function isActive(status: ContactStatus): boolean {
-  return "active" in status;
+  // Handle both enum string and Candid variant at runtime
+  if (typeof status === "string") return (status as string) === "active";
+  return "active" in (status as object);
+}
+
+function getContactStatusToggled(status: ContactStatus): ContactStatus {
+  // Returns toggled status — works with enum string
+  if (isActive(status)) return "notactive" as ContactStatus;
+  return "active" as ContactStatus;
 }
 
 function getOptionValue(
-  opt: { __kind__: "Some"; value: string } | { __kind__: "None" },
+  opt:
+    | string
+    | { __kind__: "Some"; value: string }
+    | { __kind__: "None" }
+    | undefined
+    | null,
 ): string | null {
-  if (opt.__kind__ === "Some") return opt.value;
+  if (opt === undefined || opt === null) return null;
+  if (typeof opt === "string") return opt;
+  const o = opt as { __kind__: string; value?: string };
+  if (o.__kind__ === "Some") return o.value ?? null;
   return null;
 }
 
@@ -141,9 +157,7 @@ export default function MyPagesContacts() {
   const handleStatusToggle = async (msg: ContactMessage) => {
     if (!actor) return;
     setActionLoading(`${msg.id}:status`);
-    const newStatus: ContactStatus = isActive(msg.status)
-      ? { notactive: null }
-      : { active: null };
+    const newStatus: ContactStatus = getContactStatusToggled(msg.status);
     try {
       const result = await actor.updateContactStatus(msg.id, newStatus);
       if ("ok" in result) {
@@ -213,7 +227,7 @@ export default function MyPagesContacts() {
 
   const handleBlockToggle = async (msg: ContactMessage, block: boolean) => {
     if (!actor) return;
-    const principal = getOptionValue(msg.senderPrincipal as any);
+    const principal = getOptionValue(msg.senderPrincipal as string | undefined);
     if (!principal) return;
     setActionLoading(`${msg.id}:block`);
     try {
@@ -245,7 +259,7 @@ export default function MyPagesContacts() {
   };
 
   const hasPrincipal = (msg: ContactMessage) =>
-    (msg.senderPrincipal as any)?.__kind__ === "Some";
+    getOptionValue(msg.senderPrincipal as string | undefined) !== null;
 
   return (
     <TooltipProvider>
@@ -562,8 +576,9 @@ export default function MyPagesContacts() {
                         {t.adminContacts.principalId}:{" "}
                       </span>
                       <span className="font-mono text-xs break-all">
-                        {getOptionValue(detailMsg.senderPrincipal as any) ??
-                          t.adminContacts.noPrincipal}
+                        {getOptionValue(
+                          detailMsg.senderPrincipal as string | undefined,
+                        ) ?? t.adminContacts.noPrincipal}
                       </span>
                     </div>
                     <div>
@@ -571,8 +586,9 @@ export default function MyPagesContacts() {
                         {t.adminContacts.deviceId}:{" "}
                       </span>
                       <span className="font-mono text-xs break-all">
-                        {getOptionValue(detailMsg.deviceId as any) ??
-                          t.adminContacts.noDeviceId}
+                        {getOptionValue(
+                          detailMsg.deviceId as string | undefined,
+                        ) ?? t.adminContacts.noDeviceId}
                       </span>
                     </div>
                     {detailMsg.senderBlocked && (

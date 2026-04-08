@@ -51,73 +51,6 @@ function candid_none<T>(): [] {
 function record_opt_to_undefined<T>(arg: T | null): T | undefined {
     return arg == null ? undefined : arg;
 }
-
-export type UserRole = { admin: null } | { user: null } | { guest: null };
-export type Holiday = { none: null } | { easter: null } | { christmas: null } | { newyear: null } | { midsommar: null };
-export type HolidayKey = "none" | "easter" | "christmas" | "newyear" | "midsommar";
-export type ContactStatus = { active: null } | { notactive: null };
-
-export interface UserProfile {
-    name: string;
-    email: string;
-    phone: string;
-    registeredAt: bigint;
-}
-
-export interface UserAccessEntry {
-    principal: Principal;
-    role: UserRole;
-}
-
-export interface UserListEntry {
-    principal: Principal;
-    role: UserRole;
-    profile: Option<UserProfile>;
-}
-
-export interface ContactMessage {
-    id: string;
-    name: string;
-    email: string;
-    message: string;
-    submittedAt: bigint;
-    status: ContactStatus;
-    senderPrincipal: Option<string>;
-    deviceId: Option<string>;
-    senderBlocked: boolean;
-}
-
-export type CallResult = { ok: null } | { err: string };
-export type SubmitContactResult = { ok: string } | { err: string };
-export type ListUsersResult = { ok: UserListEntry[] } | { err: string };
-export type ListContactResult = { ok: ContactMessage[] } | { err: string };
-export type ListBlockedResult = { ok: string[] } | { err: string };
-
-export interface backendInterface {
-    getMyRole(): Promise<UserRole>;
-    getMyProfile(): Promise<Option<UserProfile>>;
-    updateMyProfile(name: string, email: string, phone: string): Promise<CallResult>;
-    listUsers(): Promise<ListUsersResult>;
-    addUser(principalText: string, role: UserRole): Promise<CallResult>;
-    updateUserRole(principalText: string, newRole: UserRole): Promise<CallResult>;
-    removeUser(principalText: string): Promise<CallResult>;
-    blockUser(principalText: string): Promise<CallResult>;
-    updateUserProfile(principalText: string, name: string, email: string, phone: string): Promise<CallResult>;
-    getActiveHoliday(): Promise<Holiday>;
-    setActiveHoliday(holiday: Holiday): Promise<CallResult>;
-    submitContact(name: string, email: string, message: string): Promise<SubmitContactResult>;
-    listContactMessages(): Promise<ListContactResult>;
-    updateContactStatus(id: string, status: ContactStatus): Promise<CallResult>;
-    deleteContactMessage(id: string): Promise<CallResult>;
-    deleteContactMessages(ids: string[]): Promise<CallResult>;
-    blockContactSender(principalText: string): Promise<CallResult>;
-    unblockContactSender(principalText: string): Promise<CallResult>;
-    getBlockedSenders(): Promise<ListBlockedResult>;
-    admin_addUserAccess(principalText: string, role: UserRole): Promise<void>;
-    admin_updateUserAccess(principalText: string, role: UserRole): Promise<void>;
-    admin_getUserAccess(): Promise<UserAccessEntry[]>;
-}
-
 export class ExternalBlob {
     _blob?: Uint8Array<ArrayBuffer> | null;
     directURL: string;
@@ -156,254 +89,851 @@ export class ExternalBlob {
         return this;
     }
 }
-
+export interface UserAccessEntry {
+    principal: Principal;
+    role: UserRole;
+}
+export interface ContactMessage {
+    id: string;
+    status: ContactStatus;
+    name: string;
+    submittedAt: bigint;
+    email: string;
+    senderBlocked: boolean;
+    senderPrincipal?: string;
+    message: string;
+    deviceId?: string;
+}
+export interface UserListEntry {
+    principal: Principal;
+    role: UserRole;
+    profile?: UserProfile;
+}
+export interface UserProfile {
+    name: string;
+    email: string;
+    phone: string;
+    registeredAt: bigint;
+}
+export enum ContactStatus {
+    active = "active",
+    notactive = "notactive"
+}
+export enum Holiday {
+    newyear = "newyear",
+    none = "none",
+    easter = "easter",
+    midsommar = "midsommar",
+    christmas = "christmas"
+}
+export enum UserRole {
+    admin = "admin",
+    user = "user",
+    guest = "guest"
+}
+export interface backendInterface {
+    addUser(principalText: string, role: UserRole): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    admin_addUserAccess(userPrincipalText: string, role: UserRole): Promise<void>;
+    admin_getUserAccess(): Promise<Array<UserAccessEntry>>;
+    admin_updateUserAccess(userPrincipalText: string, newRole: UserRole): Promise<void>;
+    blockContactSender(principalText: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    blockUser(principalText: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    deleteContactMessage(id: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    deleteContactMessages(ids: Array<string>): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    getActiveHoliday(): Promise<Holiday>;
+    getBlockedSenders(): Promise<{
+        __kind__: "ok";
+        ok: Array<string>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    getMyProfile(): Promise<UserProfile | null>;
+    getMyRole(): Promise<UserRole>;
+    listContactMessages(): Promise<{
+        __kind__: "ok";
+        ok: Array<ContactMessage>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    listUsers(): Promise<{
+        __kind__: "ok";
+        ok: Array<UserListEntry>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    removeUser(principalText: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    setActiveHoliday(holiday: Holiday): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    submitContact(name: string, email: string, message: string): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    unblockContactSender(principalText: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    updateContactStatus(id: string, status: ContactStatus): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    updateMyProfile(name: string, email: string, phone: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    updateUserProfile(principalText: string, name: string, email: string, phone: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    updateUserRole(principalText: string, newRole: UserRole): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+}
+import type { ContactMessage as _ContactMessage, ContactStatus as _ContactStatus, Holiday as _Holiday, UserAccessEntry as _UserAccessEntry, UserListEntry as _UserListEntry, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
-
-    async getMyRole(): Promise<UserRole> {
-        try {
-            const result = await this.actor.getMyRole();
-            const r = result as { admin?: null } | { user?: null } | { guest?: null };
-            if ('admin' in r) return { admin: null };
-            if ('user' in r) return { user: null };
-            return { guest: null };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
-    }
-
-    async getMyProfile(): Promise<Option<UserProfile>> {
-        try {
-            const result = await this.actor.getMyProfile();
-            const arr = result as (UserProfile | null)[] | null;
-            if (!arr || arr.length === 0 || arr[0] == null) return none();
-            return some(arr[0] as UserProfile);
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
-    }
-
-    async updateMyProfile(name: string, email: string, phone: string): Promise<CallResult> {
-        try {
-            const result = await this.actor.updateMyProfile(name, email, phone);
-            const r = result as { ok?: null; err?: string };
-            if ('ok' in r) return { ok: null };
-            return { err: (r as any).err as string };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
-    }
-
-    async listUsers(): Promise<ListUsersResult> {
-        try {
-            const result = await this.actor.listUsers() as any;
-            if ('err' in result) {
-                return { err: result.err as string };
+    async addUser(arg0: string, arg1: UserRole): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addUser(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
             }
-            const entries = (result.ok as any[]).map((entry: any) => ({
-                principal: entry.principal,
-                role: this._mapRole(entry.role),
-                profile: entry.profile && entry.profile.length > 0 && entry.profile[0] != null
-                    ? some(entry.profile[0] as UserProfile)
-                    : none(),
-            }));
-            return { ok: entries };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+        } else {
+            const result = await this.actor.addUser(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async addUser(principalText: string, role: UserRole): Promise<CallResult> {
-        try {
-            const candidRole = this._toCandidRole(role);
-            const result = await this.actor.addUser(principalText, candidRole) as any;
-            if ('ok' in result) return { ok: null };
-            return { err: result.err as string };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async admin_addUserAccess(arg0: string, arg1: UserRole): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.admin_addUserAccess(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.admin_addUserAccess(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
     }
-
-    async updateUserRole(principalText: string, newRole: UserRole): Promise<CallResult> {
-        try {
-            const candidRole = this._toCandidRole(newRole);
-            const result = await this.actor.updateUserRole(principalText, candidRole) as any;
-            if ('ok' in result) return { ok: null };
-            return { err: result.err as string };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async admin_getUserAccess(): Promise<Array<UserAccessEntry>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.admin_getUserAccess();
+                return from_candid_vec_n4(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.admin_getUserAccess();
+            return from_candid_vec_n4(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async removeUser(principalText: string): Promise<CallResult> {
-        try {
-            const result = await this.actor.removeUser(principalText) as any;
-            if ('ok' in result) return { ok: null };
-            return { err: result.err as string };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async admin_updateUserAccess(arg0: string, arg1: UserRole): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.admin_updateUserAccess(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.admin_updateUserAccess(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
     }
-
-    async blockUser(principalText: string): Promise<CallResult> {
-        try {
-            const result = await this.actor.blockUser(principalText) as any;
-            if ('ok' in result) return { ok: null };
-            return { err: result.err as string };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async blockContactSender(arg0: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.blockContactSender(arg0);
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.blockContactSender(arg0);
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async updateUserProfile(principalText: string, name: string, email: string, phone: string): Promise<CallResult> {
-        try {
-            const result = await this.actor.updateUserProfile(principalText, name, email, phone) as any;
-            if ('ok' in result) return { ok: null };
-            return { err: result.err as string };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async blockUser(arg0: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.blockUser(arg0);
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.blockUser(arg0);
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
     }
-
+    async deleteContactMessage(arg0: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteContactMessage(arg0);
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteContactMessage(arg0);
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async deleteContactMessages(arg0: Array<string>): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteContactMessages(arg0);
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteContactMessages(arg0);
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getActiveHoliday(): Promise<Holiday> {
-        try {
-            const result = await this.actor.getActiveHoliday() as any;
-            return this._mapHoliday(result);
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+        if (this.processError) {
+            try {
+                const result = await this.actor.getActiveHoliday();
+                return from_candid_Holiday_n9(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getActiveHoliday();
+            return from_candid_Holiday_n9(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async setActiveHoliday(holiday: Holiday): Promise<CallResult> {
-        try {
-            const candidHoliday = this._toCandidHoliday(holiday);
-            const result = await this.actor.setActiveHoliday(candidHoliday) as any;
-            if ('ok' in result) return { ok: null };
-            return { err: result.err as string };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async getBlockedSenders(): Promise<{
+        __kind__: "ok";
+        ok: Array<string>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getBlockedSenders();
+                return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getBlockedSenders();
+            return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async submitContact(name: string, email: string, message: string): Promise<SubmitContactResult> {
-        try {
-            const result = await this.actor.submitContact(name, email, message) as any;
-            if ('ok' in result) return { ok: result.ok as string };
-            return { err: result.err as string };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async getMyProfile(): Promise<UserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getMyProfile();
+                return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getMyProfile();
+            return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async listContactMessages(): Promise<ListContactResult> {
-        try {
-            const result = await this.actor.listContactMessages() as any;
-            if ('err' in result) return { err: result.err as string };
-            const messages = (result.ok as any[]).map((msg: any) => ({
-                id: msg.id as string,
-                name: msg.name as string,
-                email: msg.email as string,
-                message: msg.message as string,
-                submittedAt: msg.submittedAt as bigint,
-                status: this._mapContactStatus(msg.status),
-                senderPrincipal: msg.senderPrincipal && msg.senderPrincipal.length > 0 && msg.senderPrincipal[0] != null
-                    ? some(msg.senderPrincipal[0] as string)
-                    : none(),
-                deviceId: msg.deviceId && msg.deviceId.length > 0 && msg.deviceId[0] != null
-                    ? some(msg.deviceId[0] as string)
-                    : none(),
-                senderBlocked: msg.senderBlocked as boolean,
-            }));
-            return { ok: messages };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async getMyRole(): Promise<UserRole> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getMyRole();
+                return from_candid_UserRole_n7(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getMyRole();
+            return from_candid_UserRole_n7(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async updateContactStatus(id: string, status: ContactStatus): Promise<CallResult> {
-        try {
-            const candidStatus = this._toCandidContactStatus(status);
-            const result = await this.actor.updateContactStatus(id, candidStatus) as any;
-            if ('ok' in result) return { ok: null };
-            return { err: result.err as string };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async listContactMessages(): Promise<{
+        __kind__: "ok";
+        ok: Array<ContactMessage>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listContactMessages();
+                return from_candid_variant_n13(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listContactMessages();
+            return from_candid_variant_n13(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async deleteContactMessage(id: string): Promise<CallResult> {
-        try {
-            const result = await this.actor.deleteContactMessage(id) as any;
-            if ('ok' in result) return { ok: null };
-            return { err: result.err as string };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async listUsers(): Promise<{
+        __kind__: "ok";
+        ok: Array<UserListEntry>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listUsers();
+                return from_candid_variant_n20(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listUsers();
+            return from_candid_variant_n20(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async deleteContactMessages(ids: string[]): Promise<CallResult> {
-        try {
-            const result = await this.actor.deleteContactMessages(ids) as any;
-            if ('ok' in result) return { ok: null };
-            return { err: result.err as string };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async removeUser(arg0: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.removeUser(arg0);
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.removeUser(arg0);
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async blockContactSender(principalText: string): Promise<CallResult> {
-        try {
-            const result = await this.actor.blockContactSender(principalText) as any;
-            if ('ok' in result) return { ok: null };
-            return { err: result.err as string };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async setActiveHoliday(arg0: Holiday): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setActiveHoliday(to_candid_Holiday_n24(this._uploadFile, this._downloadFile, arg0));
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setActiveHoliday(to_candid_Holiday_n24(this._uploadFile, this._downloadFile, arg0));
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async unblockContactSender(principalText: string): Promise<CallResult> {
-        try {
-            const result = await this.actor.unblockContactSender(principalText) as any;
-            if ('ok' in result) return { ok: null };
-            return { err: result.err as string };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async submitContact(arg0: string, arg1: string, arg2: string): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.submitContact(arg0, arg1, arg2);
+                return from_candid_variant_n26(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.submitContact(arg0, arg1, arg2);
+            return from_candid_variant_n26(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async getBlockedSenders(): Promise<ListBlockedResult> {
-        try {
-            const result = await this.actor.getBlockedSenders() as any;
-            if ('err' in result) return { err: result.err as string };
-            return { ok: result.ok as string[] };
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async unblockContactSender(arg0: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.unblockContactSender(arg0);
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.unblockContactSender(arg0);
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async admin_addUserAccess(principalText: string, role: UserRole): Promise<void> {
-        try {
-            await this.actor.admin_addUserAccess(principalText, this._toCandidRole(role));
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async updateContactStatus(arg0: string, arg1: ContactStatus): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateContactStatus(arg0, to_candid_ContactStatus_n27(this._uploadFile, this._downloadFile, arg1));
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateContactStatus(arg0, to_candid_ContactStatus_n27(this._uploadFile, this._downloadFile, arg1));
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async admin_updateUserAccess(principalText: string, role: UserRole): Promise<void> {
-        try {
-            await this.actor.admin_updateUserAccess(principalText, this._toCandidRole(role));
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async updateMyProfile(arg0: string, arg1: string, arg2: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateMyProfile(arg0, arg1, arg2);
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateMyProfile(arg0, arg1, arg2);
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    async admin_getUserAccess(): Promise<UserAccessEntry[]> {
-        try {
-            const result = await this.actor.admin_getUserAccess() as any[];
-            return result.map((entry: any) => ({
-                principal: entry.principal,
-                role: this._mapRole(entry.role),
-            }));
-        } catch(e) { if (this.processError) return this.processError(e); throw e; }
+    async updateUserProfile(arg0: string, arg1: string, arg2: string, arg3: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateUserProfile(arg0, arg1, arg2, arg3);
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateUserProfile(arg0, arg1, arg2, arg3);
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
     }
-
-    private _mapRole(r: any): UserRole {
-        if ('admin' in r) return { admin: null };
-        if ('user' in r) return { user: null };
-        return { guest: null };
-    }
-
-    private _toCandidRole(role: UserRole): any {
-        if ('admin' in role) return { admin: null };
-        if ('user' in role) return { user: null };
-        return { guest: null };
-    }
-
-    private _mapHoliday(r: any): Holiday {
-        if ('easter' in r) return { easter: null };
-        if ('christmas' in r) return { christmas: null };
-        if ('newyear' in r) return { newyear: null };
-        if ('midsommar' in r) return { midsommar: null };
-        return { none: null };
-    }
-
-    private _toCandidHoliday(holiday: Holiday): any {
-        if ('easter' in holiday) return { easter: null };
-        if ('christmas' in holiday) return { christmas: null };
-        if ('newyear' in holiday) return { newyear: null };
-        if ('midsommar' in holiday) return { midsommar: null };
-        return { none: null };
-    }
-
-    private _mapContactStatus(r: any): ContactStatus {
-        if ('active' in r) return { active: null };
-        return { notactive: null };
-    }
-
-    private _toCandidContactStatus(status: ContactStatus): any {
-        if ('active' in status) return { active: null };
-        return { notactive: null };
+    async updateUserRole(arg0: string, arg1: UserRole): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateUserRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateUserRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
     }
 }
-
+function from_candid_ContactMessage_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ContactMessage): ContactMessage {
+    return from_candid_record_n16(_uploadFile, _downloadFile, value);
+}
+function from_candid_ContactStatus_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ContactStatus): ContactStatus {
+    return from_candid_variant_n18(_uploadFile, _downloadFile, value);
+}
+function from_candid_Holiday_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Holiday): Holiday {
+    return from_candid_variant_n10(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserAccessEntry_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserAccessEntry): UserAccessEntry {
+    return from_candid_record_n6(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserListEntry_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserListEntry): UserListEntry {
+    return from_candid_record_n23(_uploadFile, _downloadFile, value);
+}
+function from_candid_UserRole_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n8(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_record_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: string;
+    status: _ContactStatus;
+    name: string;
+    submittedAt: bigint;
+    email: string;
+    senderBlocked: boolean;
+    senderPrincipal: [] | [string];
+    message: string;
+    deviceId: [] | [string];
+}): {
+    id: string;
+    status: ContactStatus;
+    name: string;
+    submittedAt: bigint;
+    email: string;
+    senderBlocked: boolean;
+    senderPrincipal?: string;
+    message: string;
+    deviceId?: string;
+} {
+    return {
+        id: value.id,
+        status: from_candid_ContactStatus_n17(_uploadFile, _downloadFile, value.status),
+        name: value.name,
+        submittedAt: value.submittedAt,
+        email: value.email,
+        senderBlocked: value.senderBlocked,
+        senderPrincipal: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.senderPrincipal)),
+        message: value.message,
+        deviceId: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.deviceId))
+    };
+}
+function from_candid_record_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    principal: Principal;
+    role: _UserRole;
+    profile: [] | [_UserProfile];
+}): {
+    principal: Principal;
+    role: UserRole;
+    profile?: UserProfile;
+} {
+    return {
+        principal: value.principal,
+        role: from_candid_UserRole_n7(_uploadFile, _downloadFile, value.role),
+        profile: record_opt_to_undefined(from_candid_opt_n12(_uploadFile, _downloadFile, value.profile))
+    };
+}
+function from_candid_record_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    principal: Principal;
+    role: _UserRole;
+}): {
+    principal: Principal;
+    role: UserRole;
+} {
+    return {
+        principal: value.principal,
+        role: from_candid_UserRole_n7(_uploadFile, _downloadFile, value.role)
+    };
+}
+function from_candid_variant_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    newyear: null;
+} | {
+    none: null;
+} | {
+    easter: null;
+} | {
+    midsommar: null;
+} | {
+    christmas: null;
+}): Holiday {
+    return "newyear" in value ? Holiday.newyear : "none" in value ? Holiday.none : "easter" in value ? Holiday.easter : "midsommar" in value ? Holiday.midsommar : "christmas" in value ? Holiday.christmas : value;
+}
+function from_candid_variant_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: Array<string>;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: Array<string>;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: Array<_ContactMessage>;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: Array<ContactMessage>;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: from_candid_vec_n14(_uploadFile, _downloadFile, value.ok)
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    active: null;
+} | {
+    notactive: null;
+}): ContactStatus {
+    return "active" in value ? ContactStatus.active : "notactive" in value ? ContactStatus.notactive : value;
+}
+function from_candid_variant_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: Array<_UserListEntry>;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: Array<UserListEntry>;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: from_candid_vec_n21(_uploadFile, _downloadFile, value.ok)
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: string;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: string;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: null;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: null;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    admin: null;
+} | {
+    user: null;
+} | {
+    guest: null;
+}): UserRole {
+    return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
+}
+function from_candid_vec_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_ContactMessage>): Array<ContactMessage> {
+    return value.map((x)=>from_candid_ContactMessage_n15(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_UserListEntry>): Array<UserListEntry> {
+    return value.map((x)=>from_candid_UserListEntry_n22(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_UserAccessEntry>): Array<UserAccessEntry> {
+    return value.map((x)=>from_candid_UserAccessEntry_n5(_uploadFile, _downloadFile, x));
+}
+function to_candid_ContactStatus_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ContactStatus): _ContactStatus {
+    return to_candid_variant_n28(_uploadFile, _downloadFile, value);
+}
+function to_candid_Holiday_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Holiday): _Holiday {
+    return to_candid_variant_n25(_uploadFile, _downloadFile, value);
+}
+function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
+    return to_candid_variant_n2(_uploadFile, _downloadFile, value);
+}
+function to_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
+    admin: null;
+} | {
+    user: null;
+} | {
+    guest: null;
+} {
+    return value == UserRole.admin ? {
+        admin: null
+    } : value == UserRole.user ? {
+        user: null
+    } : value == UserRole.guest ? {
+        guest: null
+    } : value;
+}
+function to_candid_variant_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Holiday): {
+    newyear: null;
+} | {
+    none: null;
+} | {
+    easter: null;
+} | {
+    midsommar: null;
+} | {
+    christmas: null;
+} {
+    return value == Holiday.newyear ? {
+        newyear: null
+    } : value == Holiday.none ? {
+        none: null
+    } : value == Holiday.easter ? {
+        easter: null
+    } : value == Holiday.midsommar ? {
+        midsommar: null
+    } : value == Holiday.christmas ? {
+        christmas: null
+    } : value;
+}
+function to_candid_variant_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ContactStatus): {
+    active: null;
+} | {
+    notactive: null;
+} {
+    return value == ContactStatus.active ? {
+        active: null
+    } : value == ContactStatus.notactive ? {
+        notactive: null
+    } : value;
+}
 export interface CreateActorOptions {
     agent?: Agent;
     agentOptions?: HttpAgentOptions;

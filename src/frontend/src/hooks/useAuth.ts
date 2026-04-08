@@ -1,6 +1,6 @@
+import { useInternetIdentity } from "@caffeineai/core-infrastructure";
 import { useCallback, useEffect, useState } from "react";
 import type { UserRole } from "../backend.d";
-import { useInternetIdentity } from "./useInternetIdentity";
 import { useTypedActor } from "./useTypedActor";
 
 export type AuthRole = UserRole | null;
@@ -33,23 +33,35 @@ export interface AuthState {
   roleLabel: string;
 }
 
+// UserRole is an enum string at the TS level ("admin" | "user" | "guest")
+// but the actor returns Candid variants { admin: null } at runtime.
+// These helpers handle both representations safely.
+function getRoleStr(role: UserRole | null): string {
+  if (role === null) return "guest";
+  // Candid variant object (runtime): { admin: null }
+  if (typeof role === "object") {
+    if ("admin" in (role as object)) return "admin";
+    if ("user" in (role as object)) return "user";
+    return "guest";
+  }
+  // Enum string (bindgen type): "admin" | "user" | "guest"
+  return String(role);
+}
+
 export function isAdminRole(role: UserRole | null): boolean {
-  return role !== null && "admin" in role;
+  return getRoleStr(role) === "admin";
 }
 
 export function isUserRole(role: UserRole | null): boolean {
-  return role !== null && "user" in role;
+  return getRoleStr(role) === "user";
 }
 
 export function isGuestRole(role: UserRole | null): boolean {
-  return role === null || "guest" in role;
+  return getRoleStr(role) === "guest";
 }
 
 export function getRoleLabel(role: UserRole | null): string {
-  if (role === null) return "guest";
-  if ("admin" in role) return "admin";
-  if ("user" in role) return "user";
-  return "guest";
+  return getRoleStr(role);
 }
 
 export function useAuth(): AuthState {
@@ -77,7 +89,7 @@ export function useAuth(): AuthState {
         if (!cancelled) setRole(r);
       })
       .catch(() => {
-        if (!cancelled) setRole({ guest: null });
+        if (!cancelled) setRole("guest" as UserRole);
       })
       .finally(() => {
         if (!cancelled) setRoleFetching(false);

@@ -12,9 +12,20 @@ import { useTypedActor } from "@/hooks/useTypedActor";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { HolidayKey } from "../backend.d";
+import type { Holiday } from "../backend.d";
 
-const HOLIDAY_DOTS: Record<Exclude<HolidayKey, "none">, string> = {
+// Actor returns Candid variant at runtime { easter: null } but TS type is enum string.
+function resolveHolidayKey(h: Holiday): string {
+  if (typeof h === "string") return h as string;
+  const obj = h as Record<string, unknown>;
+  if ("easter" in obj) return "easter";
+  if ("christmas" in obj) return "christmas";
+  if ("newyear" in obj) return "newyear";
+  if ("midsommar" in obj) return "midsommar";
+  return "none";
+}
+
+const HOLIDAY_DOTS: Record<string, string> = {
   easter: "#f0c040",
   christmas: "#c0392b",
   newyear: "#1a1a6e",
@@ -24,7 +35,7 @@ const HOLIDAY_DOTS: Record<Exclude<HolidayKey, "none">, string> = {
 export default function MyPagesCalendar() {
   const { t } = useLanguage();
   const { actor, isFetching } = useTypedActor();
-  const [activeHoliday, setActiveHoliday] = useState<HolidayKey>("none");
+  const [activeHoliday, setActiveHoliday] = useState<string>("none");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -33,16 +44,7 @@ export default function MyPagesCalendar() {
     const fetch = async () => {
       try {
         const h = await actor.getActiveHoliday();
-        const key: HolidayKey =
-          "easter" in h
-            ? "easter"
-            : "christmas" in h
-              ? "christmas"
-              : "newyear" in h
-                ? "newyear"
-                : "midsommar" in h
-                  ? "midsommar"
-                  : "none";
+        const key = resolveHolidayKey(h);
         setActiveHoliday(key);
       } catch {
         // ignore
@@ -53,33 +55,26 @@ export default function MyPagesCalendar() {
     fetch();
   }, [actor, isFetching]);
 
-  const handleToggle = async (
-    key: Exclude<HolidayKey, "none">,
-    checked: boolean,
-  ) => {
+  const handleToggle = async (key: string, checked: boolean) => {
     if (!actor) return;
     setSaving(true);
     try {
-      const newHoliday: HolidayKey = checked ? key : "none";
-      const holiday =
-        newHoliday === "none" ? { none: null } : { [newHoliday]: null };
-      const result = await actor.setActiveHoliday(
-        holiday as Parameters<typeof actor.setActiveHoliday>[0],
-      );
+      const newHoliday = checked ? key : "none";
+      const result = await actor.setActiveHoliday(newHoliday as Holiday);
       if ("ok" in result) {
         setActiveHoliday(newHoliday);
         toast.success(t.calendar.saved);
       } else {
         toast.error("err" in result ? result.err : t.calendar.saveError);
       }
-    } catch (e: any) {
-      toast.error(e?.message ?? t.calendar.saveError);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : t.calendar.saveError);
     } finally {
       setSaving(false);
     }
   };
 
-  const holidays: { key: Exclude<HolidayKey, "none">; label: string }[] = [
+  const holidays: { key: string; label: string }[] = [
     { key: "easter", label: t.calendar.easter },
     { key: "christmas", label: t.calendar.christmas },
     { key: "newyear", label: t.calendar.newyear },

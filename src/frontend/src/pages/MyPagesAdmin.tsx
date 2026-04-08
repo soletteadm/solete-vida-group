@@ -51,16 +51,75 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { UserListEntry, UserRole } from "../backend.d";
 
+// At runtime the actor accepts/returns Candid variants { admin: null }.
+// These helpers bridge between the enum string type (TS) and Candid objects (runtime).
 function roleToObj(roleStr: string): UserRole {
-  if (roleStr === "admin") return { admin: null };
-  if (roleStr === "user") return { user: null };
-  return { guest: null };
+  if (roleStr === "admin") return "admin" as UserRole;
+  if (roleStr === "user") return "user" as UserRole;
+  return "guest" as UserRole;
 }
 
-function objToRoleStr(role: UserRole): string {
-  if ("admin" in role) return "admin";
-  if ("user" in role) return "user";
+// Convert either enum string or Candid variant to display string
+function getRoleStr(role: UserRole | null | undefined): string {
+  if (!role) return "guest";
+  if (typeof role === "string") return role as string;
+  const obj = role as Record<string, unknown>;
+  if ("admin" in obj) return "admin";
+  if ("user" in obj) return "user";
   return "guest";
+}
+
+// Get principal string — new field is userId, but may be principal at runtime
+function getPrincipalStr(user: UserListEntry): string {
+  // Handle both new (userId) and legacy runtime shape
+  const u = user as UserListEntry & { principal?: { toString(): string } };
+  if (u.principal) return u.principal.toString();
+  return (user as unknown as { userId: string }).userId ?? "";
+}
+
+// Get profile name — new shape has profile?: UserProfile, old shape has Option<UserProfile>
+function getProfileName(user: UserListEntry): string {
+  const u = user as UserListEntry & { profile?: unknown };
+  if (!u.profile) return "\u2014";
+  // Option-style (runtime legacy): { __kind__: "Some", value: ... }
+  const maybeOpt = u.profile as unknown as {
+    __kind__?: string;
+    value?: { name?: string };
+  };
+  if (maybeOpt.__kind__ === "Some") return maybeOpt.value?.name ?? "\u2014";
+  if (maybeOpt.__kind__ === "None") return "\u2014";
+  // Direct object style (new bindgen): UserProfile directly
+  const p = u.profile as unknown as { name?: string };
+  return p.name ?? "\u2014";
+}
+
+// Get profile fields for edit form
+function getProfileFields(user: UserListEntry): {
+  name: string;
+  email: string;
+  phone: string;
+} {
+  const u = user as UserListEntry & { profile?: unknown };
+  if (!u.profile) return { name: "", email: "", phone: "" };
+  const maybeOpt = u.profile as unknown as {
+    __kind__?: string;
+    value?: { name?: string; email?: string; phone?: string };
+  };
+  if (maybeOpt.__kind__ === "Some") {
+    return {
+      name: maybeOpt.value?.name ?? "",
+      email: maybeOpt.value?.email ?? "",
+      phone: maybeOpt.value?.phone ?? "",
+    };
+  }
+  if (maybeOpt.__kind__ === "None") return { name: "", email: "", phone: "" };
+  // Direct profile object
+  const p = u.profile as unknown as {
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
+  return { name: p.name ?? "", email: p.email ?? "", phone: p.phone ?? "" };
 }
 
 function truncatePrincipal(p: string): string {
@@ -129,12 +188,11 @@ export default function MyPagesAdmin() {
   // Pre-fill edit form when editTarget changes
   useEffect(() => {
     if (!editTarget) return;
-    const profile =
-      editTarget.profile.__kind__ === "Some" ? editTarget.profile.value : null;
-    setEditName(profile?.name ?? "");
-    setEditEmail(profile?.email ?? "");
-    setEditPhone(profile?.phone ?? "");
-    setEditRole(objToRoleStr(editTarget.role));
+    const fields = getProfileFields(editTarget);
+    setEditName(fields.name);
+    setEditEmail(fields.email);
+    setEditPhone(fields.phone);
+    setEditRole(getRoleStr(editTarget.role));
   }, [editTarget]);
 
   const handleUpdateRole = async (principalText: string, newRole: string) => {
@@ -149,7 +207,7 @@ export default function MyPagesAdmin() {
         toast.success(t.admin.roleUpdated);
         setUsers((prev) =>
           prev.map((u) =>
-            u.principal.toString() === principalText
+            getPrincipalStr(u) === principalText
               ? { ...u, role: roleToObj(newRole) }
               : u,
           ),
@@ -172,7 +230,7 @@ export default function MyPagesAdmin() {
       if ("ok" in result) {
         toast.success(t.admin.userRemoved);
         setUsers((prev) =>
-          prev.filter((u) => u.principal.toString() !== removeTarget),
+          prev.filter((u) => getPrincipalStr(u) !== removeTarget),
         );
       } else {
         toast.error(result.err);
@@ -194,8 +252,8 @@ export default function MyPagesAdmin() {
         toast.success(t.admin.userBlocked);
         setUsers((prev) =>
           prev.map((u) =>
-            u.principal.toString() === blockTarget
-              ? { ...u, role: { guest: null } }
+            getPrincipalStr(u) === blockTarget
+              ? { ...u, role: roleToObj("guest") }
               : u,
           ),
         );
@@ -213,8 +271,8 @@ export default function MyPagesAdmin() {
   const handleSaveEdit = async () => {
     if (!actor || !editTarget) return;
     setSaving(true);
-    const principalStr = editTarget.principal.toString();
-    const originalRole = objToRoleStr(editTarget.role);
+    const principalStr = getPrincipalStr(editTarget);
+    const originalRole = getRoleStr(editTarget.role);
 
     console.log("[handleSaveEdit] Starting save for principal:", principalStr);
     console.log("[handleSaveEdit] Payload:", {
@@ -380,12 +438,9 @@ export default function MyPagesAdmin() {
                 </TableHeader>
                 <TableBody>
                   {users.map((user, idx) => {
-                    const principalStr = user.principal.toString();
-                    const roleStr = objToRoleStr(user.role);
-                    const profileName =
-                      user.profile.__kind__ === "Some"
-                        ? user.profile.value.name
-                        : "\u2014";
+                    const principalStr = getPrincipalStr(user);
+                    const roleStr = getRoleStr(user.role);
+                    const profileName = getProfileName(user);
                     const isUpdating = updatingRole === principalStr;
                     const isBlocked = roleStr === "guest";
 
@@ -510,7 +565,7 @@ export default function MyPagesAdmin() {
                 {t.admin.principal}
               </Label>
               <p className="font-mono text-xs text-muted-foreground bg-muted/40 rounded px-3 py-2 break-all">
-                {editTarget?.principal.toString()}
+                {editTarget ? getPrincipalStr(editTarget) : ""}
               </p>
             </div>
 

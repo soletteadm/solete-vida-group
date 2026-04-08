@@ -1,0 +1,126 @@
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type UserProfile = 
+ record {
+   email: text;
+   name: text;
+   phone: text;
+   registeredAt: int;
+ };
+type UserListEntry = 
+ record {
+   "principal": principal;
+   profile: opt UserProfile;
+   role: UserRole;
+ };
+type UserAccessEntry = 
+ record {
+   "principal": principal;
+   role: UserRole;
+ };
+type Holiday = 
+ variant {
+   christmas;
+   easter;
+   midsommar;
+   newyear;
+   none;
+ };
+type ContactStatus = 
+ variant {
+   active;
+   notactive;
+ };
+type ContactMessage = 
+ record {
+   deviceId: opt text;
+   email: text;
+   id: text;
+   message: text;
+   name: text;
+   senderBlocked: bool;
+   senderPrincipal: opt text;
+   status: ContactStatus;
+   submittedAt: int;
+ };
+service : {
+  addUser: (principalText: text, role: UserRole) -> (variant {
+                                                       err: text;
+                                                       ok;
+                                                     });
+  admin_addUserAccess: (userPrincipalText: text, role: UserRole) -> ();
+  admin_getUserAccess: () -> (vec UserAccessEntry) query;
+  admin_updateUserAccess: (userPrincipalText: text, newRole: UserRole) -> ();
+  blockContactSender: (principalText: text) -> (variant {
+                                                  err: text;
+                                                  ok;
+                                                });
+  blockUser: (principalText: text) -> (variant {
+                                         err: text;
+                                         ok;
+                                       });
+  deleteContactMessage: (id: text) -> (variant {
+                                         err: text;
+                                         ok;
+                                       });
+  deleteContactMessages: (ids: vec text) -> (variant {
+                                               err: text;
+                                               ok;
+                                             });
+  getActiveHoliday: () -> (Holiday) query;
+  getBlockedSenders: () -> (variant {
+                              err: text;
+                              ok: vec text;
+                            });
+  getMyProfile: () -> (opt UserProfile) query;
+  getMyRole: () -> (UserRole) query;
+  listContactMessages: () -> (variant {
+                                err: text;
+                                ok: vec ContactMessage;
+                              });
+  listUsers: () -> (variant {
+                      err: text;
+                      ok: vec UserListEntry;
+                    });
+  removeUser: (principalText: text) -> (variant {
+                                          err: text;
+                                          ok;
+                                        });
+  setActiveHoliday: (holiday: Holiday) -> (variant {
+                                             err: text;
+                                             ok;
+                                           });
+  submitContact: (name: text, email: text, message: text) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
+  unblockContactSender: (principalText: text) -> (variant {
+                                                    err: text;
+                                                    ok;
+                                                  });
+  updateContactStatus: (id: text, status: ContactStatus) ->
+   (variant {
+      err: text;
+      ok;
+    });
+  updateMyProfile: (name: text, email: text, phone: text) ->
+   (variant {
+      err: text;
+      ok;
+    });
+  updateUserProfile: (principalText: text, name: text, email: text, phone:
+   text) -> (variant {
+               err: text;
+               ok;
+             });
+  updateUserRole: (principalText: text, newRole: UserRole) ->
+   (variant {
+      err: text;
+      ok;
+    });
+}

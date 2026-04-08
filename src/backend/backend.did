@@ -8,12 +8,12 @@ type UserProfile = record {
 };
 
 type UserAccessEntry = record {
-  principal: principal;
+  userId: text;
   role: UserRole;
 };
 
 type UserListEntry = record {
-  principal: principal;
+  userId: text;
   role: UserRole;
   profile: opt UserProfile;
 };
@@ -32,7 +32,9 @@ type ContactMessage = record {
   senderBlocked: bool;
 };
 
-type CallResult = variant { ok; err: text };
+type HolidayKey = variant { none; easter; christmas; newyear; midsommar };
+
+type CallResult = variant { ok: null; err: text };
 type SubmitContactResult = variant { ok: text; err: text };
 type ListUsersResult = variant { ok: vec UserListEntry; err: text };
 type ListContactResult = variant { ok: vec ContactMessage; err: text };
@@ -48,8 +50,8 @@ service : {
   removeUser: (text) -> (CallResult);
   blockUser: (text) -> (CallResult);
   updateUserProfile: (text, text, text, text) -> (CallResult);
-  getActiveHoliday: () -> (variant { none; easter; christmas; newyear; midsommar }) query;
-  setActiveHoliday: (variant { none; easter; christmas; newyear; midsommar }) -> (CallResult);
+  getActiveHoliday: () -> (HolidayKey) query;
+  setActiveHoliday: (HolidayKey) -> (CallResult);
   submitContact: (text, text, text) -> (SubmitContactResult);
   listContactMessages: () -> (ListContactResult);
   updateContactStatus: (text, ContactStatus) -> (CallResult);

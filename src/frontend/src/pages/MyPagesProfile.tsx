@@ -6,16 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTypedActor } from "@/hooks/useTypedActor";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Check, Copy, Loader2, Lock, User } from "lucide-react";
+import { Check, Copy, Loader2, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { Option, UserProfile } from "../backend.d";
+import type { UserProfile } from "../backend.d";
 
 interface MyPagesProfileProps {
   principalText: string | null;
-  isAdmin: boolean;
-  isUser: boolean;
-  isGuest: boolean;
   roleLabel: string;
 }
 
@@ -30,9 +27,6 @@ function formatDate(ts: bigint): string {
 
 export default function MyPagesProfile({
   principalText,
-  isAdmin,
-  isUser,
-  isGuest,
   roleLabel,
 }: MyPagesProfileProps) {
   const { t } = useLanguage();
@@ -47,22 +41,19 @@ export default function MyPagesProfile({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
-  const canEdit = isAdmin || isUser;
-  const isReadOnly = isGuest;
-
   useEffect(() => {
     if (!actor || isFetching) return;
     let cancelled = false;
     setLoading(true);
     actor
       .getMyProfile()
-      .then((opt: Option<UserProfile>) => {
+      .then((profile: UserProfile | null) => {
         if (cancelled) return;
-        if (opt.__kind__ === "Some") {
-          setProfile(opt.value);
-          setName(opt.value.name);
-          setEmail(opt.value.email);
-          setPhone(opt.value.phone);
+        if (profile) {
+          setProfile(profile);
+          setName(profile.name);
+          setEmail(profile.email);
+          setPhone(profile.phone);
         } else {
           setProfile(null);
           setName("");
@@ -162,12 +153,6 @@ export default function MyPagesProfile({
                 >
                   {t.common[roleLabel as keyof typeof t.common] || roleLabel}
                 </Badge>
-                {isReadOnly && (
-                  <Badge variant="secondary" className="text-xs font-sans">
-                    <Lock className="w-3 h-3 mr-1" />
-                    {t.myPages.readonly}
-                  </Badge>
-                )}
               </div>
             </div>
           </div>
@@ -220,14 +205,7 @@ export default function MyPagesProfile({
       <Card className="border border-divider shadow-card">
         <CardHeader>
           <CardTitle className="font-serif text-lg text-foreground">
-            {isReadOnly ? (
-              <span className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-muted-foreground" />
-                {t.myPages.readonly}
-              </span>
-            ) : (
-              t.myPages.profile
-            )}
+            {t.myPages.profile}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -251,8 +229,7 @@ export default function MyPagesProfile({
                   id="profile-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  disabled={isReadOnly}
-                  placeholder={isReadOnly ? "\u2014" : t.myPages.name}
+                  placeholder={t.myPages.name}
                   className="font-sans text-sm"
                   data-ocid="profile.input"
                 />
@@ -271,8 +248,7 @@ export default function MyPagesProfile({
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled={isReadOnly}
-                  placeholder={isReadOnly ? "\u2014" : t.myPages.email}
+                  placeholder={t.myPages.email}
                   className="font-sans text-sm"
                   data-ocid="profile.input"
                 />
@@ -291,33 +267,30 @@ export default function MyPagesProfile({
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  disabled={isReadOnly}
-                  placeholder={isReadOnly ? "\u2014" : t.myPages.phone}
+                  placeholder={t.myPages.phone}
                   className="font-sans text-sm"
                   data-ocid="profile.input"
                 />
               </div>
 
-              {/* Save button */}
-              {canEdit && (
-                <div className="pt-2">
-                  <Button
-                    onClick={handleSave}
-                    disabled={saving || isFetching}
-                    className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full px-6"
-                    data-ocid="profile.submit_button"
-                  >
-                    {saving ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {t.myPages.saving}
-                      </>
-                    ) : (
-                      t.myPages.save
-                    )}
-                  </Button>
-                </div>
-              )}
+              {/* Save button — always visible for any authenticated user */}
+              <div className="pt-2">
+                <Button
+                  onClick={handleSave}
+                  disabled={saving || isFetching}
+                  className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full px-6"
+                  data-ocid="profile.submit_button"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {t.myPages.saving}
+                    </>
+                  ) : (
+                    t.myPages.save
+                  )}
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

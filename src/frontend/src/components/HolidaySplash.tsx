@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { HolidayKey } from "../backend.d";
+import type { Holiday } from "../backend.d";
 import { useLanguage } from "../i18n/LanguageContext";
 
 interface HolidaySplashProps {
-  holiday: HolidayKey;
+  holiday: Holiday;
   onDismiss: () => void;
 }
+
+type HolidayVisualKey = "easter" | "christmas" | "newyear" | "midsommar";
 
 interface Particle {
   x: number;
@@ -20,7 +22,7 @@ interface Particle {
 }
 
 const HOLIDAY_VISUALS: Record<
-  Exclude<HolidayKey, "none">,
+  HolidayVisualKey,
   {
     emojis: string[];
     background: string;
@@ -93,16 +95,16 @@ export default function HolidaySplash({
   const [visible, setVisible] = useState(false);
   const [dismissing, setDismissing] = useState(false);
 
-  const visuals = HOLIDAY_VISUALS[holiday as Exclude<HolidayKey, "none">];
+  const visuals = HOLIDAY_VISUALS[holiday as HolidayVisualKey];
 
-  const greetingMap: Record<Exclude<HolidayKey, "none">, string> = {
+  const greetingMap: Record<HolidayVisualKey, string> = {
     easter: t.calendar.easterGreeting,
     christmas: t.calendar.christmasGreeting,
     newyear: t.calendar.newyearGreeting,
     midsommar: t.calendar.midsommarGreeting,
   };
 
-  const greeting = greetingMap[holiday as Exclude<HolidayKey, "none">];
+  const greeting = greetingMap[holiday as HolidayVisualKey];
 
   const handleDismiss = useCallback(() => {
     if (dismissing) return;

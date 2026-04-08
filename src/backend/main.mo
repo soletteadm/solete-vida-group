@@ -1,6 +1,6 @@
-import AccessControl "./authorization/access-control";
 import List "mo:core/List";
 import Map "mo:core/Map";
+
 import Principal "mo:core/Principal";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
@@ -8,11 +8,12 @@ import Runtime "mo:core/Runtime";
 import Nat "mo:core/Nat";
 import Int "mo:core/Int";
 
+
 actor {
 
   // ---- Types ----
 
-  type UserRole = AccessControl.UserRole;
+  type UserRole = { #admin; #user; #guest };
 
   type UserProfile = {
     name : Text;
@@ -59,13 +60,13 @@ actor {
 
   // ---- State ----
 
-  var accessControlState : AccessControl.AccessControlState = AccessControl.initState();
-  var userProfiles : Map.Map<Principal, UserProfile> = Map.empty<Principal, UserProfile>();
-  var activeHoliday : Holiday = #none;
+  stable var userRoles : Map.Map<Principal, UserRole> = Map.empty<Principal, UserRole>();
+  stable var userProfiles : Map.Map<Principal, UserProfile> = Map.empty<Principal, UserProfile>();
+  stable var activeHoliday : Holiday = #none;
 
-  var contactMessages : Map.Map<Text, ContactMessage> = Map.empty<Text, ContactMessage>();
-  var blockedSenders : Map.Map<Text, Bool> = Map.empty<Text, Bool>();
-  var contactIdCounter : Nat = 0;
+  stable var contactMessages : Map.Map<Text, ContactMessage> = Map.empty<Text, ContactMessage>();
+  stable var blockedSenders : Map.Map<Text, Bool> = Map.empty<Text, Bool>();
+  stable var contactIdCounter : Nat = 0;
 
   // ---- Local admin logic (independent of AccessControl.isAdmin) ----
 
@@ -95,7 +96,7 @@ actor {
     if (isAdminController(callerPrincipalText)) {
       return true;
     };
-    switch (accessControlState.userRoles.get(caller)) {
+    switch (userRoles.get(caller)) {
       case (?#admin) { true };
       case (_) { false };
     };
@@ -104,7 +105,7 @@ actor {
   // Safe role lookup: never traps. Returns #guest for unknown principals.
   func getCallerRole(caller : Principal) : UserRole {
     if (caller.isAnonymous()) { return #guest };
-    switch (accessControlState.userRoles.get(caller)) {
+    switch (userRoles.get(caller)) {
       case (?role) { role };
       case (null) { #guest };
     };
@@ -268,8 +269,8 @@ actor {
     blockedSenders.add(principalText, true);
     // Also demote to guest in userRoles if they exist
     let p = Principal.fromText(principalText);
-    switch (accessControlState.userRoles.get(p)) {
-      case (?_) { accessControlState.userRoles.add(p, #guest) };
+    switch (userRoles.get(p)) {
+      case (?_) { userRoles.add(p, #guest) };
       case (null) {};
     };
     return #ok;
@@ -327,8 +328,8 @@ actor {
             registeredAt = Time.now();
           });
           // Register admin in userRoles if not already there
-          switch (accessControlState.userRoles.get(caller)) {
-            case (null) { accessControlState.userRoles.add(caller, #admin) };
+          switch (userRoles.get(caller)) {
+            case (null) { userRoles.add(caller, #admin) };
             case (?_) {};
           };
         };
@@ -340,10 +341,15 @@ actor {
     let role = getCallerRole(caller);
     switch (role) {
       case (#guest) {
-        // Guests can create a profile but cannot update an existing one
+        // Guests can always upsert their own profile
         switch (userProfiles.get(caller)) {
-          case (?_) {
-            return #err("Guests cannot update an existing profile.");
+          case (?existing) {
+            userProfiles.add(caller, {
+              name = name;
+              email = email;
+              phone = phone;
+              registeredAt = existing.registeredAt;
+            });
           };
           case (null) {
             userProfiles.add(caller, {
@@ -353,10 +359,10 @@ actor {
               registeredAt = Time.now();
             });
             // Register the new user in userRoles as #guest (first-login default)
-            accessControlState.userRoles.add(caller, #guest);
-            return #ok;
+            userRoles.add(caller, #guest);
           };
         };
+        return #ok;
       };
       case (_) {
         // #user or #admin: upsert
@@ -377,8 +383,8 @@ actor {
               registeredAt = Time.now();
             });
             // Ensure they are in userRoles
-            switch (accessControlState.userRoles.get(caller)) {
-              case (null) { accessControlState.userRoles.add(caller, #user) };
+            switch (userRoles.get(caller)) {
+              case (null) { userRoles.add(caller, #user) };
               case (?_) {};
             };
           };
@@ -399,7 +405,7 @@ actor {
     // Collect all principals from both maps (deduped via a temporary map)
     var allPrincipals : Map.Map<Principal, Bool> = Map.empty<Principal, Bool>();
 
-    for ((p, _) in accessControlState.userRoles.entries()) {
+    for ((p, _) in userRoles.entries()) {
       allPrincipals.add(p, true);
     };
     for ((p, _) in userProfiles.entries()) {
@@ -409,7 +415,7 @@ actor {
     let entries = allPrincipals.entries().toArray().map(
       func(pair : (Principal, Bool)) : UserListEntry {
         let p = pair.0;
-        let role = switch (accessControlState.userRoles.get(p)) {
+        let role = switch (userRoles.get(p)) {
           case (?r) { r };
           case (null) { #guest }; // has a profile but no explicit role -> treat as guest
         };
@@ -428,10 +434,10 @@ actor {
       return #err("Unauthorized: Only admins can add users.");
     };
     let p = Principal.fromText(principalText);
-    switch (accessControlState.userRoles.get(p)) {
+    switch (userRoles.get(p)) {
       case (?_) { return #err("User already exists.") };
       case (null) {
-        accessControlState.userRoles.add(p, role);
+        userRoles.add(p, role);
         switch (userProfiles.get(p)) {
           case (null) {
             userProfiles.add(p, {
@@ -454,7 +460,7 @@ actor {
     };
     let p = Principal.fromText(principalText);
     // Allow role update even if user is only in userProfiles (not yet in userRoles)
-    accessControlState.userRoles.add(p, newRole);
+    userRoles.add(p, newRole);
     return #ok;
   };
 
@@ -463,7 +469,7 @@ actor {
       return #err("Unauthorized: Only admins can remove users.");
     };
     let p = Principal.fromText(principalText);
-    accessControlState.userRoles.remove(p);
+    userRoles.remove(p);
     userProfiles.remove(p);
     return #ok;
   };
@@ -473,7 +479,7 @@ actor {
       return #err("Unauthorized: Only admins can block users.");
     };
     let p = Principal.fromText(principalText);
-    accessControlState.userRoles.add(p, #guest);
+    userRoles.add(p, #guest);
     return #ok;
   };
 
@@ -508,16 +514,16 @@ actor {
 
   public shared ({ caller }) func admin_addUserAccess(
     userPrincipalText : Text,
-    role : AccessControl.UserRole,
+    role : UserRole,
   ) : async () {
     if (not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can add user access.");
     };
     let p = Principal.fromText(userPrincipalText);
-    switch (accessControlState.userRoles.get(p)) {
+    switch (userRoles.get(p)) {
       case (?_) { Runtime.trap("User already has an access entry") };
       case (null) {
-        accessControlState.userRoles.add(p, role);
+        userRoles.add(p, role);
         switch (userProfiles.get(p)) {
           case (null) {
             userProfiles.add(p, {
@@ -535,16 +541,16 @@ actor {
 
   public shared ({ caller }) func admin_updateUserAccess(
     userPrincipalText : Text,
-    newRole : AccessControl.UserRole,
+    newRole : UserRole,
   ) : async () {
     if (not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can update user access.");
     };
     let p = Principal.fromText(userPrincipalText);
-    switch (accessControlState.userRoles.get(p)) {
+    switch (userRoles.get(p)) {
       case (null) { Runtime.trap("User has no access entry to update") };
       case (?_) {
-        accessControlState.userRoles.add(p, newRole);
+        userRoles.add(p, newRole);
       };
     };
   };
@@ -553,7 +559,7 @@ actor {
     if (not isAdmin(caller)) {
       Runtime.trap("Unauthorized: Only admins can list user access.");
     };
-    accessControlState.userRoles.entries().toArray().map(
+    userRoles.entries().toArray().map(
       func(pair : (Principal, UserRole)) : UserAccessEntry {
         { principal = pair.0; role = pair.1 };
       },

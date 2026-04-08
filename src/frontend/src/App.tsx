@@ -14,7 +14,19 @@ import MyPagesContacts from "@/pages/MyPagesContacts";
 import MyPagesProfile from "@/pages/MyPagesProfile";
 import { CalendarDays, MessageSquare, User, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { HolidayKey } from "./backend.d";
+import type { Holiday } from "./backend.d";
+
+// HolidayKey is an enum string in TS but the actor returns Candid variants at runtime.
+// This helper normalizes either format to the string key.
+function resolveHolidayKey(h: Holiday): string {
+  if (typeof h === "string") return h;
+  const obj = h as Record<string, unknown>;
+  if ("easter" in obj) return "easter";
+  if ("christmas" in obj) return "christmas";
+  if ("newyear" in obj) return "newyear";
+  if ("midsommar" in obj) return "midsommar";
+  return "none";
+}
 
 type Page = "home" | "myPages";
 type MyPagesTab = "profile" | "admin" | "calendar" | "contacts";
@@ -22,7 +34,7 @@ type MyPagesTab = "profile" | "admin" | "calendar" | "contacts";
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>("home");
   const [myPagesTab, setMyPagesTab] = useState<MyPagesTab>("profile");
-  const [activeHoliday, setActiveHoliday] = useState<HolidayKey>("none");
+  const [activeHoliday, setActiveHoliday] = useState<string>("none");
   const [showSplash, setShowSplash] = useState(false);
   const { t } = useLanguage();
   const auth = useAuth();
@@ -34,16 +46,7 @@ function AppContent() {
     const fetchHoliday = async () => {
       try {
         const h = await actor.getActiveHoliday();
-        const key: HolidayKey =
-          "easter" in h
-            ? "easter"
-            : "christmas" in h
-              ? "christmas"
-              : "newyear" in h
-                ? "newyear"
-                : "midsommar" in h
-                  ? "midsommar"
-                  : "none";
+        const key = resolveHolidayKey(h);
         if (key !== "none") {
           setActiveHoliday(key);
           setShowSplash(true);
@@ -98,7 +101,7 @@ function AppContent() {
       {/* Holiday Splash Screen */}
       {showSplash && activeHoliday !== "none" && (
         <HolidaySplash
-          holiday={activeHoliday}
+          holiday={activeHoliday as Holiday}
           onDismiss={() => setShowSplash(false)}
         />
       )}
@@ -185,9 +188,6 @@ function AppContent() {
                 <TabsContent value="profile">
                   <MyPagesProfile
                     principalText={auth.principalText}
-                    isAdmin={auth.isAdmin}
-                    isUser={auth.isUser}
-                    isGuest={auth.isGuest}
                     roleLabel={auth.roleLabel}
                   />
                 </TabsContent>

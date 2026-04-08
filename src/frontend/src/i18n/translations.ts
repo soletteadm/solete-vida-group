@@ -100,7 +100,6 @@ export interface TranslationMap {
     phone: string;
     save: string;
     saving: string;
-    readonly: string;
     editProfile: string;
     profileSaved: string;
     profileError: string;
@@ -354,7 +353,6 @@ export const translations: Record<Language, TranslationMap> = {
       phone: "Phone Number",
       save: "Save Changes",
       saving: "Saving...",
-      readonly: "Your profile is set to read-only.",
       editProfile: "Edit Profile",
       profileSaved: "Profile saved successfully!",
       profileError: "Failed to save profile.",
@@ -605,7 +603,6 @@ export const translations: Record<Language, TranslationMap> = {
       phone: "Número de Teléfono",
       save: "Guardar Cambios",
       saving: "Guardando...",
-      readonly: "Su perfil está configurado como solo lectura.",
       editProfile: "Editar Perfil",
       profileSaved: "¡Perfil guardado con éxito!",
       profileError: "Error al guardar el perfil.",
@@ -858,7 +855,6 @@ export const translations: Record<Language, TranslationMap> = {
       phone: "Telefonnummer",
       save: "Spara Ändringar",
       saving: "Sparar...",
-      readonly: "Din profil är inställd på skrivskyddad.",
       editProfile: "Redigera Profil",
       profileSaved: "Profilen sparades!",
       profileError: "Kunde inte spara profilen.",
