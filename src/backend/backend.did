@@ -34,8 +34,21 @@ type ContactMessage = record {
 
 type HolidayKey = variant { none; easter; christmas; newyear; midsommar };
 
+type DocumentRecord = record {
+  id: text;
+  ownerPrincipal: principal;
+  ownerName: text;
+  fileName: text;
+  filePath: text;
+  mimeType: text;
+  isPublic: bool;
+  uploadedAt: int;
+  fileSize: nat;
+};
+
 type CallResult = variant { ok: null; err: text };
 type SubmitContactResult = variant { ok: text; err: text };
+type UploadDocumentResult = variant { ok: text; err: text };
 type ListUsersResult = variant { ok: vec UserListEntry; err: text };
 type ListContactResult = variant { ok: vec ContactMessage; err: text };
 type ListBlockedResult = variant { ok: vec text; err: text };
@@ -60,6 +73,14 @@ service : {
   blockContactSender: (text) -> (CallResult);
   unblockContactSender: (text) -> (CallResult);
   getBlockedSenders: () -> (ListBlockedResult);
+  uploadDocument: (text, text, text, bool, nat) -> (UploadDocumentResult);
+  listMyDocuments: () -> (vec DocumentRecord) query;
+  setDocumentPublic: (text, bool) -> (CallResult);
+  deleteDocument: (text) -> (CallResult);
+  listPublicDocuments: () -> (vec DocumentRecord) query;
+  getMyStorageUsed: () -> (nat) query;
+  setGuestDocumentUploadPermission: (bool) -> (CallResult);
+  getGuestDocumentUploadPermission: () -> (bool) query;
   admin_addUserAccess: (text, UserRole) -> ();
   admin_updateUserAccess: (text, UserRole) -> ();
   admin_getUserAccess: () -> (vec UserAccessEntry) query;

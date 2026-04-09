@@ -8,6 +8,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import {
   CheckCircle,
   ChevronDown,
+  Cpu,
   Globe,
   Layers,
   Loader2,
@@ -17,6 +18,8 @@ import {
   SendHorizonal,
   Shield,
   Star,
+  Users,
+  Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
@@ -138,55 +141,428 @@ export default function HomePage({ onLogin, isLoggedIn }: HomePageProps) {
         id="home"
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
         aria-label="Hero"
+        style={{ background: "oklch(0.10 0.008 60)" }}
       >
-        {/* Background gradient */}
-        <div className="absolute inset-0 hero-gradient" />
-        {/* Overlay */}
-        <div className="absolute inset-0 hero-overlay" />
-        {/* Decorative circles */}
-        <div className="absolute top-1/4 right-0 w-96 h-96 rounded-full bg-white/5 translate-x-1/2 blur-3xl" />
-        <div className="absolute bottom-1/4 left-0 w-64 h-64 rounded-full bg-gold/10 -translate-x-1/3 blur-2xl" />
+        {/* Tech grid pattern background */}
+        <div
+          className="absolute inset-0 opacity-[0.07]"
+          aria-hidden="true"
+          style={{
+            backgroundImage: `
+              linear-gradient(oklch(0.72 0.09 70) 1px, transparent 1px),
+              linear-gradient(90deg, oklch(0.72 0.09 70) 1px, transparent 1px)
+            `,
+            backgroundSize: "60px 60px",
+          }}
+        />
 
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 32 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
+        {/* Radial glow — upper right */}
+        <div
+          className="absolute -top-24 -right-24 w-[600px] h-[600px] rounded-full opacity-20"
+          aria-hidden="true"
+          style={{
+            background:
+              "radial-gradient(circle, oklch(0.72 0.09 70) 0%, transparent 70%)",
+          }}
+        />
+        {/* Radial glow — lower left */}
+        <div
+          className="absolute -bottom-32 -left-32 w-[500px] h-[500px] rounded-full opacity-10"
+          aria-hidden="true"
+          style={{
+            background:
+              "radial-gradient(circle, oklch(0.72 0.09 70) 0%, transparent 70%)",
+          }}
+        />
+
+        {/* Inline SVG — abstract circuit/node illustration */}
+        <div
+          className="absolute right-0 top-0 bottom-0 w-1/2 hidden lg:flex items-center justify-center opacity-25 pointer-events-none"
+          role="presentation"
+        >
+          <svg
+            viewBox="0 0 480 480"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-full max-w-md"
+            aria-hidden="true"
           >
-            <p className="font-sans text-xs tracking-[0.25em] uppercase text-white/70 mb-4">
-              EST. 2025 &nbsp;·&nbsp; ALICANTE, SPAIN
-            </p>
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white uppercase tracking-wide leading-tight mb-6">
-              {t.hero.title}
-            </h1>
-            <p className="font-sans text-lg sm:text-xl text-white/85 mb-10 leading-relaxed max-w-2xl mx-auto">
-              {t.hero.subtitle}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button
-                size="lg"
-                onClick={() => scrollToSection("services")}
-                className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full px-8 text-base shadow-lg"
-                data-ocid="hero.primary_button"
+            {/* Circuit nodes */}
+            <circle cx="240" cy="240" r="6" fill="oklch(0.72 0.09 70)" />
+            <circle cx="160" cy="160" r="4" fill="oklch(0.72 0.09 70)" />
+            <circle cx="320" cy="160" r="4" fill="oklch(0.72 0.09 70)" />
+            <circle cx="120" cy="280" r="4" fill="oklch(0.72 0.09 70)" />
+            <circle cx="360" cy="280" r="4" fill="oklch(0.72 0.09 70)" />
+            <circle cx="200" cy="360" r="4" fill="oklch(0.72 0.09 70)" />
+            <circle cx="300" cy="360" r="4" fill="oklch(0.72 0.09 70)" />
+            <circle cx="80" cy="180" r="3" fill="oklch(0.72 0.09 70)" />
+            <circle cx="400" cy="180" r="3" fill="oklch(0.72 0.09 70)" />
+            <circle cx="240" cy="100" r="3" fill="oklch(0.72 0.09 70)" />
+            <circle cx="240" cy="400" r="3" fill="oklch(0.72 0.09 70)" />
+            {/* Lines */}
+            <line
+              x1="240"
+              y1="240"
+              x2="160"
+              y2="160"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="1.5"
+              strokeDasharray="4 3"
+            />
+            <line
+              x1="240"
+              y1="240"
+              x2="320"
+              y2="160"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="1.5"
+              strokeDasharray="4 3"
+            />
+            <line
+              x1="240"
+              y1="240"
+              x2="120"
+              y2="280"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="1.5"
+              strokeDasharray="4 3"
+            />
+            <line
+              x1="240"
+              y1="240"
+              x2="360"
+              y2="280"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="1.5"
+              strokeDasharray="4 3"
+            />
+            <line
+              x1="240"
+              y1="240"
+              x2="200"
+              y2="360"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="1.5"
+              strokeDasharray="4 3"
+            />
+            <line
+              x1="240"
+              y1="240"
+              x2="300"
+              y2="360"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="1.5"
+              strokeDasharray="4 3"
+            />
+            <line
+              x1="160"
+              y1="160"
+              x2="80"
+              y2="180"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="1"
+              strokeDasharray="3 4"
+            />
+            <line
+              x1="320"
+              y1="160"
+              x2="400"
+              y2="180"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="1"
+              strokeDasharray="3 4"
+            />
+            <line
+              x1="160"
+              y1="160"
+              x2="240"
+              y2="100"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="1"
+              strokeDasharray="3 4"
+            />
+            <line
+              x1="320"
+              y1="160"
+              x2="240"
+              y2="100"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="1"
+              strokeDasharray="3 4"
+            />
+            <line
+              x1="200"
+              y1="360"
+              x2="240"
+              y2="400"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="1"
+              strokeDasharray="3 4"
+            />
+            <line
+              x1="300"
+              y1="360"
+              x2="240"
+              y2="400"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="1"
+              strokeDasharray="3 4"
+            />
+            <line
+              x1="120"
+              y1="280"
+              x2="80"
+              y2="180"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="0.8"
+              strokeDasharray="2 5"
+              opacity="0.5"
+            />
+            <line
+              x1="360"
+              y1="280"
+              x2="400"
+              y2="180"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="0.8"
+              strokeDasharray="2 5"
+              opacity="0.5"
+            />
+            {/* Outer ring */}
+            <circle
+              cx="240"
+              cy="240"
+              r="150"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="0.5"
+              strokeDasharray="8 6"
+              opacity="0.4"
+            />
+            <circle
+              cx="240"
+              cy="240"
+              r="200"
+              stroke="oklch(0.72 0.09 70)"
+              strokeWidth="0.4"
+              strokeDasharray="4 8"
+              opacity="0.2"
+            />
+          </svg>
+        </div>
+
+        {/* Content — two-column on desktop, stacked on mobile */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24 lg:py-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-screen lg:min-h-0 lg:pt-16 lg:pb-32">
+            {/* Left column — headline + CTA */}
+            <div className="space-y-8">
+              {/* Eyebrow */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
               >
-                {t.hero.exploreCta}
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => scrollToSection("about")}
-                className="border-white/40 bg-white/10 text-white hover:bg-white/20 font-sans rounded-full px-8 text-base backdrop-blur-sm"
-                data-ocid="hero.secondary_button"
+                <span
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-sans font-semibold uppercase tracking-[0.2em]"
+                  style={{
+                    color: "oklch(0.72 0.09 70)",
+                    border: "1px solid oklch(0.72 0.09 70 / 0.3)",
+                    background: "oklch(0.72 0.09 70 / 0.08)",
+                  }}
+                >
+                  <Cpu className="w-3 h-3" />
+                  IT Consulting &amp; Technology
+                </span>
+              </motion.div>
+
+              {/* Headline */}
+              <motion.h1
+                className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-[4.25rem] font-bold leading-[1.08] tracking-tight"
+                style={{ color: "oklch(0.97 0.008 70)" }}
+                initial={{ opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.65, ease: "easeOut", delay: 0.1 }}
               >
-                {t.hero.learnMore}
-              </Button>
+                {t.hero.headline}
+              </motion.h1>
+
+              {/* Subheadline */}
+              <motion.p
+                className="font-sans text-lg sm:text-xl leading-relaxed max-w-xl"
+                style={{ color: "oklch(0.97 0.008 70 / 0.72)" }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut", delay: 0.22 }}
+              >
+                {t.hero.subheadline}
+              </motion.p>
+
+              {/* CTA */}
+              <motion.div
+                className="flex flex-col sm:flex-row gap-3"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, ease: "easeOut", delay: 0.34 }}
+              >
+                <Button
+                  size="lg"
+                  onClick={() => scrollToSection("services")}
+                  className="font-sans rounded-full px-8 text-base font-semibold shadow-lg transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+                  style={{
+                    background: "oklch(0.72 0.09 70)",
+                    color: "oklch(0.13 0.008 60)",
+                  }}
+                  data-ocid="hero.primary_button"
+                >
+                  {t.hero.cta}
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => scrollToSection("about")}
+                  className="font-sans rounded-full px-8 text-base backdrop-blur-sm transition-all duration-200 hover:scale-[1.02]"
+                  style={{
+                    borderColor: "oklch(0.97 0.008 70 / 0.3)",
+                    background: "oklch(0.97 0.008 70 / 0.06)",
+                    color: "oklch(0.97 0.008 70)",
+                  }}
+                  data-ocid="hero.secondary_button"
+                >
+                  {t.hero.learnMore}
+                </Button>
+              </motion.div>
+
+              {/* Tagline */}
+              <motion.p
+                className="font-sans text-xs tracking-[0.18em] uppercase"
+                style={{ color: "oklch(0.72 0.09 70 / 0.7)" }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+              >
+                {t.hero.tagline}
+              </motion.p>
             </div>
-          </motion.div>
+
+            {/* Right column — stats card */}
+            <motion.div
+              className="hidden lg:flex justify-center items-center"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.75, ease: "easeOut", delay: 0.3 }}
+            >
+              <div
+                className="relative w-full max-w-sm rounded-2xl p-8 space-y-6"
+                style={{
+                  background: "oklch(0.97 0.008 70 / 0.04)",
+                  border: "1px solid oklch(0.72 0.09 70 / 0.25)",
+                  backdropFilter: "blur(12px)",
+                  boxShadow:
+                    "0 0 60px oklch(0.72 0.09 70 / 0.08), inset 0 1px 0 oklch(0.97 0.008 70 / 0.08)",
+                }}
+              >
+                {/* Corner accent */}
+                <div
+                  className="absolute top-0 right-0 w-20 h-20 rounded-bl-3xl rounded-tr-2xl opacity-50"
+                  style={{
+                    background:
+                      "linear-gradient(225deg, oklch(0.72 0.09 70 / 0.18) 0%, transparent 60%)",
+                  }}
+                />
+
+                <p
+                  className="font-sans text-xs uppercase tracking-[0.22em] font-semibold"
+                  style={{ color: "oklch(0.72 0.09 70)" }}
+                >
+                  Solete Vida Group S.L.
+                </p>
+
+                {/* Stat rows */}
+                {[
+                  {
+                    icon: <Zap className="w-5 h-5" />,
+                    value: "25+",
+                    label: t.hero.stat1Label,
+                  },
+                  {
+                    icon: <Users className="w-5 h-5" />,
+                    value: "200+",
+                    label: t.hero.stat2Label,
+                  },
+                  {
+                    icon: <Globe className="w-5 h-5" />,
+                    value: "ICP",
+                    label: t.hero.stat3Label,
+                  },
+                ].map((stat, i) => (
+                  <motion.div
+                    key={stat.label}
+                    className="flex items-center gap-4"
+                    initial={{ opacity: 0, x: 16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5 + i * 0.12 }}
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: "oklch(0.72 0.09 70 / 0.12)",
+                        color: "oklch(0.72 0.09 70)",
+                      }}
+                    >
+                      {stat.icon}
+                    </div>
+                    <div>
+                      <p
+                        className="font-serif text-2xl font-bold leading-none"
+                        style={{ color: "oklch(0.97 0.008 70)" }}
+                      >
+                        {stat.value}
+                      </p>
+                      <p
+                        className="font-sans text-xs mt-0.5"
+                        style={{ color: "oklch(0.97 0.008 70 / 0.55)" }}
+                      >
+                        {stat.label}
+                      </p>
+                    </div>
+                    {i < 2 && (
+                      <div
+                        className="absolute left-8 right-8"
+                        style={{
+                          borderBottom: "1px solid oklch(0.72 0.09 70 / 0.1)",
+                          marginTop: "3rem",
+                        }}
+                      />
+                    )}
+                  </motion.div>
+                ))}
+
+                {/* Divider lines between stats */}
+                <div
+                  style={{ borderTop: "1px solid oklch(0.72 0.09 70 / 0.12)" }}
+                  className="pt-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ background: "oklch(0.72 0.09 70)" }}
+                    />
+                    <p
+                      className="font-sans text-xs"
+                      style={{ color: "oklch(0.97 0.008 70 / 0.4)" }}
+                    >
+                      Alicante, Spain · Est. 2025
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
 
         {/* Scroll indicator */}
-        <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/50 cursor-pointer"
+        <motion.button
+          type="button"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 cursor-pointer bg-transparent border-0 p-0"
           onClick={() => scrollToSection("about")}
           animate={{ y: [0, 6, 0] }}
           transition={{
@@ -194,13 +570,19 @@ export default function HomePage({ onLogin, isLoggedIn }: HomePageProps) {
             duration: 1.8,
             ease: "easeInOut",
           }}
-          aria-hidden="true"
+          aria-label="Scroll down"
         >
-          <span className="font-sans text-[10px] tracking-widest uppercase">
+          <span
+            className="font-sans text-[10px] tracking-widest uppercase"
+            style={{ color: "oklch(0.97 0.008 70 / 0.4)" }}
+          >
             Scroll
           </span>
-          <ChevronDown className="w-4 h-4" />
-        </motion.div>
+          <ChevronDown
+            className="w-4 h-4"
+            style={{ color: "oklch(0.72 0.09 70 / 0.6)" }}
+          />
+        </motion.button>
       </section>
 
       {/* ============ ABOUT SECTION ============ */}

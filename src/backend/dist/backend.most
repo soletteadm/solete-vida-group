@@ -14,6 +14,29 @@ type ContactMessage__139940291 =
 type ContactStatus__937563682 = {#active; #notactive};
 type Data__791452850<K, V> =
   {var count : Nat__490723111; kvs : [var ?(K, V)]};
+type DocumentRecord_V1__217761273 =
+  {
+    fileName : Text;
+    filePath : Text;
+    id : Text;
+    isPublic : Bool;
+    mimeType : Text;
+    ownerName : Text;
+    ownerPrincipal : Principal;
+    uploadedAt : Int
+  };
+type DocumentRecord__161942319 =
+  {
+    fileName : Text;
+    filePath : Text;
+    fileSize : Nat;
+    id : Text;
+    isPublic : Bool;
+    mimeType : Text;
+    ownerName : Text;
+    ownerPrincipal : Principal;
+    uploadedAt : Int
+  };
 type Internal__8484328<K, V> =
   {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
 type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
@@ -28,12 +51,24 @@ actor {
   stable var activeHoliday :
     {#christmas; #easter; #midsommar; #newyear; #none};
   stable admin_controllers : [Text];
+  stable var allowGuestDocumentUpload : Bool;
   stable var blockedSenders :
     {var root : Node__46230540<Text, Bool>; var size : Nat__490723111};
   stable var contactIdCounter : Nat;
   stable var contactMessages :
     {
       var root : Node__46230540<Text, ContactMessage__139940291>;
+      var size : Nat__490723111
+    };
+  stable var documentIdCounter : Nat;
+  stable var documentRecords :
+    {
+      var root : Node__46230540<Text, DocumentRecord_V1__217761273>;
+      var size : Nat__490723111
+    };
+  stable var documentRecords_v2 :
+    {
+      var root : Node__46230540<Text, DocumentRecord__161942319>;
       var size : Nat__490723111
     };
   stable var userProfiles :

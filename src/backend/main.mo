@@ -58,6 +58,32 @@ actor {
     senderBlocked : Bool;
   };
 
+  // DocumentRecord without fileSize — matches the previously deployed stable type.
+  // This variable receives the old stable data on upgrade.
+  type DocumentRecord_V1 = {
+    id : Text;
+    ownerPrincipal : Principal;
+    ownerName : Text;
+    fileName : Text;
+    filePath : Text;
+    mimeType : Text;
+    isPublic : Bool;
+    uploadedAt : Int;
+  };
+
+  // Current DocumentRecord type includes fileSize.
+  type DocumentRecord = {
+    id : Text;
+    ownerPrincipal : Principal;
+    ownerName : Text;
+    fileName : Text;
+    filePath : Text;
+    mimeType : Text;
+    isPublic : Bool;
+    uploadedAt : Int;
+    fileSize : Nat;
+  };
+
   // ---- State ----
 
   stable var userRoles : Map.Map<Principal, UserRole> = Map.empty<Principal, UserRole>();
@@ -67,6 +93,43 @@ actor {
   stable var contactMessages : Map.Map<Text, ContactMessage> = Map.empty<Text, ContactMessage>();
   stable var blockedSenders : Map.Map<Text, Bool> = Map.empty<Text, Bool>();
   stable var contactIdCounter : Nat = 0;
+
+  // documentRecords: stable var that stores the OLD type (DocumentRecord_V1) so that
+  // the upgrade compatibility check passes. It receives the previously-deployed data.
+  // In postupgrade we copy+migrate all entries into documentRecords_v2 and clear this map.
+  stable var documentRecords : Map.Map<Text, DocumentRecord_V1> = Map.empty<Text, DocumentRecord_V1>();
+  // documentRecords_v2: the live store used by all document APIs (new type with fileSize).
+  stable var documentRecords_v2 : Map.Map<Text, DocumentRecord> = Map.empty<Text, DocumentRecord>();
+  stable var documentIdCounter : Nat = 0;
+  stable var allowGuestDocumentUpload : Bool = false;
+
+  // ---- Migration ----
+
+  system func postupgrade() {
+    // Migrate V1 records (no fileSize) into documentRecords_v2 with fileSize = 0
+    for ((id, old) in documentRecords.entries()) {
+      switch (documentRecords_v2.get(id)) {
+        case (null) {
+          documentRecords_v2.add(id, {
+            id = old.id;
+            ownerPrincipal = old.ownerPrincipal;
+            ownerName = old.ownerName;
+            fileName = old.fileName;
+            filePath = old.filePath;
+            mimeType = old.mimeType;
+            isPublic = old.isPublic;
+            uploadedAt = old.uploadedAt;
+            fileSize = 0;
+          });
+        };
+        case (?_) {}; // already migrated
+      };
+    };
+    // Clear the v1 store after migration
+    for ((id, _) in documentRecords.entries()) {
+      documentRecords.remove(id);
+    };
+  };
 
   // ---- Local admin logic (independent of AccessControl.isAdmin) ----
 
@@ -129,6 +192,20 @@ actor {
     var count : Nat = 0;
     for (_ in t.chars()) { count += 1 };
     count;
+  };
+
+  // Sanitize a file name: replace spaces and special chars with underscores,
+  // keep alphanumeric, dots, and hyphens.
+  func sanitizeFileName(name : Text) : Text {
+    Text.fromIter(
+      name.toIter().map(func(c : Char) : Char {
+        if (c.isAlphabetic() or c.isDigit() or c == '.' or c == '-') {
+          c
+        } else {
+          '_'
+        }
+      })
+    );
   };
 
   // ---- Holiday APIs ----
@@ -508,6 +585,148 @@ actor {
       };
     };
     return #ok;
+  };
+
+  // ---- Document APIs ----
+
+  // uploadDocument: stores metadata for a document already uploaded via object-storage.
+  // The filePath must use the format: documents/public/{ownerName}/{fileName}
+  // Caller must be #user or #admin, or #guest only when allowGuestDocumentUpload is true.
+  // fileSize is in bytes; total storage per user is capped at 100MB (104857600 bytes).
+  public shared ({ caller }) func uploadDocument(fileName : Text, filePath : Text, mimeType : Text, isPublic : Bool, fileSize : Nat) : async { #ok : Text; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in to upload documents.");
+    };
+    let role = getCallerRole(caller);
+    switch (role) {
+      case (#guest) {
+        if (not allowGuestDocumentUpload) {
+          return #err("Unauthorized: Guests cannot upload documents.");
+        };
+      };
+      case (_) {};
+    };
+
+    // Enforce 100MB total storage limit per user
+    let maxStorage : Nat = 104857600;
+    let usedStorage = documentRecords_v2.entries().toArray()
+      .filter(func(pair : (Text, DocumentRecord)) : Bool {
+        Principal.equal(pair.1.ownerPrincipal, caller)
+      })
+      .foldLeft(0 : Nat, func(acc : Nat, pair : (Text, DocumentRecord)) : Nat {
+        acc + pair.1.fileSize
+      });
+    if (usedStorage + fileSize > maxStorage) {
+      return #err("Storage limit exceeded. Maximum total storage per user is 100MB.");
+    };
+
+    let safeFileName = sanitizeFileName(fileName);
+    if (textLength(safeFileName) == 0) {
+      return #err("File name is required.");
+    };
+
+    // Resolve owner name from profile, fallback to sanitized principal text
+    let ownerName = switch (userProfiles.get(caller)) {
+      case (?profile) {
+        if (textLength(profile.name) > 0) { profile.name } else { caller.toText() }
+      };
+      case (null) { caller.toText() };
+    };
+
+    documentIdCounter += 1;
+    let id = "doc-" # documentIdCounter.toText() # "-" # Time.now().toText();
+
+    let doc : DocumentRecord = {
+      id = id;
+      ownerPrincipal = caller;
+      ownerName = ownerName;
+      fileName = safeFileName;
+      filePath = filePath;
+      mimeType = mimeType;
+      isPublic = isPublic;
+      uploadedAt = Time.now();
+      fileSize = fileSize;
+    };
+
+    documentRecords_v2.add(id, doc);
+    return #ok(id);
+  };
+
+  // listMyDocuments: returns all documents owned by the caller.
+  public query ({ caller }) func listMyDocuments() : async [DocumentRecord] {
+    if (caller.isAnonymous()) { return [] };
+    documentRecords_v2.entries().toArray()
+      .filter(func(pair : (Text, DocumentRecord)) : Bool {
+        Principal.equal(pair.1.ownerPrincipal, caller)
+      })
+      .map(func(pair : (Text, DocumentRecord)) : DocumentRecord { pair.1 });
+  };
+
+  // setDocumentPublic: toggles the isPublic flag for the caller's own document.
+  public shared ({ caller }) func setDocumentPublic(documentId : Text, isPublic : Bool) : async { #ok; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in.");
+    };
+    switch (documentRecords_v2.get(documentId)) {
+      case (null) { return #err("Document not found.") };
+      case (?doc) {
+        if (not Principal.equal(doc.ownerPrincipal, caller) and not isAdmin(caller)) {
+          return #err("Unauthorized: You can only update your own documents.");
+        };
+        documentRecords_v2.add(documentId, { doc with isPublic = isPublic });
+        return #ok;
+      };
+    };
+  };
+
+  // deleteDocument: removes document metadata; caller must own the document (or be admin).
+  public shared ({ caller }) func deleteDocument(documentId : Text) : async { #ok; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in.");
+    };
+    switch (documentRecords_v2.get(documentId)) {
+      case (null) { return #err("Document not found.") };
+      case (?doc) {
+        if (not Principal.equal(doc.ownerPrincipal, caller) and not isAdmin(caller)) {
+          return #err("Unauthorized: You can only delete your own documents.");
+        };
+        documentRecords_v2.remove(documentId);
+        return #ok;
+      };
+    };
+  };
+
+  // listPublicDocuments: returns all documents marked as public. No auth required.
+  public query func listPublicDocuments() : async [DocumentRecord] {
+    documentRecords_v2.entries().toArray()
+      .filter(func(pair : (Text, DocumentRecord)) : Bool { pair.1.isPublic })
+      .map(func(pair : (Text, DocumentRecord)) : DocumentRecord { pair.1 });
+  };
+
+  // getMyStorageUsed: returns total bytes used by the caller across all their documents.
+  public query ({ caller }) func getMyStorageUsed() : async Nat {
+    if (caller.isAnonymous()) { return 0 };
+    documentRecords_v2.entries().toArray()
+      .filter(func(pair : (Text, DocumentRecord)) : Bool {
+        Principal.equal(pair.1.ownerPrincipal, caller)
+      })
+      .foldLeft(0 : Nat, func(acc : Nat, pair : (Text, DocumentRecord)) : Nat {
+        acc + pair.1.fileSize
+      });
+  };
+
+  // setGuestDocumentUploadPermission: admin-only toggle for guest upload access.
+  public shared ({ caller }) func setGuestDocumentUploadPermission(allowed : Bool) : async { #ok; #err : Text } {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can change guest document upload permission.");
+    };
+    allowGuestDocumentUpload := allowed;
+    return #ok;
+  };
+
+  // getGuestDocumentUploadPermission: returns whether guests are allowed to upload documents.
+  public query func getGuestDocumentUploadPermission() : async Bool {
+    allowGuestDocumentUpload;
   };
 
   // --> Admin operations, USED ONLY WITH CANDID UI, DO NOT USE admin_* operations in front-end

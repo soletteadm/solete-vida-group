@@ -11,6 +11,17 @@ export interface UserAccessEntry {
     principal: Principal;
     role: UserRole;
 }
+export interface DocumentRecord {
+    id: string;
+    ownerName: string;
+    ownerPrincipal: Principal;
+    mimeType: string;
+    fileName: string;
+    filePath: string;
+    fileSize: bigint;
+    isPublic: boolean;
+    uploadedAt: bigint;
+}
 export interface ContactMessage {
     id: string;
     status: ContactStatus;
@@ -88,6 +99,13 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    deleteDocument(documentId: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     getActiveHoliday(): Promise<Holiday>;
     getBlockedSenders(): Promise<{
         __kind__: "ok";
@@ -96,8 +114,10 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    getGuestDocumentUploadPermission(): Promise<boolean>;
     getMyProfile(): Promise<UserProfile | null>;
     getMyRole(): Promise<UserRole>;
+    getMyStorageUsed(): Promise<bigint>;
     listContactMessages(): Promise<{
         __kind__: "ok";
         ok: Array<ContactMessage>;
@@ -105,6 +125,8 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    listMyDocuments(): Promise<Array<DocumentRecord>>;
+    listPublicDocuments(): Promise<Array<DocumentRecord>>;
     listUsers(): Promise<{
         __kind__: "ok";
         ok: Array<UserListEntry>;
@@ -120,6 +142,20 @@ export interface backendInterface {
         err: string;
     }>;
     setActiveHoliday(holiday: Holiday): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    setDocumentPublic(documentId: string, isPublic: boolean): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    setGuestDocumentUploadPermission(allowed: boolean): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
@@ -164,6 +200,13 @@ export interface backendInterface {
     updateUserRole(principalText: string, newRole: UserRole): Promise<{
         __kind__: "ok";
         ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    uploadDocument(fileName: string, filePath: string, mimeType: string, isPublic: boolean, fileSize: bigint): Promise<{
+        __kind__: "ok";
+        ok: string;
     } | {
         __kind__: "err";
         err: string;

@@ -45,6 +45,17 @@ export const ContactMessage = IDL.Record({
   'message' : IDL.Text,
   'deviceId' : IDL.Opt(IDL.Text),
 });
+export const DocumentRecord = IDL.Record({
+  'id' : IDL.Text,
+  'ownerName' : IDL.Text,
+  'ownerPrincipal' : IDL.Principal,
+  'mimeType' : IDL.Text,
+  'fileName' : IDL.Text,
+  'filePath' : IDL.Text,
+  'fileSize' : IDL.Nat,
+  'isPublic' : IDL.Bool,
+  'uploadedAt' : IDL.Int,
+});
 export const UserListEntry = IDL.Record({
   'principal' : IDL.Principal,
   'role' : UserRole,
@@ -80,19 +91,28 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
+  'deleteDocument' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'getActiveHoliday' : IDL.Func([], [Holiday], ['query']),
   'getBlockedSenders' : IDL.Func(
       [],
       [IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text })],
       [],
     ),
+  'getGuestDocumentUploadPermission' : IDL.Func([], [IDL.Bool], ['query']),
   'getMyProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getMyRole' : IDL.Func([], [UserRole], ['query']),
+  'getMyStorageUsed' : IDL.Func([], [IDL.Nat], ['query']),
   'listContactMessages' : IDL.Func(
       [],
       [IDL.Variant({ 'ok' : IDL.Vec(ContactMessage), 'err' : IDL.Text })],
       [],
     ),
+  'listMyDocuments' : IDL.Func([], [IDL.Vec(DocumentRecord)], ['query']),
+  'listPublicDocuments' : IDL.Func([], [IDL.Vec(DocumentRecord)], ['query']),
   'listUsers' : IDL.Func(
       [],
       [IDL.Variant({ 'ok' : IDL.Vec(UserListEntry), 'err' : IDL.Text })],
@@ -105,6 +125,16 @@ export const idlService = IDL.Service({
     ),
   'setActiveHoliday' : IDL.Func(
       [Holiday],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'setDocumentPublic' : IDL.Func(
+      [IDL.Text, IDL.Bool],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'setGuestDocumentUploadPermission' : IDL.Func(
+      [IDL.Bool],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
@@ -136,6 +166,11 @@ export const idlService = IDL.Service({
   'updateUserRole' : IDL.Func(
       [IDL.Text, UserRole],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'uploadDocument' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
       [],
     ),
 });
@@ -180,6 +215,17 @@ export const idlFactory = ({ IDL }) => {
     'message' : IDL.Text,
     'deviceId' : IDL.Opt(IDL.Text),
   });
+  const DocumentRecord = IDL.Record({
+    'id' : IDL.Text,
+    'ownerName' : IDL.Text,
+    'ownerPrincipal' : IDL.Principal,
+    'mimeType' : IDL.Text,
+    'fileName' : IDL.Text,
+    'filePath' : IDL.Text,
+    'fileSize' : IDL.Nat,
+    'isPublic' : IDL.Bool,
+    'uploadedAt' : IDL.Int,
+  });
   const UserListEntry = IDL.Record({
     'principal' : IDL.Principal,
     'role' : UserRole,
@@ -215,19 +261,28 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
+    'deleteDocument' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'getActiveHoliday' : IDL.Func([], [Holiday], ['query']),
     'getBlockedSenders' : IDL.Func(
         [],
         [IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text })],
         [],
       ),
+    'getGuestDocumentUploadPermission' : IDL.Func([], [IDL.Bool], ['query']),
     'getMyProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getMyRole' : IDL.Func([], [UserRole], ['query']),
+    'getMyStorageUsed' : IDL.Func([], [IDL.Nat], ['query']),
     'listContactMessages' : IDL.Func(
         [],
         [IDL.Variant({ 'ok' : IDL.Vec(ContactMessage), 'err' : IDL.Text })],
         [],
       ),
+    'listMyDocuments' : IDL.Func([], [IDL.Vec(DocumentRecord)], ['query']),
+    'listPublicDocuments' : IDL.Func([], [IDL.Vec(DocumentRecord)], ['query']),
     'listUsers' : IDL.Func(
         [],
         [IDL.Variant({ 'ok' : IDL.Vec(UserListEntry), 'err' : IDL.Text })],
@@ -240,6 +295,16 @@ export const idlFactory = ({ IDL }) => {
       ),
     'setActiveHoliday' : IDL.Func(
         [Holiday],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'setDocumentPublic' : IDL.Func(
+        [IDL.Text, IDL.Bool],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'setGuestDocumentUploadPermission' : IDL.Func(
+        [IDL.Bool],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
@@ -271,6 +336,11 @@ export const idlFactory = ({ IDL }) => {
     'updateUserRole' : IDL.Func(
         [IDL.Text, UserRole],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'uploadDocument' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),
   });

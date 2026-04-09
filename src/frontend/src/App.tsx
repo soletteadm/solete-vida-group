@@ -11,8 +11,15 @@ import HomePage from "@/pages/HomePage";
 import MyPagesAdmin from "@/pages/MyPagesAdmin";
 import MyPagesCalendar from "@/pages/MyPagesCalendar";
 import MyPagesContacts from "@/pages/MyPagesContacts";
+import MyPagesDocuments from "@/pages/MyPagesDocuments";
 import MyPagesProfile from "@/pages/MyPagesProfile";
-import { CalendarDays, MessageSquare, User, Users } from "lucide-react";
+import {
+  CalendarDays,
+  FileText,
+  MessageSquare,
+  User,
+  Users,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Holiday } from "./backend.d";
 
@@ -29,7 +36,7 @@ function resolveHolidayKey(h: Holiday): string {
 }
 
 type Page = "home" | "myPages";
-type MyPagesTab = "profile" | "admin" | "calendar" | "contacts";
+type MyPagesTab = "profile" | "admin" | "calendar" | "contacts" | "documents";
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>("home");
@@ -183,6 +190,16 @@ function AppContent() {
                       {t.myPages.contacts}
                     </TabsTrigger>
                   )}
+                  {auth.isLoggedIn && (
+                    <TabsTrigger
+                      value="documents"
+                      className="font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black"
+                      data-ocid="mypages.documents.tab"
+                    >
+                      <FileText className="w-4 h-4" />
+                      {t.documents.tab}
+                    </TabsTrigger>
+                  )}
                 </TabsList>
 
                 <TabsContent value="profile">
@@ -207,6 +224,16 @@ function AppContent() {
                 {auth.isAdmin && (
                   <TabsContent value="contacts">
                     <MyPagesContacts />
+                  </TabsContent>
+                )}
+
+                {auth.isLoggedIn && (
+                  <TabsContent value="documents">
+                    <MyPagesDocuments
+                      principalText={auth.principalText}
+                      userName={auth.principalText ?? ""}
+                      userRole={auth.roleLabel as "admin" | "user" | "guest"}
+                    />
                   </TabsContent>
                 )}
               </Tabs>

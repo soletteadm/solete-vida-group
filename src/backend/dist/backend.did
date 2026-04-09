@@ -30,6 +30,18 @@ type Holiday =
    newyear;
    none;
  };
+type DocumentRecord = 
+ record {
+   fileName: text;
+   filePath: text;
+   fileSize: nat;
+   id: text;
+   isPublic: bool;
+   mimeType: text;
+   ownerName: text;
+   ownerPrincipal: principal;
+   uploadedAt: int;
+ };
 type ContactStatus = 
  variant {
    active;
@@ -71,17 +83,25 @@ service : {
                                                err: text;
                                                ok;
                                              });
+  deleteDocument: (documentId: text) -> (variant {
+                                           err: text;
+                                           ok;
+                                         });
   getActiveHoliday: () -> (Holiday) query;
   getBlockedSenders: () -> (variant {
                               err: text;
                               ok: vec text;
                             });
+  getGuestDocumentUploadPermission: () -> (bool) query;
   getMyProfile: () -> (opt UserProfile) query;
   getMyRole: () -> (UserRole) query;
+  getMyStorageUsed: () -> (nat) query;
   listContactMessages: () -> (variant {
                                 err: text;
                                 ok: vec ContactMessage;
                               });
+  listMyDocuments: () -> (vec DocumentRecord) query;
+  listPublicDocuments: () -> (vec DocumentRecord) query;
   listUsers: () -> (variant {
                       err: text;
                       ok: vec UserListEntry;
@@ -94,6 +114,16 @@ service : {
                                              err: text;
                                              ok;
                                            });
+  setDocumentPublic: (documentId: text, isPublic: bool) ->
+   (variant {
+      err: text;
+      ok;
+    });
+  setGuestDocumentUploadPermission: (allowed: bool) ->
+   (variant {
+      err: text;
+      ok;
+    });
   submitContact: (name: text, email: text, message: text) ->
    (variant {
       err: text;
@@ -123,4 +153,9 @@ service : {
       err: text;
       ok;
     });
+  uploadDocument: (fileName: text, filePath: text, mimeType: text, isPublic:
+   bool, fileSize: nat) -> (variant {
+                              err: text;
+                              ok: text;
+                            });
 }

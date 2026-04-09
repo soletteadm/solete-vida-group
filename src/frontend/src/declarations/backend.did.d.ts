@@ -23,6 +23,17 @@ export interface ContactMessage {
 }
 export type ContactStatus = { 'active' : null } |
   { 'notactive' : null };
+export interface DocumentRecord {
+  'id' : string,
+  'ownerName' : string,
+  'ownerPrincipal' : Principal,
+  'mimeType' : string,
+  'fileName' : string,
+  'filePath' : string,
+  'fileSize' : bigint,
+  'isPublic' : boolean,
+  'uploadedAt' : bigint,
+}
 export type Holiday = { 'newyear' : null } |
   { 'none' : null } |
   { 'easter' : null } |
@@ -68,19 +79,28 @@ export interface _SERVICE {
     { 'ok' : null } |
       { 'err' : string }
   >,
+  'deleteDocument' : ActorMethod<
+    [string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'getActiveHoliday' : ActorMethod<[], Holiday>,
   'getBlockedSenders' : ActorMethod<
     [],
     { 'ok' : Array<string> } |
       { 'err' : string }
   >,
+  'getGuestDocumentUploadPermission' : ActorMethod<[], boolean>,
   'getMyProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getMyRole' : ActorMethod<[], UserRole>,
+  'getMyStorageUsed' : ActorMethod<[], bigint>,
   'listContactMessages' : ActorMethod<
     [],
     { 'ok' : Array<ContactMessage> } |
       { 'err' : string }
   >,
+  'listMyDocuments' : ActorMethod<[], Array<DocumentRecord>>,
+  'listPublicDocuments' : ActorMethod<[], Array<DocumentRecord>>,
   'listUsers' : ActorMethod<
     [],
     { 'ok' : Array<UserListEntry> } |
@@ -89,6 +109,16 @@ export interface _SERVICE {
   'removeUser' : ActorMethod<[string], { 'ok' : null } | { 'err' : string }>,
   'setActiveHoliday' : ActorMethod<
     [Holiday],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  'setDocumentPublic' : ActorMethod<
+    [string, boolean],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  'setGuestDocumentUploadPermission' : ActorMethod<
+    [boolean],
     { 'ok' : null } |
       { 'err' : string }
   >,
@@ -120,6 +150,11 @@ export interface _SERVICE {
   'updateUserRole' : ActorMethod<
     [string, UserRole],
     { 'ok' : null } |
+      { 'err' : string }
+  >,
+  'uploadDocument' : ActorMethod<
+    [string, string, string, boolean, bigint],
+    { 'ok' : string } |
       { 'err' : string }
   >,
 }

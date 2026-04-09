@@ -14,7 +14,7 @@ export default function Footer({ onNavigate }: FooterProps) {
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
           {/* Column 1: Company Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-2.5">

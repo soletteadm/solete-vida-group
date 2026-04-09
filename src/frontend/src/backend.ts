@@ -93,6 +93,17 @@ export interface UserAccessEntry {
     principal: Principal;
     role: UserRole;
 }
+export interface DocumentRecord {
+    id: string;
+    ownerName: string;
+    ownerPrincipal: Principal;
+    mimeType: string;
+    fileName: string;
+    filePath: string;
+    fileSize: bigint;
+    isPublic: boolean;
+    uploadedAt: bigint;
+}
 export interface ContactMessage {
     id: string;
     status: ContactStatus;
@@ -170,6 +181,13 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    deleteDocument(documentId: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     getActiveHoliday(): Promise<Holiday>;
     getBlockedSenders(): Promise<{
         __kind__: "ok";
@@ -178,8 +196,10 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    getGuestDocumentUploadPermission(): Promise<boolean>;
     getMyProfile(): Promise<UserProfile | null>;
     getMyRole(): Promise<UserRole>;
+    getMyStorageUsed(): Promise<bigint>;
     listContactMessages(): Promise<{
         __kind__: "ok";
         ok: Array<ContactMessage>;
@@ -187,6 +207,8 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    listMyDocuments(): Promise<Array<DocumentRecord>>;
+    listPublicDocuments(): Promise<Array<DocumentRecord>>;
     listUsers(): Promise<{
         __kind__: "ok";
         ok: Array<UserListEntry>;
@@ -202,6 +224,20 @@ export interface backendInterface {
         err: string;
     }>;
     setActiveHoliday(holiday: Holiday): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    setDocumentPublic(documentId: string, isPublic: boolean): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    setGuestDocumentUploadPermission(allowed: boolean): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
@@ -246,6 +282,13 @@ export interface backendInterface {
     updateUserRole(principalText: string, newRole: UserRole): Promise<{
         __kind__: "ok";
         ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    uploadDocument(fileName: string, filePath: string, mimeType: string, isPublic: boolean, fileSize: bigint): Promise<{
+        __kind__: "ok";
+        ok: string;
     } | {
         __kind__: "err";
         err: string;
@@ -396,6 +439,26 @@ export class Backend implements backendInterface {
             return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
         }
     }
+    async deleteDocument(arg0: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteDocument(arg0);
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteDocument(arg0);
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getActiveHoliday(): Promise<Holiday> {
         if (this.processError) {
             try {
@@ -430,6 +493,20 @@ export class Backend implements backendInterface {
             return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getGuestDocumentUploadPermission(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getGuestDocumentUploadPermission();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getGuestDocumentUploadPermission();
+            return result;
+        }
+    }
     async getMyProfile(): Promise<UserProfile | null> {
         if (this.processError) {
             try {
@@ -458,6 +535,20 @@ export class Backend implements backendInterface {
             return from_candid_UserRole_n7(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getMyStorageUsed(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getMyStorageUsed();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getMyStorageUsed();
+            return result;
+        }
+    }
     async listContactMessages(): Promise<{
         __kind__: "ok";
         ok: Array<ContactMessage>;
@@ -476,6 +567,34 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.listContactMessages();
             return from_candid_variant_n13(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async listMyDocuments(): Promise<Array<DocumentRecord>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listMyDocuments();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listMyDocuments();
+            return result;
+        }
+    }
+    async listPublicDocuments(): Promise<Array<DocumentRecord>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listPublicDocuments();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listPublicDocuments();
+            return result;
         }
     }
     async listUsers(): Promise<{
@@ -535,6 +654,46 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.setActiveHoliday(to_candid_Holiday_n24(this._uploadFile, this._downloadFile, arg0));
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async setDocumentPublic(arg0: string, arg1: boolean): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setDocumentPublic(arg0, arg1);
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setDocumentPublic(arg0, arg1);
+            return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async setGuestDocumentUploadPermission(arg0: boolean): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setGuestDocumentUploadPermission(arg0);
+                return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setGuestDocumentUploadPermission(arg0);
             return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -656,6 +815,26 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.updateUserRole(arg0, to_candid_UserRole_n1(this._uploadFile, this._downloadFile, arg1));
             return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async uploadDocument(arg0: string, arg1: string, arg2: string, arg3: boolean, arg4: bigint): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.uploadDocument(arg0, arg1, arg2, arg3, arg4);
+                return from_candid_variant_n26(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.uploadDocument(arg0, arg1, arg2, arg3, arg4);
+            return from_candid_variant_n26(this._uploadFile, this._downloadFile, result);
         }
     }
 }

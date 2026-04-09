@@ -17,6 +17,13 @@ export interface TranslationMap {
     subtitle: string;
     exploreCta: string;
     learnMore: string;
+    headline: string;
+    subheadline: string;
+    cta: string;
+    tagline: string;
+    stat1Label: string;
+    stat2Label: string;
+    stat3Label: string;
   };
   // About section
   about: {
@@ -240,6 +247,37 @@ export interface TranslationMap {
     user: string;
     guest: string;
   };
+  // Documents
+  documents: {
+    tab: string;
+    uploadTitle: string;
+    uploadButton: string;
+    noDocuments: string;
+    public: string;
+    private: string;
+    fileName: string;
+    uploadDate: string;
+    fileSize: string;
+    actions: string;
+    download: string;
+    delete: string;
+    fileTypeError: string;
+    fileSizeError: string;
+    uploadSuccess: string;
+    uploadError: string;
+    deleteSuccess: string;
+    deleteError: string;
+    footerTitle: string;
+    downloadLink: string;
+    storageUsed: string;
+    storageLimitError: string;
+    guestUploadDisabled: string;
+    guestUploadToggleLabel: string;
+    guestUploadEnabled: string;
+    guestUploadDisabledMsg: string;
+    share: string;
+    copied: string;
+  };
 }
 
 export const translations: Record<Language, TranslationMap> = {
@@ -258,6 +296,14 @@ export const translations: Record<Language, TranslationMap> = {
       subtitle: "Excellence in Mediterranean Business & Ventures.",
       exploreCta: "Explore Our Services",
       learnMore: "Learn More",
+      headline: "Technology That Moves Business Forward",
+      subheadline:
+        "End-to-end IT consulting — from system design to implementation. Building reliable, scalable solutions since 1998.",
+      cta: "Explore Our Services",
+      tagline: "EST. 2025 · ALICANTE, SPAIN · Since 1998 in Sweden",
+      stat1Label: "Years Experience",
+      stat2Label: "Clients Served",
+      stat3Label: "ICP Blockchain Ready",
     },
     about: {
       eyebrow: "About Us",
@@ -490,6 +536,38 @@ export const translations: Record<Language, TranslationMap> = {
       user: "User",
       guest: "Guest",
     },
+    documents: {
+      tab: "Documents",
+      uploadTitle: "Upload Document",
+      uploadButton: "Upload",
+      noDocuments: "No documents uploaded yet.",
+      public: "Public",
+      private: "Private",
+      fileName: "File Name",
+      uploadDate: "Upload Date",
+      fileSize: "Size",
+      actions: "Actions",
+      download: "Download",
+      delete: "Delete",
+      fileTypeError: "Only PDF and Word documents (.pdf, .docx) are allowed.",
+      fileSizeError: "File is too large. Maximum size is 10 MB.",
+      uploadSuccess: "Document uploaded successfully.",
+      uploadError: "Failed to upload document.",
+      deleteSuccess: "Document deleted successfully.",
+      deleteError: "Failed to delete document.",
+      footerTitle: "Documents",
+      downloadLink: "Download",
+      storageUsed: "{used} MB used of {total} MB",
+      storageLimitError:
+        "Upload would exceed your 100 MB storage limit. You have {remaining} MB remaining.",
+      guestUploadDisabled:
+        "Document uploads are not enabled for your account. Contact an admin.",
+      guestUploadToggleLabel: "Allow guests to upload documents",
+      guestUploadEnabled: "Guests can now upload documents",
+      guestUploadDisabledMsg: "Guest uploads are now disabled",
+      share: "Share",
+      copied: "Copied!",
+    },
   },
 
   es: {
@@ -507,6 +585,14 @@ export const translations: Record<Language, TranslationMap> = {
       subtitle: "Excelencia en Negocios e Inversiones del Mediterráneo.",
       exploreCta: "Ver Nuestros Servicios",
       learnMore: "Saber Más",
+      headline: "Tecnología Que Impulsa Tu Negocio",
+      subheadline:
+        "Consultoría IT integral — desde el diseño hasta la implementación. Construyendo soluciones fiables desde 1998.",
+      cta: "Explorar Servicios",
+      tagline: "EST. 2025 · ALICANTE, ESPAÑA · Desde 1998 en Suecia",
+      stat1Label: "Años de Experiencia",
+      stat2Label: "Clientes Atendidos",
+      stat3Label: "ICP Blockchain Listo",
     },
     about: {
       eyebrow: "Sobre Nosotros",
@@ -742,6 +828,39 @@ export const translations: Record<Language, TranslationMap> = {
       user: "Usuario",
       guest: "Invitado",
     },
+    documents: {
+      tab: "Documentos",
+      uploadTitle: "Subir Documento",
+      uploadButton: "Subir",
+      noDocuments: "Aún no se han subido documentos.",
+      public: "Público",
+      private: "Privado",
+      fileName: "Nombre de Archivo",
+      uploadDate: "Fecha de Subida",
+      fileSize: "Tamaño",
+      actions: "Acciones",
+      download: "Descargar",
+      delete: "Eliminar",
+      fileTypeError: "Solo se permiten PDF y documentos Word (.pdf, .docx).",
+      fileSizeError:
+        "El archivo es demasiado grande. El tamaño máximo es 10 MB.",
+      uploadSuccess: "Documento subido correctamente.",
+      uploadError: "Error al subir el documento.",
+      deleteSuccess: "Documento eliminado correctamente.",
+      deleteError: "Error al eliminar el documento.",
+      footerTitle: "Documentos",
+      downloadLink: "Descargar",
+      storageUsed: "{used} MB usados de {total} MB",
+      storageLimitError:
+        "La subida superaría tu límite de 100 MB. Te quedan {remaining} MB.",
+      guestUploadDisabled:
+        "Las subidas de documentos no están habilitadas para tu cuenta. Contacta con un administrador.",
+      guestUploadToggleLabel: "Permitir a los invitados subir documentos",
+      guestUploadEnabled: "Los invitados ya pueden subir documentos",
+      guestUploadDisabledMsg: "Las subidas para invitados están desactivadas",
+      share: "Compartir",
+      copied: "¡Copiado!",
+    },
   },
 
   sv: {
@@ -759,6 +878,14 @@ export const translations: Record<Language, TranslationMap> = {
       subtitle: "Excellens i Medelhavets Affärsliv & Ventures.",
       exploreCta: "Utforska Våra Tjänster",
       learnMore: "Läs Mer",
+      headline: "Teknologi Som Driver Affärer Framåt",
+      subheadline:
+        "Heltäckande IT-konsulting — från systemdesign till implementation. Bygger pålitliga lösningar sedan 1998.",
+      cta: "Utforska Tjänster",
+      tagline: "EST. 2025 · ALICANTE, SPANIEN · Sedan 1998 i Sverige",
+      stat1Label: "Års Erfarenhet",
+      stat2Label: "Kunder Betjänade",
+      stat3Label: "ICP Blockchain Redo",
     },
     about: {
       eyebrow: "Om Oss",
@@ -993,6 +1120,38 @@ export const translations: Record<Language, TranslationMap> = {
       admin: "Administratör",
       user: "Användare",
       guest: "Gäst",
+    },
+    documents: {
+      tab: "Dokument",
+      uploadTitle: "Ladda Upp Dokument",
+      uploadButton: "Ladda Upp",
+      noDocuments: "Inga dokument uppladdade ännu.",
+      public: "Offentlig",
+      private: "Privat",
+      fileName: "Filnamn",
+      uploadDate: "Uppladdningsdatum",
+      fileSize: "Storlek",
+      actions: "Åtgärder",
+      download: "Ladda Ner",
+      delete: "Radera",
+      fileTypeError: "Endast PDF och Word-dokument (.pdf, .docx) är tillåtna.",
+      fileSizeError: "Filen är för stor. Maximal storlek är 10 MB.",
+      uploadSuccess: "Dokumentet laddades upp.",
+      uploadError: "Kunde inte ladda upp dokumentet.",
+      deleteSuccess: "Dokumentet raderades.",
+      deleteError: "Kunde inte radera dokumentet.",
+      footerTitle: "Dokument",
+      downloadLink: "Ladda Ner",
+      storageUsed: "{used} MB används av {total} MB",
+      storageLimitError:
+        "Uppladdningen skulle överskrida din gräns på 100 MB. Du har {remaining} MB kvar.",
+      guestUploadDisabled:
+        "Dokumentuppladdning är inte aktiverat för ditt konto. Kontakta en administratör.",
+      guestUploadToggleLabel: "Tillåt gäster att ladda upp dokument",
+      guestUploadEnabled: "Gäster kan nu ladda upp dokument",
+      guestUploadDisabledMsg: "Uppladdning för gäster är nu inaktiverat",
+      share: "Dela",
+      copied: "Kopierat!",
     },
   },
 };
