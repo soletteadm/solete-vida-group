@@ -2,12 +2,14 @@ import { useActor } from "@caffeineai/core-infrastructure";
 import { type Backend, createActor } from "../backend";
 
 /**
- * This hook provides a typed Backend actor instance connected to the canister.
- * It uses the generated createActor function from backend.ts via the core-infrastructure useActor.
+ * Returns the typed Backend actor connected to the canister.
+ * No object-storage callbacks — files are stored directly in the canister
+ * via uploadDocumentWithData and retrieved via getDocumentData.
  */
 export function useTypedActor(): {
   actor: Backend | null;
   isFetching: boolean;
 } {
-  return useActor(createActor);
+  const { actor, isFetching } = useActor(createActor);
+  return { actor, isFetching };
 }

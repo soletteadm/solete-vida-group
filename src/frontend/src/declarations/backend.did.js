@@ -102,6 +102,20 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text })],
       [],
     ),
+  'getDocumentData' : IDL.Func(
+      [IDL.Text],
+      [
+        IDL.Variant({
+          'ok' : IDL.Record({
+            'data' : IDL.Vec(IDL.Nat8),
+            'mimeType' : IDL.Text,
+            'fileName' : IDL.Text,
+          }),
+          'err' : IDL.Text,
+        }),
+      ],
+      ['query'],
+    ),
   'getGuestDocumentUploadPermission' : IDL.Func([], [IDL.Bool], ['query']),
   'getMyProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getMyRole' : IDL.Func([], [UserRole], ['query']),
@@ -171,6 +185,11 @@ export const idlService = IDL.Service({
   'uploadDocument' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Nat],
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
+  'uploadDocumentWithData' : IDL.Func(
+      [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text, IDL.Bool],
+      [IDL.Variant({ 'ok' : DocumentRecord, 'err' : IDL.Text })],
       [],
     ),
 });
@@ -272,6 +291,20 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text })],
         [],
       ),
+    'getDocumentData' : IDL.Func(
+        [IDL.Text],
+        [
+          IDL.Variant({
+            'ok' : IDL.Record({
+              'data' : IDL.Vec(IDL.Nat8),
+              'mimeType' : IDL.Text,
+              'fileName' : IDL.Text,
+            }),
+            'err' : IDL.Text,
+          }),
+        ],
+        ['query'],
+      ),
     'getGuestDocumentUploadPermission' : IDL.Func([], [IDL.Bool], ['query']),
     'getMyProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getMyRole' : IDL.Func([], [UserRole], ['query']),
@@ -341,6 +374,11 @@ export const idlFactory = ({ IDL }) => {
     'uploadDocument' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Nat],
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
+    'uploadDocumentWithData' : IDL.Func(
+        [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text, IDL.Bool],
+        [IDL.Variant({ 'ok' : DocumentRecord, 'err' : IDL.Text })],
         [],
       ),
   });

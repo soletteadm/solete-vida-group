@@ -92,6 +92,15 @@ service : {
                               err: text;
                               ok: vec text;
                             });
+  getDocumentData: (docId: text) ->
+   (variant {
+      err: text;
+      ok: record {
+            data: vec nat8;
+            fileName: text;
+            mimeType: text;
+          };
+    }) query;
   getGuestDocumentUploadPermission: () -> (bool) query;
   getMyProfile: () -> (opt UserProfile) query;
   getMyRole: () -> (UserRole) query;
@@ -158,4 +167,9 @@ service : {
                               err: text;
                               ok: text;
                             });
+  uploadDocumentWithData: (fileName: text, fileData: vec nat8, mimeType:
+   text, isPublic: bool) -> (variant {
+                               err: text;
+                               ok: DocumentRecord;
+                             });
 }

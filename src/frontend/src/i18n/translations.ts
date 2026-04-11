@@ -247,6 +247,16 @@ export interface TranslationMap {
     user: string;
     guest: string;
   };
+  // Share document page
+  sharePage: {
+    loading: string;
+    notFound: string;
+    notFoundMsg: string;
+    sharingIntro: string; // use {name} placeholder
+    open: string;
+    downloading: string;
+    error: string;
+  };
   // Documents
   documents: {
     tab: string;
@@ -535,6 +545,16 @@ export const translations: Record<Language, TranslationMap> = {
       admin: "Admin",
       user: "User",
       guest: "Guest",
+    },
+    sharePage: {
+      loading: "Loading document…",
+      notFound: "Document not found",
+      notFoundMsg:
+        "This link is invalid or the document is no longer available.",
+      sharingIntro: "{name} is sharing this document with you",
+      open: "Download",
+      downloading: "Downloading…",
+      error: "Failed to load document. Please try again.",
     },
     documents: {
       tab: "Documents",
@@ -828,6 +848,16 @@ export const translations: Record<Language, TranslationMap> = {
       user: "Usuario",
       guest: "Invitado",
     },
+    sharePage: {
+      loading: "Cargando documento…",
+      notFound: "Documento no encontrado",
+      notFoundMsg:
+        "Este enlace no es válido o el documento ya no está disponible.",
+      sharingIntro: "{name} está compartiendo este documento contigo",
+      open: "Descargar",
+      downloading: "Descargando…",
+      error: "Error al cargar el documento. Por favor, inténtelo de nuevo.",
+    },
     documents: {
       tab: "Documentos",
       uploadTitle: "Subir Documento",
@@ -1120,6 +1150,16 @@ export const translations: Record<Language, TranslationMap> = {
       admin: "Administratör",
       user: "Användare",
       guest: "Gäst",
+    },
+    sharePage: {
+      loading: "Laddar dokument…",
+      notFound: "Dokumentet hittades inte",
+      notFoundMsg:
+        "Den här länken är ogiltig eller dokumentet är inte längre tillgängligt.",
+      sharingIntro: "{name} delar det här dokumentet med dig",
+      open: "Ladda ner",
+      downloading: "Laddar ner…",
+      error: "Kunde inte ladda dokumentet. Försök igen.",
     },
     documents: {
       tab: "Dokument",

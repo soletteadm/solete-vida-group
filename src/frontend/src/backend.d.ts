@@ -114,6 +114,17 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    getDocumentData(docId: string): Promise<{
+        __kind__: "ok";
+        ok: {
+            data: Uint8Array;
+            mimeType: string;
+            fileName: string;
+        };
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     getGuestDocumentUploadPermission(): Promise<boolean>;
     getMyProfile(): Promise<UserProfile | null>;
     getMyRole(): Promise<UserRole>;
@@ -207,6 +218,13 @@ export interface backendInterface {
     uploadDocument(fileName: string, filePath: string, mimeType: string, isPublic: boolean, fileSize: bigint): Promise<{
         __kind__: "ok";
         ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    uploadDocumentWithData(fileName: string, fileData: Uint8Array, mimeType: string, isPublic: boolean): Promise<{
+        __kind__: "ok";
+        ok: DocumentRecord;
     } | {
         __kind__: "err";
         err: string;

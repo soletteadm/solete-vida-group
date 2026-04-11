@@ -90,6 +90,13 @@ export interface _SERVICE {
     { 'ok' : Array<string> } |
       { 'err' : string }
   >,
+  'getDocumentData' : ActorMethod<
+    [string],
+    {
+        'ok' : { 'data' : Uint8Array, 'mimeType' : string, 'fileName' : string }
+      } |
+      { 'err' : string }
+  >,
   'getGuestDocumentUploadPermission' : ActorMethod<[], boolean>,
   'getMyProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getMyRole' : ActorMethod<[], UserRole>,
@@ -155,6 +162,11 @@ export interface _SERVICE {
   'uploadDocument' : ActorMethod<
     [string, string, string, boolean, bigint],
     { 'ok' : string } |
+      { 'err' : string }
+  >,
+  'uploadDocumentWithData' : ActorMethod<
+    [string, Uint8Array, string, boolean],
+    { 'ok' : DocumentRecord } |
       { 'err' : string }
   >,
 }

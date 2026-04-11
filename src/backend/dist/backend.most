@@ -71,6 +71,8 @@ actor {
       var root : Node__46230540<Text, DocumentRecord__161942319>;
       var size : Nat__490723111
     };
+  stable var fileBlobs :
+    {var root : Node__46230540<Text, [Nat8]>; var size : Nat__490723111};
   stable var userProfiles :
     {
       var root : Node__46230540<Principal, UserProfile__491224006>;

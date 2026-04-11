@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -6,49 +5,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useTypedActor } from "@/hooks/useTypedActor";
 import { useLanguage } from "@/i18n/LanguageContext";
-import {
-  Check,
-  Clipboard,
-  Download,
-  FileText,
-  Loader2,
-  Settings2,
-  Trash2,
-  Upload,
-} from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Download, FileText, Loader2, Settings2, Upload } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { DocumentRecord } from "../backend.d";
 
-async function downloadFile(
-  filePath: string,
-  fileName: string,
-  mimeType: string,
-): Promise<void> {
-  try {
-    const response = await fetch(filePath);
-    const arrayBuffer = await response.arrayBuffer();
-    // Always use the passed-in mimeType — never trust response content-type headers
-    // This ensures .docx/.doc are treated as Word docs, not HTML
-    const forcedMime =
-      mimeType && mimeType !== "application/octet-stream"
-        ? mimeType
-        : "application/octet-stream";
-    const objectUrl = URL.createObjectURL(
-      new Blob([arrayBuffer], { type: forcedMime }),
-    );
-    const a = document.createElement("a");
-    a.href = objectUrl;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(objectUrl);
-  } catch {
-    // fallback: open in new tab
-    window.open(filePath, "_blank", "noopener,noreferrer");
-  }
+// ─── MIME helpers ─────────────────────────────────────────────────────────────
+
+function mimeForFile(file: File): string {
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  if (ext === "pdf") return "application/pdf";
+  if (ext === "docx")
+    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  if (ext === "doc") return "application/msword";
+  if (file.type && file.type !== "application/octet-stream") return file.type;
+  return "application/octet-stream";
 }
+
+// ─── Types & constants ────────────────────────────────────────────────────────
 
 interface MyPagesDocumentsProps {
   principalText: string | null;
@@ -65,22 +39,11 @@ const ALLOWED_TYPES = [
   "application/msword",
 ];
 
-function sanitizeFileName(name: string): string {
-  return name.replace(/[^a-zA-Z0-9._-]/g, "_");
-}
-
-function formatDate(ts: bigint): string {
-  const ms = Number(ts) / 1_000_000;
-  return new Date(ms).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
 function formatMB(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1);
 }
+
+// ─── Storage bar ──────────────────────────────────────────────────────────────
 
 function StorageBar({ usedBytes }: { usedBytes: number }) {
   const { t } = useLanguage();
@@ -112,20 +75,29 @@ function StorageBar({ usedBytes }: { usedBytes: number }) {
   );
 }
 
-// Extended actor type for methods not yet in generated bindings
+// ─── Extended actor type ───────────────────────────────────────────────────────
+
 interface ExtendedActor {
   getMyStorageUsed(): Promise<bigint>;
   setGuestDocumentUploadPermission(
     allowed: boolean,
   ): Promise<{ __kind__: "ok"; ok: null } | { __kind__: "err"; err: string }>;
   getGuestDocumentUploadPermission(): Promise<boolean>;
-  uploadDocument(
+  uploadDocumentWithData(
     fileName: string,
-    filePath: string,
+    fileData: Uint8Array,
     mimeType: string,
     isPublic: boolean,
-    fileSize: bigint,
-  ): Promise<{ __kind__: "ok"; ok: string } | { __kind__: "err"; err: string }>;
+  ): Promise<
+    { __kind__: "ok"; ok: DocumentRecord } | { __kind__: "err"; err: string }
+  >;
+  getDocumentData(docId: string): Promise<
+    | {
+        __kind__: "ok";
+        ok: { data: Uint8Array; mimeType: string; fileName: string };
+      }
+    | { __kind__: "err"; err: string }
+  >;
   listMyDocuments(): Promise<DocumentRecord[]>;
   setDocumentPublic(
     documentId: string,
@@ -135,6 +107,8 @@ interface ExtendedActor {
     documentId: string,
   ): Promise<{ __kind__: "ok"; ok: null } | { __kind__: "err"; err: string }>;
 }
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function MyPagesDocuments({
   principalText,
@@ -152,18 +126,18 @@ export default function MyPagesDocuments({
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  // Storage tracking
   const [storageUsed, setStorageUsed] = useState<number>(0);
-
-  // Guest upload permission (admin can toggle)
   const [guestUploadAllowed, setGuestUploadAllowed] = useState<boolean>(false);
   const [togglingGuestPerm, setTogglingGuestPerm] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  // Silence unused warnings
+  void principalText;
+  void userName;
+
+  // ─── Load data ────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!extActor || isFetching) return;
@@ -215,6 +189,8 @@ export default function MyPagesDocuments({
     }
   };
 
+  // ─── Validation ───────────────────────────────────────────────────────────
+
   const validateFile = (file: File): string | null => {
     const ext = `.${file.name.split(".").pop()?.toLowerCase()}`;
     if (
@@ -226,7 +202,6 @@ export default function MyPagesDocuments({
     if (file.size > MAX_FILE_SIZE) {
       return t.documents.fileSizeError;
     }
-    // Storage limit check
     if (storageUsed + file.size > MAX_TOTAL_STORAGE) {
       const remainingMB = formatMB(
         Math.max(0, MAX_TOTAL_STORAGE - storageUsed),
@@ -249,12 +224,13 @@ export default function MyPagesDocuments({
     setSelectedFile(file);
   };
 
+  // ─── Upload — reads raw bytes and stores directly in canister ─────────────
+
   const handleUpload = async () => {
     if (!extActor || !selectedFile) return;
     setUploading(true);
     setFileError(null);
 
-    // Re-validate at upload time in case storage changed
     const err = validateFile(selectedFile);
     if (err) {
       setFileError(err);
@@ -263,17 +239,19 @@ export default function MyPagesDocuments({
     }
 
     try {
-      const ownerName = userName || principalText || "unknown";
-      const sanitized = sanitizeFileName(selectedFile.name);
-      const filePath = `documents/public/${ownerName}/${sanitized}`;
-      const mimeType = selectedFile.type || "application/octet-stream";
+      // 1. Read file as raw bytes
+      const arrayBuffer = await selectedFile.arrayBuffer();
+      const byteArray = new Uint8Array(arrayBuffer);
 
-      const result = await extActor.uploadDocument(
+      // 2. Determine correct MIME type
+      const mime = mimeForFile(selectedFile);
+
+      // 3. Upload directly to canister — no external blob storage
+      const result = await extActor.uploadDocumentWithData(
         selectedFile.name,
-        filePath,
-        mimeType,
+        byteArray,
+        mime,
         false, // default to private
-        BigInt(selectedFile.size),
       );
 
       if ("ok" in result) {
@@ -284,68 +262,47 @@ export default function MyPagesDocuments({
       } else {
         toast.error(`${t.documents.uploadError}: ${result.err}`);
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
       toast.error(`${t.documents.uploadError}: ${msg}`);
     } finally {
       setUploading(false);
     }
   };
 
-  const handleTogglePublic = async (doc: DocumentRecord) => {
-    if (!extActor) return;
-    setTogglingId(doc.id);
-    try {
-      const result = await extActor.setDocumentPublic(doc.id, !doc.isPublic);
-      if ("ok" in result) {
-        setDocuments((prev) =>
-          prev.map((d) =>
-            d.id === doc.id ? { ...d, isPublic: !doc.isPublic } : d,
-          ),
-        );
-      } else {
-        toast.error(result.err);
-      }
-    } catch {
-      toast.error(t.common.error);
-    } finally {
-      setTogglingId(null);
-    }
-  };
+  // ─── Download — fetches raw bytes from canister and triggers browser dl ───
 
-  const handleDelete = async (docId: string) => {
-    if (!extActor) return;
-    setDeletingId(docId);
-    try {
-      const result = await extActor.deleteDocument(docId);
-      if ("ok" in result) {
-        toast.success(t.documents.deleteSuccess);
-        setDocuments((prev) => prev.filter((d) => d.id !== docId));
-        await refreshStorage();
-      } else {
-        toast.error(`${t.documents.deleteError}: ${result.err}`);
+  const handleDownload = useCallback(
+    async (doc: DocumentRecord) => {
+      if (!extActor) return;
+      setDownloadingId(doc.id);
+      try {
+        const result = await extActor.getDocumentData(doc.id);
+        if ("ok" in result) {
+          const { data, mimeType, fileName } = result.ok;
+          const bytes = new Uint8Array(data);
+          const blob = new Blob([bytes], { type: mimeType });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } else {
+          toast.error(`${t.common.error}: ${result.err}`);
+        }
+      } catch {
+        toast.error(t.common.error);
+      } finally {
+        setDownloadingId(null);
       }
-    } catch {
-      toast.error(t.documents.deleteError);
-    } finally {
-      setDeletingId(null);
-    }
-  };
+    },
+    [extActor, t],
+  );
 
-  const handleShare = async (doc: DocumentRecord) => {
-    try {
-      // Build the shareable URL: use the filePath as the storage gateway URL
-      // If it's a relative path, prepend the origin
-      const shareUrl = doc.filePath.startsWith("http")
-        ? doc.filePath
-        : `${window.location.origin}/${doc.filePath.replace(/^\//, "")}`;
-      await navigator.clipboard.writeText(shareUrl);
-      setCopiedId(doc.id);
-      setTimeout(() => setCopiedId(null), 2000);
-    } catch {
-      toast.error(t.common.error);
-    }
-  };
+  // ─── Guest upload permission ──────────────────────────────────────────────
 
   const handleToggleGuestPermission = async () => {
     if (!extActor) return;
@@ -369,6 +326,8 @@ export default function MyPagesDocuments({
       setTogglingGuestPerm(false);
     }
   };
+
+  // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6" data-ocid="documents.section">
@@ -416,10 +375,8 @@ export default function MyPagesDocuments({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Storage bar */}
           {!loading && <StorageBar usedBytes={storageUsed} />}
 
-          {/* Guest blocked message */}
           {isGuest && !guestUploadAllowed ? (
             <div
               className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800/30 dark:bg-amber-900/20 dark:text-amber-300"
@@ -511,14 +468,8 @@ export default function MyPagesDocuments({
                     <th className="text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                       {t.documents.fileName}
                     </th>
-                    <th className="text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide hidden sm:table-cell">
-                      {t.documents.uploadDate}
-                    </th>
-                    <th className="text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide hidden sm:table-cell">
-                      {t.documents.fileSize}
-                    </th>
                     <th className="text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-                      {t.documents.public}
+                      {t.documents.fileSize}
                     </th>
                     <th className="text-right py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                       {t.documents.actions}
@@ -536,112 +487,43 @@ export default function MyPagesDocuments({
                         className="border-b border-divider/50 hover:bg-muted/20 transition-colors"
                         data-ocid="documents.row"
                       >
+                        {/* Filnamn */}
                         <td className="py-3 pr-4">
                           <div className="flex items-center gap-2 min-w-0">
                             <FileText className="w-4 h-4 text-gold shrink-0" />
                             <span
-                              className="truncate max-w-[160px]"
+                              className="truncate max-w-[200px]"
                               title={doc.fileName}
                             >
                               {doc.fileName}
                             </span>
                           </div>
                         </td>
-                        <td className="py-3 pr-4 text-muted-foreground whitespace-nowrap hidden sm:table-cell">
-                          {formatDate(doc.uploadedAt)}
-                        </td>
-                        <td className="py-3 pr-4 text-muted-foreground whitespace-nowrap hidden sm:table-cell">
+
+                        {/* Storlek */}
+                        <td className="py-3 pr-4 text-muted-foreground whitespace-nowrap">
                           {docWithSize.fileSize != null
                             ? `${(Number(docWithSize.fileSize) / 1024).toFixed(0)} KB`
                             : "—"}
                         </td>
-                        <td className="py-3 pr-4">
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={doc.isPublic}
-                              onCheckedChange={() => handleTogglePublic(doc)}
-                              disabled={togglingId === doc.id}
-                              aria-label={
-                                doc.isPublic
-                                  ? t.documents.public
-                                  : t.documents.private
-                              }
-                              data-ocid="documents.public_toggle"
-                            />
-                            <Badge
-                              variant="outline"
-                              className={
-                                doc.isPublic
-                                  ? "border-gold text-gold text-xs"
-                                  : "border-muted-foreground/40 text-muted-foreground text-xs"
-                              }
-                            >
-                              {doc.isPublic
-                                ? t.documents.public
-                                : t.documents.private}
-                            </Badge>
-                          </div>
-                        </td>
+
+                        {/* Åtgärder — Download only */}
                         <td className="py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleShare(doc)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
-                              data-ocid="documents.share_button"
-                              aria-label={`${t.documents.share} ${doc.fileName}`}
-                              title={
-                                copiedId === doc.id
-                                  ? t.documents.copied
-                                  : t.documents.share
-                              }
-                            >
-                              {copiedId === doc.id ? (
-                                <>
-                                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                  <span className="text-emerald-600">
-                                    {t.documents.copied}
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  <Clipboard className="w-3.5 h-3.5" />
-                                  {t.documents.share}
-                                </>
-                              )}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                downloadFile(
-                                  doc.filePath,
-                                  doc.fileName,
-                                  doc.mimeType,
-                                )
-                              }
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
-                              data-ocid="documents.download_link"
-                              aria-label={`${t.documents.download} ${doc.fileName}`}
-                            >
+                          <button
+                            type="button"
+                            onClick={() => handleDownload(doc)}
+                            disabled={downloadingId === doc.id}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50"
+                            data-ocid="documents.download_link"
+                            aria-label={`${t.documents.download} ${doc.fileName}`}
+                          >
+                            {downloadingId === doc.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
                               <Download className="w-3.5 h-3.5" />
-                              {t.documents.download}
-                            </button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(doc.id)}
-                              disabled={deletingId === doc.id}
-                              className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-50"
-                              aria-label={`${t.documents.delete} ${doc.fileName}`}
-                              data-ocid="documents.delete_button"
-                            >
-                              {deletingId === doc.id ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              ) : (
-                                <Trash2 className="w-3.5 h-3.5" />
-                              )}
-                            </Button>
-                          </div>
+                            )}
+                            {t.documents.download}
+                          </button>
                         </td>
                       </tr>
                     );

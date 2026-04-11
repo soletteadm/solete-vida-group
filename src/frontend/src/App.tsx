@@ -13,6 +13,7 @@ import MyPagesCalendar from "@/pages/MyPagesCalendar";
 import MyPagesContacts from "@/pages/MyPagesContacts";
 import MyPagesDocuments from "@/pages/MyPagesDocuments";
 import MyPagesProfile from "@/pages/MyPagesProfile";
+import ShareDocumentPage from "@/pages/ShareDocumentPage";
 import {
   CalendarDays,
   FileText,
@@ -22,6 +23,14 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Holiday } from "./backend.d";
+
+// ─── Share route detection ────────────────────────────────────────────────────
+
+function getShareDocId(): string | null {
+  const hash = window.location.hash;
+  const match = hash.match(/^#\/documents\/(.+)$/);
+  return match ? match[1] : null;
+}
 
 // HolidayKey is an enum string in TS but the actor returns Candid variants at runtime.
 // This helper normalizes either format to the string key.
@@ -249,6 +258,22 @@ function AppContent() {
 }
 
 export default function App() {
+  const [docId, setDocId] = useState<string | null>(getShareDocId());
+
+  useEffect(() => {
+    const onHashChange = () => setDocId(getShareDocId());
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  if (docId) {
+    return (
+      <LanguageProvider>
+        <ShareDocumentPage docId={docId} />
+        <Toaster richColors position="top-right" />
+      </LanguageProvider>
+    );
+  }
   return (
     <LanguageProvider>
       <AppContent />

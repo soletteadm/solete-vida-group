@@ -103,6 +103,9 @@ actor {
   stable var documentIdCounter : Nat = 0;
   stable var allowGuestDocumentUpload : Bool = false;
 
+  // fileBlobs: raw file bytes stored by docId. Key = docId (same as DocumentRecord.id).
+  stable var fileBlobs : Map.Map<Text, [Nat8]> = Map.empty<Text, [Nat8]>();
+
   // ---- Migration ----
 
   system func postupgrade() {
@@ -679,7 +682,7 @@ actor {
     };
   };
 
-  // deleteDocument: removes document metadata; caller must own the document (or be admin).
+  // deleteDocument: removes document metadata and raw bytes; caller must own the document (or be admin).
   public shared ({ caller }) func deleteDocument(documentId : Text) : async { #ok; #err : Text } {
     if (caller.isAnonymous()) {
       return #err("Unauthorized: You must be logged in.");
@@ -691,6 +694,7 @@ actor {
           return #err("Unauthorized: You can only delete your own documents.");
         };
         documentRecords_v2.remove(documentId);
+        fileBlobs.remove(documentId);
         return #ok;
       };
     };
@@ -727,6 +731,112 @@ actor {
   // getGuestDocumentUploadPermission: returns whether guests are allowed to upload documents.
   public query func getGuestDocumentUploadPermission() : async Bool {
     allowGuestDocumentUpload;
+  };
+
+  // uploadDocumentWithData: stores raw file bytes in the canister and creates metadata.
+  // Replaces the object-storage-based uploadDocument for actual file content persistence.
+  // mimeType must be application/pdf or application/vnd.openxmlformats-officedocument.wordprocessingml.document.
+  public shared ({ caller }) func uploadDocumentWithData(
+    fileName : Text,
+    fileData : [Nat8],
+    mimeType : Text,
+    isPublic : Bool,
+  ) : async { #ok : DocumentRecord; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in to upload documents.");
+    };
+
+    // Check guest permission
+    let role = getCallerRole(caller);
+    switch (role) {
+      case (#guest) {
+        if (not allowGuestDocumentUpload) {
+          return #err("Guest document upload is not enabled by admin.");
+        };
+      };
+      case (_) {};
+    };
+
+    // Validate mime type (PDF or Word)
+    let isPdf = mimeType == "application/pdf";
+    let isWord = mimeType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    if (not isPdf and not isWord) {
+      return #err("File type not supported. Only PDF and Word documents allowed.");
+    };
+
+    // Enforce 100MB total storage limit per user
+    let maxStorage : Nat = 104857600;
+    let fileSize : Nat = fileData.size();
+    let usedStorage = documentRecords_v2.entries().toArray()
+      .filter(func(pair : (Text, DocumentRecord)) : Bool {
+        Principal.equal(pair.1.ownerPrincipal, caller)
+      })
+      .foldLeft(0 : Nat, func(acc : Nat, pair : (Text, DocumentRecord)) : Nat {
+        acc + pair.1.fileSize
+      });
+    if (usedStorage + fileSize > maxStorage) {
+      let usedMb = usedStorage / 1048576;
+      return #err("Storage limit exceeded. Used " # usedMb.toText() # " MB of 100 MB.");
+    };
+
+    let safeFileName = sanitizeFileName(fileName);
+    if (textLength(safeFileName) == 0) {
+      return #err("File name is required.");
+    };
+
+    // Resolve owner name from profile
+    let ownerName = switch (userProfiles.get(caller)) {
+      case (?profile) {
+        if (textLength(profile.name) > 0) { profile.name } else { caller.toText() }
+      };
+      case (null) { caller.toText() };
+    };
+
+    documentIdCounter += 1;
+    let id = "doc-" # documentIdCounter.toText() # "-" # Time.now().toText();
+
+    let doc : DocumentRecord = {
+      id = id;
+      ownerPrincipal = caller;
+      ownerName = ownerName;
+      fileName = safeFileName;
+      filePath = id; // filePath stores the docId as a plain reference
+      mimeType = mimeType;
+      isPublic = isPublic;
+      uploadedAt = Time.now();
+      fileSize = fileSize;
+    };
+
+    documentRecords_v2.add(id, doc);
+    fileBlobs.add(id, fileData);
+    return #ok(doc);
+  };
+
+  // getDocumentData: returns raw file bytes + metadata for download.
+  // Public documents can be accessed by anyone; private documents only by their owner or an admin.
+  public query ({ caller }) func getDocumentData(
+    docId : Text
+  ) : async { #ok : { data : [Nat8]; mimeType : Text; fileName : Text }; #err : Text } {
+    switch (documentRecords_v2.get(docId)) {
+      case (null) { return #err("Document not found.") };
+      case (?doc) {
+        // Access control: private docs require ownership or admin
+        if (not doc.isPublic) {
+          if (caller.isAnonymous()) {
+            return #err("Unauthorized.");
+          };
+          if (not Principal.equal(doc.ownerPrincipal, caller) and not isAdmin(caller)) {
+            return #err("Unauthorized.");
+          };
+        };
+        switch (fileBlobs.get(docId)) {
+          case (null) { return #err("Document not found.") };
+          case (?bytes) {
+            return #ok({ data = bytes; mimeType = doc.mimeType; fileName = doc.fileName });
+          };
+        };
+      };
+    };
   };
 
   // --> Admin operations, USED ONLY WITH CANDID UI, DO NOT USE admin_* operations in front-end
