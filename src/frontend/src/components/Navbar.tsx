@@ -83,7 +83,7 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={() => handleNavClick(link.section)}
-                className="px-4 py-2 text-sm font-sans font-medium text-foreground hover:text-gold transition-colors rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                className="px-4 py-2 text-base font-sans font-medium text-foreground hover:text-gold transition-colors rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
                 data-ocid="nav.link"
               >
                 {link.label}
@@ -95,7 +95,7 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={handleMyPages}
-                className={`px-4 py-2 text-sm font-sans font-medium transition-colors rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
+                className={`px-4 py-2 text-base font-sans font-medium transition-colors rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
                   currentPage === "myPages"
                     ? "text-gold"
                     : "text-foreground hover:text-gold"
@@ -120,7 +120,7 @@ export default function Navbar({
                 <button
                   type="button"
                   onClick={() => setLang(l)}
-                  className={`text-xs font-sans font-semibold uppercase tracking-wide px-1 py-0.5 rounded transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold ${
+                  className={`text-sm font-sans font-semibold uppercase tracking-wide px-1 py-0.5 rounded transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold ${
                     lang === l
                       ? "text-gold"
                       : "text-muted-foreground hover:text-foreground"
@@ -131,7 +131,7 @@ export default function Navbar({
                   {l.toUpperCase()}
                 </button>
                 {idx < languages.length - 1 && (
-                  <span className="text-muted-foreground mx-0.5 text-xs">
+                  <span className="text-muted-foreground mx-0.5 text-sm">
                     |
                   </span>
                 )}
@@ -152,7 +152,7 @@ export default function Navbar({
                 size="sm"
                 variant="ghost"
                 onClick={onLogout}
-                className="font-sans text-sm"
+                className="font-sans text-base"
                 data-ocid="nav.button"
               >
                 <LogOut className="w-4 h-4 mr-1" />
@@ -164,7 +164,7 @@ export default function Navbar({
               size="sm"
               onClick={onLogin}
               disabled={isLoading}
-              className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full px-5 text-sm"
+              className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full px-5 text-base"
               data-ocid="nav.primary_button"
             >
               {isLoading ? (
@@ -215,7 +215,7 @@ export default function Navbar({
                     key={link.key}
                     type="button"
                     onClick={() => handleNavClick(link.section)}
-                    className="w-full text-left px-4 py-3 text-sm font-sans font-medium text-foreground hover:text-gold hover:bg-beige rounded-lg transition-colors"
+                    className="w-full text-left px-4 py-3 text-base font-sans font-medium text-foreground hover:text-gold hover:bg-beige rounded-lg transition-colors"
                     data-ocid="nav.link"
                   >
                     {link.label}
@@ -225,7 +225,7 @@ export default function Navbar({
                   <button
                     type="button"
                     onClick={handleMyPages}
-                    className="w-full text-left px-4 py-3 text-sm font-sans font-medium text-gold hover:bg-beige rounded-lg transition-colors flex items-center gap-2"
+                    className="w-full text-left px-4 py-3 text-base font-sans font-medium text-gold hover:bg-beige rounded-lg transition-colors flex items-center gap-2"
                     data-ocid="nav.link"
                   >
                     <User className="w-4 h-4" />
@@ -242,7 +242,7 @@ export default function Navbar({
                       <button
                         type="button"
                         onClick={() => setLang(l)}
-                        className={`text-xs font-sans font-semibold uppercase tracking-wide px-1.5 py-1 rounded transition-colors ${
+                        className={`text-sm font-sans font-semibold uppercase tracking-wide px-1.5 py-1 rounded transition-colors ${
                           lang === l
                             ? "text-gold bg-gold/15"
                             : "text-muted-foreground hover:text-foreground"
@@ -253,7 +253,7 @@ export default function Navbar({
                         {l.toUpperCase()}
                       </button>
                       {idx < languages.length - 1 && (
-                        <span className="text-muted-foreground mx-0.5 text-xs">
+                        <span className="text-muted-foreground mx-0.5 text-sm">
                           |
                         </span>
                       )}
@@ -274,7 +274,7 @@ export default function Navbar({
                       variant="ghost"
                       size="sm"
                       onClick={onLogout}
-                      className="w-full justify-start font-sans text-sm"
+                      className="w-full justify-start font-sans text-base"
                       data-ocid="nav.button"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
@@ -288,7 +288,7 @@ export default function Navbar({
                       onLogin();
                     }}
                     disabled={isLoading}
-                    className="w-full bg-gold hover:bg-gold/90 text-black font-sans rounded-full text-sm"
+                    className="w-full bg-gold hover:bg-gold/90 text-black font-sans rounded-full text-base"
                     data-ocid="nav.primary_button"
                   >
                     {isLoading ? (

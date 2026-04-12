@@ -287,6 +287,9 @@ export interface TranslationMap {
     guestUploadDisabledMsg: string;
     share: string;
     copied: string;
+    preview: string;
+    play: string;
+    close: string;
   };
 }
 
@@ -569,7 +572,8 @@ export const translations: Record<Language, TranslationMap> = {
       actions: "Actions",
       download: "Download",
       delete: "Delete",
-      fileTypeError: "Only PDF and Word documents (.pdf, .docx) are allowed.",
+      fileTypeError:
+        "Only PDF, Word, images (.jpg, .png, .gif, .webp), audio (.mp3, .wav), and video (.mp4, .mov, .webm) files are allowed.",
       fileSizeError: "File is too large. Maximum size is 10 MB.",
       uploadSuccess: "Document uploaded successfully.",
       uploadError: "Failed to upload document.",
@@ -587,6 +591,9 @@ export const translations: Record<Language, TranslationMap> = {
       guestUploadDisabledMsg: "Guest uploads are now disabled",
       share: "Share",
       copied: "Copied!",
+      preview: "Preview",
+      play: "Play",
+      close: "Close",
     },
   },
 
@@ -871,7 +878,8 @@ export const translations: Record<Language, TranslationMap> = {
       actions: "Acciones",
       download: "Descargar",
       delete: "Eliminar",
-      fileTypeError: "Solo se permiten PDF y documentos Word (.pdf, .docx).",
+      fileTypeError:
+        "Solo se permiten archivos PDF, Word, imágenes (.jpg, .png, .gif, .webp), audio (.mp3, .wav) y video (.mp4, .mov, .webm).",
       fileSizeError:
         "El archivo es demasiado grande. El tamaño máximo es 10 MB.",
       uploadSuccess: "Documento subido correctamente.",
@@ -890,6 +898,9 @@ export const translations: Record<Language, TranslationMap> = {
       guestUploadDisabledMsg: "Las subidas para invitados están desactivadas",
       share: "Compartir",
       copied: "¡Copiado!",
+      preview: "Vista previa",
+      play: "Reproducir",
+      close: "Cerrar",
     },
   },
 
@@ -1174,7 +1185,8 @@ export const translations: Record<Language, TranslationMap> = {
       actions: "Åtgärder",
       download: "Ladda Ner",
       delete: "Radera",
-      fileTypeError: "Endast PDF och Word-dokument (.pdf, .docx) är tillåtna.",
+      fileTypeError:
+        "Endast PDF-, Word-, bild- (.jpg, .png, .gif, .webp), ljud- (.mp3, .wav) och videofiler (.mp4, .mov, .webm) är tillåtna.",
       fileSizeError: "Filen är för stor. Maximal storlek är 10 MB.",
       uploadSuccess: "Dokumentet laddades upp.",
       uploadError: "Kunde inte ladda upp dokumentet.",
@@ -1192,6 +1204,9 @@ export const translations: Record<Language, TranslationMap> = {
       guestUploadDisabledMsg: "Uppladdning för gäster är nu inaktiverat",
       share: "Dela",
       copied: "Kopierat!",
+      preview: "Förhandsvisning",
+      play: "Spela",
+      close: "Stäng",
     },
   },
 };

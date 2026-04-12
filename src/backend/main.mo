@@ -757,11 +757,19 @@ actor {
       case (_) {};
     };
 
-    // Validate mime type (PDF or Word)
+    // Validate mime type (PDF, Word, images, audio, video)
     let isPdf = mimeType == "application/pdf";
-    let isWord = mimeType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-    if (not isPdf and not isWord) {
-      return #err("File type not supported. Only PDF and Word documents allowed.");
+    let isWord = mimeType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      or mimeType == "application/msword";
+    let isImage = mimeType == "image/jpeg" or mimeType == "image/png" or mimeType == "image/gif"
+      or mimeType == "image/webp" or mimeType == "image/svg+xml";
+    let isAudio = mimeType == "audio/mpeg" or mimeType == "audio/wav" or mimeType == "audio/ogg"
+      or mimeType == "audio/flac" or mimeType == "audio/aac" or mimeType == "audio/x-m4a";
+    let isVideo = mimeType == "video/mp4" or mimeType == "video/quicktime"
+      or mimeType == "video/x-msvideo" or mimeType == "video/webm"
+      or mimeType == "video/x-matroska" or mimeType == "video/mpeg";
+    if (not isPdf and not isWord and not isImage and not isAudio and not isVideo) {
+      return #err("File type not supported. Only PDF, Word documents, images (JPEG, PNG, GIF, WebP, SVG), audio (MP3, WAV, OGG, FLAC, AAC, M4A), and video (MP4, MOV, AVI, WebM, MKV, MPEG) are allowed.");
     };
 
     // Enforce 100MB total storage limit per user
