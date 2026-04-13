@@ -25,7 +25,7 @@ type DocumentRecord_V1__217761273 =
     ownerPrincipal : Principal;
     uploadedAt : Int
   };
-type DocumentRecord__161942319 =
+type DocumentRecord_V2__964687617 =
   {
     fileName : Text;
     filePath : Text;
@@ -36,6 +36,28 @@ type DocumentRecord__161942319 =
     ownerName : Text;
     ownerPrincipal : Principal;
     uploadedAt : Int
+  };
+type DocumentRecord__161942319 =
+  {
+    fileName : Text;
+    filePath : Text;
+    fileSize : Nat;
+    id : Text;
+    isPublic : Bool;
+    mimeType : Text;
+    ownerName : Text;
+    ownerPrincipal : Principal;
+    parentFolderId : ?Text;
+    uploadedAt : Int
+  };
+type FolderRecord__699397301 =
+  {
+    createdAt : Int;
+    id : Text;
+    name : Text;
+    ownerName : Text;
+    ownerPrincipal : Principal;
+    parentFolderId : ?Text
   };
 type Internal__8484328<K, V> =
   {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
@@ -68,11 +90,22 @@ actor {
     };
   stable var documentRecords_v2 :
     {
+      var root : Node__46230540<Text, DocumentRecord_V2__964687617>;
+      var size : Nat__490723111
+    };
+  stable var documentRecords_v3 :
+    {
       var root : Node__46230540<Text, DocumentRecord__161942319>;
       var size : Nat__490723111
     };
   stable var fileBlobs :
     {var root : Node__46230540<Text, [Nat8]>; var size : Nat__490723111};
+  stable var folderIdCounter : Nat;
+  stable var folderRecords :
+    {
+      var root : Node__46230540<Text, FolderRecord__699397301>;
+      var size : Nat__490723111
+    };
   stable var userProfiles :
     {
       var root : Node__46230540<Principal, UserProfile__491224006>;

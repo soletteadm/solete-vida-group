@@ -53,8 +53,17 @@ export const DocumentRecord = IDL.Record({
   'fileName' : IDL.Text,
   'filePath' : IDL.Text,
   'fileSize' : IDL.Nat,
+  'parentFolderId' : IDL.Opt(IDL.Text),
   'isPublic' : IDL.Bool,
   'uploadedAt' : IDL.Int,
+});
+export const FolderRecord = IDL.Record({
+  'id' : IDL.Text,
+  'ownerName' : IDL.Text,
+  'ownerPrincipal' : IDL.Principal,
+  'name' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'parentFolderId' : IDL.Opt(IDL.Text),
 });
 export const UserListEntry = IDL.Record({
   'principal' : IDL.Principal,
@@ -81,6 +90,16 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
+  'bulkMove' : IDL.Func(
+      [IDL.Vec(IDL.Text), IDL.Vec(IDL.Text), IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
+  'createFolder' : IDL.Func(
+      [IDL.Text, IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'deleteContactMessage' : IDL.Func(
       [IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -94,6 +113,11 @@ export const idlService = IDL.Service({
   'deleteDocument' : IDL.Func(
       [IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'deleteFolder' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
       [],
     ),
   'getActiveHoliday' : IDL.Func([], [Holiday], ['query']),
@@ -125,11 +149,30 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Vec(ContactMessage), 'err' : IDL.Text })],
       [],
     ),
-  'listMyDocuments' : IDL.Func([], [IDL.Vec(DocumentRecord)], ['query']),
+  'listMyDocuments' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [IDL.Vec(DocumentRecord)],
+      ['query'],
+    ),
+  'listMyFolders' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [IDL.Vec(FolderRecord)],
+      ['query'],
+    ),
   'listPublicDocuments' : IDL.Func([], [IDL.Vec(DocumentRecord)], ['query']),
   'listUsers' : IDL.Func(
       [],
       [IDL.Variant({ 'ok' : IDL.Vec(UserListEntry), 'err' : IDL.Text })],
+      [],
+    ),
+  'moveDocument' : IDL.Func(
+      [IDL.Text, IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
+  'moveFolder' : IDL.Func(
+      [IDL.Text, IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
       [],
     ),
   'removeUser' : IDL.Func(
@@ -188,7 +231,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'uploadDocumentWithData' : IDL.Func(
-      [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text, IDL.Bool],
+      [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text, IDL.Bool, IDL.Opt(IDL.Text)],
       [IDL.Variant({ 'ok' : DocumentRecord, 'err' : IDL.Text })],
       [],
     ),
@@ -242,8 +285,17 @@ export const idlFactory = ({ IDL }) => {
     'fileName' : IDL.Text,
     'filePath' : IDL.Text,
     'fileSize' : IDL.Nat,
+    'parentFolderId' : IDL.Opt(IDL.Text),
     'isPublic' : IDL.Bool,
     'uploadedAt' : IDL.Int,
+  });
+  const FolderRecord = IDL.Record({
+    'id' : IDL.Text,
+    'ownerName' : IDL.Text,
+    'ownerPrincipal' : IDL.Principal,
+    'name' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'parentFolderId' : IDL.Opt(IDL.Text),
   });
   const UserListEntry = IDL.Record({
     'principal' : IDL.Principal,
@@ -270,6 +322,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
+    'bulkMove' : IDL.Func(
+        [IDL.Vec(IDL.Text), IDL.Vec(IDL.Text), IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
+    'createFolder' : IDL.Func(
+        [IDL.Text, IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
     'deleteContactMessage' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -283,6 +345,11 @@ export const idlFactory = ({ IDL }) => {
     'deleteDocument' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'deleteFolder' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),
     'getActiveHoliday' : IDL.Func([], [Holiday], ['query']),
@@ -314,11 +381,30 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Vec(ContactMessage), 'err' : IDL.Text })],
         [],
       ),
-    'listMyDocuments' : IDL.Func([], [IDL.Vec(DocumentRecord)], ['query']),
+    'listMyDocuments' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Vec(DocumentRecord)],
+        ['query'],
+      ),
+    'listMyFolders' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Vec(FolderRecord)],
+        ['query'],
+      ),
     'listPublicDocuments' : IDL.Func([], [IDL.Vec(DocumentRecord)], ['query']),
     'listUsers' : IDL.Func(
         [],
         [IDL.Variant({ 'ok' : IDL.Vec(UserListEntry), 'err' : IDL.Text })],
+        [],
+      ),
+    'moveDocument' : IDL.Func(
+        [IDL.Text, IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
+    'moveFolder' : IDL.Func(
+        [IDL.Text, IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),
     'removeUser' : IDL.Func(
@@ -377,7 +463,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'uploadDocumentWithData' : IDL.Func(
-        [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text, IDL.Bool],
+        [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text, IDL.Bool, IDL.Opt(IDL.Text)],
         [IDL.Variant({ 'ok' : DocumentRecord, 'err' : IDL.Text })],
         [],
       ),

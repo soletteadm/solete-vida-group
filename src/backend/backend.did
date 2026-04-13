@@ -44,14 +44,30 @@ type DocumentRecord = record {
   isPublic: bool;
   uploadedAt: int;
   fileSize: nat;
+  parentFolderId: opt text;
+};
+
+type FolderRecord = record {
+  id: text;
+  ownerPrincipal: principal;
+  ownerName: text;
+  name: text;
+  parentFolderId: opt text;
+  createdAt: int;
 };
 
 type CallResult = variant { ok: null; err: text };
 type SubmitContactResult = variant { ok: text; err: text };
 type UploadDocumentResult = variant { ok: text; err: text };
+type UploadDocumentWithDataResult = variant { ok: DocumentRecord; err: text };
+type CreateFolderResult = variant { ok: text; err: text };
+type DeleteFolderResult = variant { ok: text; err: text };
 type ListUsersResult = variant { ok: vec UserListEntry; err: text };
 type ListContactResult = variant { ok: vec ContactMessage; err: text };
 type ListBlockedResult = variant { ok: vec text; err: text };
+
+type MoveDocumentResult = variant { ok: text; err: text };
+type BulkMoveResult = variant { ok: text; err: text };
 
 service : {
   getMyRole: () -> (UserRole) query;
@@ -74,13 +90,21 @@ service : {
   unblockContactSender: (text) -> (CallResult);
   getBlockedSenders: () -> (ListBlockedResult);
   uploadDocument: (text, text, text, bool, nat) -> (UploadDocumentResult);
-  listMyDocuments: () -> (vec DocumentRecord) query;
+  listMyDocuments: (opt text) -> (vec DocumentRecord) query;
   setDocumentPublic: (text, bool) -> (CallResult);
   deleteDocument: (text) -> (CallResult);
   listPublicDocuments: () -> (vec DocumentRecord) query;
   getMyStorageUsed: () -> (nat) query;
   setGuestDocumentUploadPermission: (bool) -> (CallResult);
   getGuestDocumentUploadPermission: () -> (bool) query;
+  uploadDocumentWithData: (text, vec nat8, text, bool, opt text) -> (UploadDocumentWithDataResult);
+  getDocumentData: (text) -> (variant { ok: record { data: vec nat8; mimeType: text; fileName: text }; err: text }) query;
+  createFolder: (text, opt text) -> (CreateFolderResult);
+  listMyFolders: (opt text) -> (vec FolderRecord) query;
+  deleteFolder: (text) -> (DeleteFolderResult);
+  moveDocument: (text, opt text) -> (MoveDocumentResult);
+  moveFolder: (text, opt text) -> (MoveDocumentResult);
+  bulkMove: (vec text, vec text, opt text) -> (BulkMoveResult);
   admin_addUserAccess: (text, UserRole) -> ();
   admin_updateUserAccess: (text, UserRole) -> ();
   admin_getUserAccess: () -> (vec UserAccessEntry) query;

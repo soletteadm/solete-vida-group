@@ -6,45 +6,49 @@ import { Switch } from "@/components/ui/switch";
 import { useTypedActor } from "@/hooks/useTypedActor";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
+  ArrowLeft,
+  CheckSquare,
+  ChevronRight,
   Download,
   Eye,
   FileText,
+  FolderInput,
+  FolderOpen,
+  FolderPlus,
   Globe,
   Link,
   Loader2,
   Lock,
   Music,
   Settings2,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
+import React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import type { DocumentRecord } from "../backend.d";
+import type { DocumentRecord, FolderRecord } from "../backend.d";
 
 // ─── MIME helpers ─────────────────────────────────────────────────────────────
 
 function mimeForFile(file: File): string {
   const ext = file.name.split(".").pop()?.toLowerCase();
-  // Documents
   if (ext === "pdf") return "application/pdf";
   if (ext === "docx")
     return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   if (ext === "doc") return "application/msword";
-  // Images
   if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
   if (ext === "png") return "image/png";
   if (ext === "gif") return "image/gif";
   if (ext === "webp") return "image/webp";
   if (ext === "svg") return "image/svg+xml";
-  // Audio
   if (ext === "mp3") return "audio/mpeg";
   if (ext === "wav") return "audio/wav";
   if (ext === "ogg") return "audio/ogg";
   if (ext === "flac") return "audio/flac";
   if (ext === "aac") return "audio/aac";
   if (ext === "m4a") return "audio/x-m4a";
-  // Video
   if (ext === "mp4") return "video/mp4";
   if (ext === "mov") return "video/quicktime";
   if (ext === "avi") return "video/x-msvideo";
@@ -63,28 +67,29 @@ interface MyPagesDocumentsProps {
   userRole: "admin" | "user" | "guest";
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB per file
-const MAX_TOTAL_STORAGE = 100 * 1024 * 1024; // 100 MB total
+interface Breadcrumb {
+  id: string | null;
+  name: string;
+}
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_TOTAL_STORAGE = 100 * 1024 * 1024;
 const ALLOWED_EXTENSIONS = [
-  // Documents
   ".pdf",
   ".docx",
   ".doc",
-  // Images
   ".jpg",
   ".jpeg",
   ".png",
   ".gif",
   ".webp",
   ".svg",
-  // Audio
   ".mp3",
   ".wav",
   ".ogg",
   ".flac",
   ".aac",
   ".m4a",
-  // Video
   ".mp4",
   ".mov",
   ".avi",
@@ -94,24 +99,20 @@ const ALLOWED_EXTENSIONS = [
   ".mpg",
 ];
 const ALLOWED_TYPES = [
-  // Documents
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/msword",
-  // Images
   "image/jpeg",
   "image/png",
   "image/gif",
   "image/webp",
   "image/svg+xml",
-  // Audio
   "audio/mpeg",
   "audio/wav",
   "audio/ogg",
   "audio/flac",
   "audio/aac",
   "audio/x-m4a",
-  // Video
   "video/mp4",
   "video/quicktime",
   "video/x-msvideo",
@@ -156,6 +157,510 @@ function StorageBar({ usedBytes }: { usedBytes: number }) {
   );
 }
 
+// ─── Move Modal (files and folders) ──────────────────────────────────────────
+
+interface DialogFolder {
+  id: string | null; // null = root sentinel
+  name: string;
+}
+
+interface MoveModalProps {
+  itemName: string;
+  itemType: "file" | "folder";
+  excludeFolderId: string | null; // folder being moved (excluded from picker)
+  initialFolderId: string | null; // starting level (null = root)
+  loadFolders: (parentId: string | null) => Promise<FolderRecord[]>;
+  onConfirm: (targetFolderId: string | null) => void;
+  onCancel: () => void;
+  isMoving: boolean;
+}
+
+function MoveModal({
+  itemName,
+  itemType,
+  excludeFolderId,
+  initialFolderId,
+  loadFolders,
+  onConfirm,
+  onCancel,
+  isMoving,
+}: MoveModalProps) {
+  const { t } = useLanguage();
+
+  // Which folder level is displayed in the dialog (null = root)
+  const [dialogFolderId, setDialogFolderId] = useState<string | null>(null);
+  // Stack of parent levels for Back navigation: each entry is { id, name } of the level we came FROM
+  const [dialogStack, setDialogStack] = useState<DialogFolder[]>([]);
+  // Name of the folder currently being browsed (shown next to Back button)
+  const [currentFolderName, setCurrentFolderName] = useState<string>("");
+  // Folders visible at the current dialog level
+  const [dialogFolders, setDialogFolders] = useState<FolderRecord[]>([]);
+  const [dialogLoading, setDialogLoading] = useState(true);
+  // Which folder is selected as the move destination
+  const [selected, setSelected] = useState<string | null>(
+    initialFolderId === null ? "__root__" : initialFolderId,
+  );
+
+  // Reload whenever the dialog level changes
+  useEffect(() => {
+    let cancelled = false;
+    setDialogLoading(true);
+    loadFolders(dialogFolderId)
+      .then((folders) => {
+        if (!cancelled) setDialogFolders(folders);
+      })
+      .catch(() => {
+        if (!cancelled) setDialogFolders([]);
+      })
+      .finally(() => {
+        if (!cancelled) setDialogLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [dialogFolderId, loadFolders]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onCancel]);
+
+  const handleConfirm = () => {
+    onConfirm(selected === "__root__" ? null : (selected ?? null));
+  };
+
+  // Click folder name → navigate into it
+  const navigateInto = (folder: FolderRecord) => {
+    // Push the current level onto the stack
+    setDialogStack((prev) => [
+      ...prev,
+      { id: dialogFolderId, name: currentFolderName || t.documents.moveRoot },
+    ]);
+    setCurrentFolderName(folder.name);
+    setDialogFolderId(folder.id);
+  };
+
+  // Back button → pop stack and go up one level
+  const navigateBack = () => {
+    setDialogStack((prev) => {
+      const newStack = [...prev];
+      const parent = newStack.pop();
+      setCurrentFolderName(parent?.name ?? "");
+      setDialogFolderId(parent?.id ?? null);
+      return newStack;
+    });
+  };
+
+  // Never show the folder being moved (can't move into itself)
+  const visibleFolders = dialogFolders.filter((f) => f.id !== excludeFolderId);
+  const isInsideSubfolder = dialogStack.length > 0;
+  const title =
+    itemType === "folder" ? t.documents.moveFolderTitle : t.documents.moveTitle;
+
+  return (
+    <dialog
+      open
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent"
+      data-ocid="documents.move_modal"
+      aria-label={title}
+      onClick={onCancel}
+      onKeyDown={(e) => e.key === "Escape" && onCancel()}
+    >
+      <div
+        className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        {/* Title */}
+        <div className="flex items-center gap-2">
+          <FolderInput className="w-5 h-5 text-gold shrink-0" />
+          <h3 className="font-serif text-base font-semibold text-foreground">
+            {title}
+          </h3>
+        </div>
+        <p className="text-xs text-muted-foreground truncate" title={itemName}>
+          {itemName}
+        </p>
+
+        {/* Back button + current folder name */}
+        {isInsideSubfolder && (
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              type="button"
+              onClick={navigateBack}
+              className="inline-flex items-center gap-1.5 shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded px-2 py-1 bg-muted/30 hover:bg-muted/60"
+              data-ocid="documents.move_back"
+              aria-label={t.documents.back}
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              {t.documents.back}
+            </button>
+            {currentFolderName && (
+              <span className="flex items-center gap-1 min-w-0 text-xs text-foreground font-medium truncate">
+                <FolderOpen className="w-3.5 h-3.5 text-gold shrink-0" />
+                <span className="truncate">{currentFolderName}</span>
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Folder list */}
+        <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+          {/* Root option — only at root level */}
+          {!isInsideSubfolder && (
+            <label
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                selected === "__root__"
+                  ? "bg-gold/20 border border-gold/40"
+                  : "hover:bg-muted/40 border border-transparent"
+              }`}
+            >
+              <input
+                type="radio"
+                name="move-target"
+                value="__root__"
+                checked={selected === "__root__"}
+                onChange={() => setSelected("__root__")}
+                className="accent-gold"
+                data-ocid="documents.move_root_option"
+              />
+              <span className="text-sm text-foreground font-medium">
+                {t.documents.moveRoot}
+              </span>
+            </label>
+          )}
+
+          {/* Loading spinner */}
+          {dialogLoading && (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
+          {/* Folder rows — radio to select, name to navigate in */}
+          {!dialogLoading &&
+            visibleFolders.map((folder) => (
+              <div
+                key={folder.id}
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors ${
+                  selected === folder.id
+                    ? "bg-gold/20 border border-gold/40"
+                    : "hover:bg-muted/40 border border-transparent"
+                }`}
+                data-ocid="documents.move_folder_row"
+              >
+                <input
+                  type="radio"
+                  name="move-target"
+                  value={folder.id}
+                  checked={selected === folder.id}
+                  onChange={() => setSelected(folder.id)}
+                  className="accent-gold shrink-0"
+                  data-ocid="documents.move_folder_option"
+                />
+                <FolderOpen className="w-4 h-4 text-gold shrink-0" />
+                {/* Clicking the folder name navigates into it */}
+                <button
+                  type="button"
+                  onClick={() => navigateInto(folder)}
+                  className="flex-1 text-left text-sm text-foreground truncate min-w-0 hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded"
+                  data-ocid="documents.move_folder_navigate"
+                  title={folder.name}
+                >
+                  {folder.name}
+                </button>
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+              </div>
+            ))}
+
+          {/* Empty message inside a subfolder */}
+          {!dialogLoading &&
+            isInsideSubfolder &&
+            visibleFolders.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-3">
+                {t.documents.noDocuments}
+              </p>
+            )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2 justify-end pt-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onCancel}
+            disabled={isMoving}
+            className="rounded-full"
+            data-ocid="documents.move_cancel"
+          >
+            {t.documents.cancel}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleConfirm}
+            disabled={isMoving}
+            className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full"
+            data-ocid="documents.move_confirm"
+          >
+            {isMoving ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                {t.documents.moveConfirm}
+              </>
+            ) : (
+              t.documents.moveConfirm
+            )}
+          </Button>
+        </div>
+      </div>
+    </dialog>
+  );
+}
+
+// ─── Bulk Move Modal ──────────────────────────────────────────────────────────
+
+interface BulkMoveModalProps {
+  selectedCount: number;
+  excludeFolderIds: string[]; // folders being moved (excluded from picker)
+  loadFolders: (parentId: string | null) => Promise<FolderRecord[]>;
+  onConfirm: (targetFolderId: string | null) => void;
+  onCancel: () => void;
+  isMoving: boolean;
+}
+
+function BulkMoveModal({
+  selectedCount,
+  excludeFolderIds,
+  loadFolders,
+  onConfirm,
+  onCancel,
+  isMoving,
+}: BulkMoveModalProps) {
+  const { t } = useLanguage();
+
+  const [dialogFolderId, setDialogFolderId] = useState<string | null>(null);
+  const [dialogStack, setDialogStack] = useState<DialogFolder[]>([]);
+  const [currentFolderName, setCurrentFolderName] = useState<string>("");
+  const [dialogFolders, setDialogFolders] = useState<FolderRecord[]>([]);
+  const [dialogLoading, setDialogLoading] = useState(true);
+  const [selected, setSelected] = useState<string>("__root__");
+
+  useEffect(() => {
+    let cancelled = false;
+    setDialogLoading(true);
+    loadFolders(dialogFolderId)
+      .then((folders) => {
+        if (!cancelled) setDialogFolders(folders);
+      })
+      .catch(() => {
+        if (!cancelled) setDialogFolders([]);
+      })
+      .finally(() => {
+        if (!cancelled) setDialogLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [dialogFolderId, loadFolders]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onCancel]);
+
+  const handleConfirm = () => {
+    onConfirm(selected === "__root__" ? null : (selected ?? null));
+  };
+
+  const navigateInto = (folder: FolderRecord) => {
+    setDialogStack((prev) => [
+      ...prev,
+      { id: dialogFolderId, name: currentFolderName || t.documents.moveRoot },
+    ]);
+    setCurrentFolderName(folder.name);
+    setDialogFolderId(folder.id);
+  };
+
+  const navigateBack = () => {
+    setDialogStack((prev) => {
+      const newStack = [...prev];
+      const parent = newStack.pop();
+      setCurrentFolderName(parent?.name ?? "");
+      setDialogFolderId(parent?.id ?? null);
+      return newStack;
+    });
+  };
+
+  // Exclude all selected folders from picker (prevent circular moves)
+  const visibleFolders = dialogFolders.filter(
+    (f) => !excludeFolderIds.includes(f.id),
+  );
+  const isInsideSubfolder = dialogStack.length > 0;
+  const title = t.documents.bulkMoveTitle.replace("{n}", String(selectedCount));
+
+  return (
+    <dialog
+      open
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent"
+      data-ocid="documents.bulk_move_modal"
+      aria-label={title}
+      onClick={onCancel}
+      onKeyDown={(e) => e.key === "Escape" && onCancel()}
+    >
+      <div
+        className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        {/* Title */}
+        <div className="flex items-center gap-2">
+          <CheckSquare className="w-5 h-5 text-gold shrink-0" />
+          <h3 className="font-serif text-base font-semibold text-foreground">
+            {title}
+          </h3>
+        </div>
+
+        {/* Back button + current folder name */}
+        {isInsideSubfolder && (
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              type="button"
+              onClick={navigateBack}
+              className="inline-flex items-center gap-1.5 shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded px-2 py-1 bg-muted/30 hover:bg-muted/60"
+              data-ocid="documents.bulk_move_back"
+              aria-label={t.documents.back}
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              {t.documents.back}
+            </button>
+            {currentFolderName && (
+              <span className="flex items-center gap-1 min-w-0 text-xs text-foreground font-medium truncate">
+                <FolderOpen className="w-3.5 h-3.5 text-gold shrink-0" />
+                <span className="truncate">{currentFolderName}</span>
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Folder list */}
+        <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+          {/* Root option — only at root level */}
+          {!isInsideSubfolder && (
+            <label
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                selected === "__root__"
+                  ? "bg-gold/20 border border-gold/40"
+                  : "hover:bg-muted/40 border border-transparent"
+              }`}
+            >
+              <input
+                type="radio"
+                name="bulk-move-target"
+                value="__root__"
+                checked={selected === "__root__"}
+                onChange={() => setSelected("__root__")}
+                className="accent-gold"
+                data-ocid="documents.bulk_move_root_option"
+              />
+              <span className="text-sm text-foreground font-medium">
+                {t.documents.moveRoot}
+              </span>
+            </label>
+          )}
+
+          {dialogLoading && (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
+          {!dialogLoading &&
+            visibleFolders.map((folder) => (
+              <div
+                key={folder.id}
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors ${
+                  selected === folder.id
+                    ? "bg-gold/20 border border-gold/40"
+                    : "hover:bg-muted/40 border border-transparent"
+                }`}
+                data-ocid="documents.bulk_move_folder_row"
+              >
+                <input
+                  type="radio"
+                  name="bulk-move-target"
+                  value={folder.id}
+                  checked={selected === folder.id}
+                  onChange={() => setSelected(folder.id)}
+                  className="accent-gold shrink-0"
+                  data-ocid="documents.bulk_move_folder_option"
+                />
+                <FolderOpen className="w-4 h-4 text-gold shrink-0" />
+                <button
+                  type="button"
+                  onClick={() => navigateInto(folder)}
+                  className="flex-1 text-left text-sm text-foreground truncate min-w-0 hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded"
+                  data-ocid="documents.bulk_move_folder_navigate"
+                  title={folder.name}
+                >
+                  {folder.name}
+                </button>
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+              </div>
+            ))}
+
+          {!dialogLoading &&
+            isInsideSubfolder &&
+            visibleFolders.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-3">
+                {t.documents.noDocuments}
+              </p>
+            )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2 justify-end pt-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onCancel}
+            disabled={isMoving}
+            className="rounded-full"
+            data-ocid="documents.bulk_move_cancel"
+          >
+            {t.documents.cancel}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleConfirm}
+            disabled={isMoving}
+            className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full"
+            data-ocid="documents.bulk_move_confirm"
+          >
+            {isMoving ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                {t.documents.moveConfirm}
+              </>
+            ) : (
+              t.documents.moveConfirm
+            )}
+          </Button>
+        </div>
+      </div>
+    </dialog>
+  );
+}
+
 // ─── Image preview modal ──────────────────────────────────────────────────────
 
 interface ImageModalProps {
@@ -167,7 +672,6 @@ interface ImageModalProps {
 function ImageModal({ url, fileName, onClose }: ImageModalProps) {
   const { t } = useLanguage();
 
-  // Close on Escape key
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -190,7 +694,6 @@ function ImageModal({ url, fileName, onClose }: ImageModalProps) {
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
         <button
           type="button"
           onClick={onClose}
@@ -200,8 +703,6 @@ function ImageModal({ url, fileName, onClose }: ImageModalProps) {
         >
           <X className="w-4 h-4" />
         </button>
-
-        {/* Image */}
         <div className="rounded-xl overflow-hidden border border-border shadow-xl bg-card max-h-[80vh]">
           <img
             src={url}
@@ -209,8 +710,6 @@ function ImageModal({ url, fileName, onClose }: ImageModalProps) {
             className="max-w-full max-h-[80vh] object-contain block"
           />
         </div>
-
-        {/* Caption */}
         <p className="text-xs text-white/70 truncate max-w-full px-4 font-sans">
           {fileName}
         </p>
@@ -231,7 +730,7 @@ function AudioPlayerRow({ url, fileName, onClose }: AudioPlayerRowProps) {
   const { t } = useLanguage();
   return (
     <tr data-ocid="documents.audio_player_row">
-      <td colSpan={3} className="px-3 pb-3 pt-1">
+      <td colSpan={4} className="px-3 pb-3 pt-1">
         <div className="flex items-center gap-3 bg-muted/30 border border-gold/20 rounded-xl px-4 py-3">
           <Music className="w-4 h-4 text-gold shrink-0" />
           <span className="text-xs text-muted-foreground truncate min-w-0 flex-1 font-sans">
@@ -262,6 +761,114 @@ function AudioPlayerRow({ url, fileName, onClose }: AudioPlayerRowProps) {
   );
 }
 
+// ─── Create Folder Modal ──────────────────────────────────────────────────────
+
+interface CreateFolderModalProps {
+  onConfirm: (name: string) => void;
+  onCancel: () => void;
+  isCreating: boolean;
+}
+
+function CreateFolderModal({
+  onConfirm,
+  onCancel,
+  isCreating,
+}: CreateFolderModalProps) {
+  const { t } = useLanguage();
+  const [name, setName] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onCancel]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = name.trim();
+    if (trimmed) onConfirm(trimmed);
+  };
+
+  return (
+    <dialog
+      open
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent"
+      data-ocid="documents.create_folder_modal"
+      aria-label={t.documents.newFolder}
+      onClick={onCancel}
+      onKeyDown={(e) => e.key === "Escape" && onCancel()}
+    >
+      <div
+        className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-2">
+          <FolderPlus className="w-5 h-5 text-gold" />
+          <h3 className="font-serif text-base font-semibold text-foreground">
+            {t.documents.newFolder}
+          </h3>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="folder-name-input"
+              className="block text-xs font-medium text-muted-foreground mb-1.5"
+            >
+              {t.documents.folderName}
+            </label>
+            <input
+              id="folder-name-input"
+              ref={inputRef}
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t.documents.folderName}
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/60 transition"
+              maxLength={100}
+              data-ocid="documents.folder_name_input"
+              disabled={isCreating}
+            />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onCancel}
+              disabled={isCreating}
+              className="rounded-full"
+              data-ocid="documents.create_folder_cancel"
+            >
+              {t.documents.cancel}
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!name.trim() || isCreating}
+              className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full"
+              data-ocid="documents.create_folder_confirm"
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                  {t.documents.creating}
+                </>
+              ) : (
+                t.documents.createFolder
+              )}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+  );
+}
+
 // ─── Extended actor type ───────────────────────────────────────────────────────
 
 interface ExtendedActor {
@@ -275,6 +882,7 @@ interface ExtendedActor {
     fileData: Uint8Array,
     mimeType: string,
     isPublic: boolean,
+    parentFolderId: string | null,
   ): Promise<
     { __kind__: "ok"; ok: DocumentRecord } | { __kind__: "err"; err: string }
   >;
@@ -285,13 +893,34 @@ interface ExtendedActor {
       }
     | { __kind__: "err"; err: string }
   >;
-  listMyDocuments(): Promise<DocumentRecord[]>;
+  listMyDocuments(parentFolderId: string | null): Promise<DocumentRecord[]>;
+  listMyFolders(parentFolderId: string | null): Promise<FolderRecord[]>;
   setDocumentPublic(
     documentId: string,
     isPublic: boolean,
   ): Promise<{ __kind__: "ok"; ok: null } | { __kind__: "err"; err: string }>;
   deleteDocument(
     documentId: string,
+  ): Promise<{ __kind__: "ok"; ok: null } | { __kind__: "err"; err: string }>;
+  createFolder(
+    name: string,
+    parentFolderId: string | null,
+  ): Promise<{ __kind__: "ok"; ok: string } | { __kind__: "err"; err: string }>;
+  deleteFolder(
+    folderId: string,
+  ): Promise<{ __kind__: "ok"; ok: string } | { __kind__: "err"; err: string }>;
+  moveDocument(
+    docId: string,
+    targetFolderId: string | null,
+  ): Promise<{ __kind__: "ok"; ok: null } | { __kind__: "err"; err: string }>;
+  moveFolder(
+    folderId: string,
+    targetFolderId: string | null,
+  ): Promise<{ __kind__: "ok"; ok: null } | { __kind__: "err"; err: string }>;
+  bulkMove(
+    docIds: string[],
+    folderIds: string[],
+    targetFolderId: string | null,
   ): Promise<{ __kind__: "ok"; ok: null } | { __kind__: "err"; err: string }>;
 }
 
@@ -323,7 +952,15 @@ export default function MyPagesDocuments({
   const isAdmin = userRole === "admin";
   const isGuest = userRole === "guest";
 
+  // ─── Document / folder state ───────────────────────────────────────────────
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
+  const [folders, setFolders] = useState<FolderRecord[]>([]);
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [breadcrumbs, setBreadcrumbs] = useState<Breadcrumb[]>([
+    { id: null, name: t.documents.tab },
+  ]);
+
+  // ─── UI state ─────────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -334,8 +971,13 @@ export default function MyPagesDocuments({
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [togglingPublicId, setTogglingPublicId] = useState<string | null>(null);
+  const [deletingFolderId, setDeletingFolderId] = useState<string | null>(null);
 
-  // Preview state
+  // ─── Folder create modal state ────────────────────────────────────────────
+  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+
+  // ─── Preview state ────────────────────────────────────────────────────────
   const [imagePreview, setImagePreview] = useState<ImagePreviewState | null>(
     null,
   );
@@ -343,7 +985,22 @@ export default function MyPagesDocuments({
   const [audioPlayer, setAudioPlayer] = useState<AudioPlayerState | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
 
-  // Silence unused warnings
+  // ─── Move file state ──────────────────────────────────────────────────────
+  const [moveDoc, setMoveDoc] = useState<DocumentRecord | null>(null);
+  const [isMoving, setIsMoving] = useState(false);
+
+  // ─── Move folder state ────────────────────────────────────────────────────
+  const [movingFolder, setMovingFolder] = useState<FolderRecord | null>(null);
+  const [isMovingFolder, setIsMovingFolder] = useState(false);
+
+  // ─── Multi-select state ────────────────────────────────────────────────────
+  const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
+  const [selectedFolderIds, setSelectedFolderIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [showBulkMoveModal, setShowBulkMoveModal] = useState(false);
+  const [isBulkMoving, setIsBulkMoving] = useState(false);
+
   void principalText;
   void userName;
 
@@ -358,7 +1015,7 @@ export default function MyPagesDocuments({
     };
   }, []);
 
-  // ─── Load data ────────────────────────────────────────────────────────────
+  // ─── Load data (re-runs whenever currentFolderId changes) ─────────────────
 
   useEffect(() => {
     if (!extActor || isFetching) return;
@@ -367,13 +1024,15 @@ export default function MyPagesDocuments({
     const loadAll = async () => {
       setLoading(true);
       try {
-        const [docs, storageBytes, guestPerm] = await Promise.all([
-          extActor.listMyDocuments(),
+        const [docs, folderList, storageBytes, guestPerm] = await Promise.all([
+          extActor.listMyDocuments(currentFolderId),
+          extActor.listMyFolders(currentFolderId),
           extActor.getMyStorageUsed().catch(() => BigInt(0)),
           extActor.getGuestDocumentUploadPermission().catch(() => false),
         ]);
         if (!cancelled) {
           setDocuments(docs);
+          setFolders(folderList);
           setStorageUsed(Number(storageBytes));
           setGuestUploadAllowed(guestPerm);
         }
@@ -388,7 +1047,7 @@ export default function MyPagesDocuments({
     return () => {
       cancelled = true;
     };
-  }, [extActor, isFetching]);
+  }, [extActor, isFetching, currentFolderId]);
 
   const refreshStorage = async () => {
     if (!extActor) return;
@@ -400,13 +1059,79 @@ export default function MyPagesDocuments({
     }
   };
 
-  const fetchDocuments = async () => {
+  const refreshContents = useCallback(async () => {
     if (!extActor) return;
     try {
-      const docs = await extActor.listMyDocuments();
+      const [docs, folderList] = await Promise.all([
+        extActor.listMyDocuments(currentFolderId),
+        extActor.listMyFolders(currentFolderId),
+      ]);
       setDocuments(docs);
+      setFolders(folderList);
     } catch {
       // ignore
+    }
+  }, [extActor, currentFolderId]);
+
+  // ─── Navigation ───────────────────────────────────────────────────────────
+
+  const navigateIntoFolder = useCallback((folder: FolderRecord) => {
+    setCurrentFolderId(folder.id);
+    setBreadcrumbs((prev) => [...prev, { id: folder.id, name: folder.name }]);
+    setAudioPlayer(null);
+    setImagePreview(null);
+  }, []);
+
+  const navigateToBreadcrumb = useCallback((crumb: Breadcrumb) => {
+    setCurrentFolderId(crumb.id);
+    setBreadcrumbs((prev) => {
+      const idx = prev.findIndex((b) => b.id === crumb.id);
+      return idx >= 0 ? prev.slice(0, idx + 1) : prev;
+    });
+    setAudioPlayer(null);
+    setImagePreview(null);
+  }, []);
+
+  // ─── Create folder ────────────────────────────────────────────────────────
+
+  const handleCreateFolder = async (name: string) => {
+    if (!extActor) return;
+    setIsCreatingFolder(true);
+    try {
+      const result = await extActor.createFolder(name, currentFolderId);
+      if ("ok" in result) {
+        toast.success(t.documents.folderCreated);
+        setShowCreateFolderModal(false);
+        await refreshContents();
+      } else {
+        toast.error(`${t.common.error}: ${result.err}`);
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(`${t.common.error}: ${msg}`);
+    } finally {
+      setIsCreatingFolder(false);
+    }
+  };
+
+  // ─── Delete folder ────────────────────────────────────────────────────────
+
+  const handleDeleteFolder = async (folder: FolderRecord) => {
+    if (!extActor) return;
+    if (!window.confirm(t.documents.deleteFolderConfirm)) return;
+    setDeletingFolderId(folder.id);
+    try {
+      const result = await extActor.deleteFolder(folder.id);
+      if ("ok" in result) {
+        toast.success(t.documents.folderDeleted);
+        await refreshContents();
+      } else {
+        toast.error(`${t.common.error}: ${result.err}`);
+      }
+    } catch {
+      toast.error(t.common.error);
+    } finally {
+      setDeletingFolderId(null);
     }
   };
 
@@ -445,7 +1170,7 @@ export default function MyPagesDocuments({
     setSelectedFile(file);
   };
 
-  // ─── Upload — reads raw bytes and stores directly in canister ─────────────
+  // ─── Upload ───────────────────────────────────────────────────────────────
 
   const handleUpload = async () => {
     if (!extActor || !selectedFile) return;
@@ -460,26 +1185,23 @@ export default function MyPagesDocuments({
     }
 
     try {
-      // 1. Read file as raw bytes
       const arrayBuffer = await selectedFile.arrayBuffer();
       const byteArray = new Uint8Array(arrayBuffer);
-
-      // 2. Determine correct MIME type
       const mime = mimeForFile(selectedFile);
 
-      // 3. Upload directly to canister — no external blob storage
       const result = await extActor.uploadDocumentWithData(
         selectedFile.name,
         byteArray,
         mime,
-        false, // default to private
+        false,
+        currentFolderId,
       );
 
       if ("ok" in result) {
         toast.success(t.documents.uploadSuccess);
         setSelectedFile(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
-        await Promise.all([fetchDocuments(), refreshStorage()]);
+        await Promise.all([refreshContents(), refreshStorage()]);
       } else {
         toast.error(`${t.documents.uploadError}: ${result.err}`);
       }
@@ -491,7 +1213,7 @@ export default function MyPagesDocuments({
     }
   };
 
-  // ─── Download — fetches raw bytes from canister and triggers browser dl ───
+  // ─── Download ─────────────────────────────────────────────────────────────
 
   const handleDownload = useCallback(
     async (doc: DocumentRecord) => {
@@ -523,7 +1245,7 @@ export default function MyPagesDocuments({
     [extActor, t],
   );
 
-  // ─── Share — copies share link to clipboard ───────────────────────────────
+  // ─── Share ────────────────────────────────────────────────────────────────
 
   const handleShare = useCallback((doc: DocumentRecord) => {
     const link = `${window.location.origin}/#/documents/${doc.id}`;
@@ -560,7 +1282,7 @@ export default function MyPagesDocuments({
     [extActor, t],
   );
 
-  // ─── Image preview — lazy fetch on click ──────────────────────────────────
+  // ─── Image preview ────────────────────────────────────────────────────────
 
   const handleImagePreview = useCallback(
     async (doc: DocumentRecord) => {
@@ -572,7 +1294,6 @@ export default function MyPagesDocuments({
           const { data, mimeType, fileName } = result.ok;
           const bytes = new Uint8Array(data);
           const blob = new Blob([bytes], { type: mimeType });
-          // Revoke previous image URL if any
           if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
           const url = URL.createObjectURL(blob);
           imageUrlRef.current = url;
@@ -597,13 +1318,12 @@ export default function MyPagesDocuments({
     setImagePreview(null);
   }, []);
 
-  // ─── Audio player — lazy fetch on click ───────────────────────────────────
+  // ─── Audio player ─────────────────────────────────────────────────────────
 
   const handleAudioPlay = useCallback(
     async (doc: DocumentRecord) => {
       if (!extActor) return;
 
-      // If already playing this doc, close it
       if (audioPlayer?.docId === doc.id) {
         if (audioUrlRef.current) {
           URL.revokeObjectURL(audioUrlRef.current);
@@ -613,7 +1333,6 @@ export default function MyPagesDocuments({
         return;
       }
 
-      // Revoke previous audio URL
       if (audioUrlRef.current) {
         URL.revokeObjectURL(audioUrlRef.current);
         audioUrlRef.current = null;
@@ -650,8 +1369,211 @@ export default function MyPagesDocuments({
     setAudioPlayer(null);
   }, []);
 
-  // ─── Guest upload permission ──────────────────────────────────────────────
+  // ─── Open file in new tab ─────────────────────────────────────────────────
 
+  const handleOpenFile = useCallback(
+    async (doc: DocumentRecord) => {
+      if (!extActor) return;
+      setDownloadingId(doc.id);
+      try {
+        const result = await extActor.getDocumentData(doc.id);
+        if ("ok" in result) {
+          const { data, mimeType } = result.ok;
+          const bytes = new Uint8Array(data);
+          const blob = new Blob([bytes], {
+            type: mimeType || "application/octet-stream",
+          });
+          const url = URL.createObjectURL(blob);
+          const tab = window.open(url, "_blank");
+          // Revoke after a short delay to allow the new tab to load
+          setTimeout(() => URL.revokeObjectURL(url), 10000);
+          if (!tab) {
+            // Pop-ups blocked — fall back to download
+            await handleDownload(doc);
+          }
+        } else {
+          toast.error(`${t.common.error}: ${result.err}`);
+        }
+      } catch {
+        toast.error(t.common.error);
+      } finally {
+        setDownloadingId(null);
+      }
+    },
+    [extActor, t, handleDownload],
+  );
+
+  // ─── Move file ────────────────────────────────────────────────────────────
+
+  const loadFoldersForDialog = useCallback(
+    async (parentId: string | null): Promise<FolderRecord[]> => {
+      if (!extActor) return [];
+      try {
+        return await extActor.listMyFolders(parentId);
+      } catch {
+        return [];
+      }
+    },
+    [extActor],
+  );
+
+  const handleOpenMove = useCallback((doc: DocumentRecord) => {
+    setMoveDoc(doc);
+  }, []);
+
+  const handleMoveConfirm = useCallback(
+    async (targetFolderId: string | null) => {
+      if (!extActor || !moveDoc) return;
+      setIsMoving(true);
+      try {
+        const result = await extActor.moveDocument(moveDoc.id, targetFolderId);
+        if ("ok" in result) {
+          toast.success(t.documents.moveSuccess);
+          setMoveDoc(null);
+          await refreshContents();
+        } else {
+          toast.error(`${t.documents.moveError}: ${result.err}`);
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        toast.error(`${t.documents.moveError}: ${msg}`);
+      } finally {
+        setIsMoving(false);
+      }
+    },
+    [extActor, moveDoc, t, refreshContents],
+  );
+
+  // ─── Move folder ──────────────────────────────────────────────────────────
+
+  const handleOpenMoveFolder = useCallback((folder: FolderRecord) => {
+    setMovingFolder(folder);
+  }, []);
+
+  const handleMoveFolderConfirm = useCallback(
+    async (targetFolderId: string | null) => {
+      if (!extActor || !movingFolder) return;
+      setIsMovingFolder(true);
+      try {
+        const result = await extActor.moveFolder(
+          movingFolder.id,
+          targetFolderId,
+        );
+        if ("ok" in result) {
+          toast.success(t.documents.moveFolderSuccess);
+          setMovingFolder(null);
+          await refreshContents();
+        } else {
+          toast.error(`${t.documents.moveFolderError}: ${result.err}`);
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        toast.error(`${t.documents.moveFolderError}: ${msg}`);
+      } finally {
+        setIsMovingFolder(false);
+      }
+    },
+    [extActor, movingFolder, t, refreshContents],
+  );
+
+  // ─── Multi-select helpers ─────────────────────────────────────────────────
+
+  const totalSelected = selectedDocIds.size + selectedFolderIds.size;
+
+  const handleToggleDocSelect = useCallback((docId: string) => {
+    setSelectedDocIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(docId)) next.delete(docId);
+      else next.add(docId);
+      return next;
+    });
+  }, []);
+
+  const handleToggleFolderSelect = useCallback((folderId: string) => {
+    setSelectedFolderIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(folderId)) next.delete(folderId);
+      else next.add(folderId);
+      return next;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(
+    (checked: boolean) => {
+      if (checked) {
+        setSelectedDocIds(new Set(documents.map((d) => d.id)));
+        setSelectedFolderIds(new Set(folders.map((f) => f.id)));
+      } else {
+        setSelectedDocIds(new Set());
+        setSelectedFolderIds(new Set());
+      }
+    },
+    [documents, folders],
+  );
+
+  const clearSelection = useCallback(() => {
+    setSelectedDocIds(new Set());
+    setSelectedFolderIds(new Set());
+  }, []);
+
+  // Clear selection on folder navigation
+  const navigateIntoFolderWithClear = useCallback(
+    (folder: FolderRecord) => {
+      clearSelection();
+      navigateIntoFolder(folder);
+    },
+    [clearSelection, navigateIntoFolder],
+  );
+
+  const navigateToBreadcrumbWithClear = useCallback(
+    (crumb: Breadcrumb) => {
+      clearSelection();
+      navigateToBreadcrumb(crumb);
+    },
+    [clearSelection, navigateToBreadcrumb],
+  );
+
+  // ─── Bulk move ────────────────────────────────────────────────────────────
+
+  const handleBulkMoveConfirm = useCallback(
+    async (targetFolderId: string | null) => {
+      if (!extActor) return;
+      setIsBulkMoving(true);
+      try {
+        const docIds = Array.from(selectedDocIds);
+        const folderIds = Array.from(selectedFolderIds);
+        const result = await extActor.bulkMove(
+          docIds,
+          folderIds,
+          targetFolderId,
+        );
+        if ("ok" in result) {
+          const n = docIds.length + folderIds.length;
+          toast.success(t.documents.bulkMoveSuccess.replace("{n}", String(n)));
+          setShowBulkMoveModal(false);
+          clearSelection();
+          await refreshContents();
+        } else {
+          toast.error(`${t.documents.bulkMoveError}: ${result.err}`);
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        toast.error(`${t.documents.bulkMoveError}: ${msg}`);
+      } finally {
+        setIsBulkMoving(false);
+      }
+    },
+    [
+      extActor,
+      selectedDocIds,
+      selectedFolderIds,
+      t,
+      clearSelection,
+      refreshContents,
+    ],
+  );
+
+  // ─── Guest upload permission ──────────────────────────────────────────────
   const handleToggleGuestPermission = async () => {
     if (!extActor) return;
     setTogglingGuestPerm(true);
@@ -675,6 +1597,9 @@ export default function MyPagesDocuments({
     }
   };
 
+  // ─── Derived: is the list empty? ──────────────────────────────────────────
+  const isEmpty = documents.length === 0 && folders.length === 0;
+
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
@@ -685,6 +1610,55 @@ export default function MyPagesDocuments({
           url={imagePreview.url}
           fileName={imagePreview.fileName}
           onClose={handleCloseImagePreview}
+        />
+      )}
+
+      {/* Create folder modal */}
+      {showCreateFolderModal && (
+        <CreateFolderModal
+          onConfirm={handleCreateFolder}
+          onCancel={() => setShowCreateFolderModal(false)}
+          isCreating={isCreatingFolder}
+        />
+      )}
+
+      {/* Move file modal */}
+      {moveDoc && (
+        <MoveModal
+          itemName={moveDoc.fileName}
+          itemType="file"
+          excludeFolderId={null}
+          initialFolderId={moveDoc.parentFolderId ?? null}
+          loadFolders={loadFoldersForDialog}
+          onConfirm={handleMoveConfirm}
+          onCancel={() => setMoveDoc(null)}
+          isMoving={isMoving}
+        />
+      )}
+
+      {/* Move folder modal */}
+      {movingFolder && (
+        <MoveModal
+          itemName={movingFolder.name}
+          itemType="folder"
+          excludeFolderId={movingFolder.id}
+          initialFolderId={movingFolder.parentFolderId ?? null}
+          loadFolders={loadFoldersForDialog}
+          onConfirm={handleMoveFolderConfirm}
+          onCancel={() => setMovingFolder(null)}
+          isMoving={isMovingFolder}
+        />
+      )}
+
+      {/* Bulk move modal */}
+      {showBulkMoveModal && (
+        <BulkMoveModal
+          selectedCount={totalSelected}
+          excludeFolderIds={Array.from(selectedFolderIds)}
+          loadFolders={loadFoldersForDialog}
+          onConfirm={handleBulkMoveConfirm}
+          onCancel={() => setShowBulkMoveModal(false)}
+          isMoving={isBulkMoving}
         />
       )}
 
@@ -726,10 +1700,23 @@ export default function MyPagesDocuments({
       {/* Upload section */}
       <Card className="border border-divider shadow-card">
         <CardHeader>
-          <CardTitle className="font-serif text-lg text-foreground flex items-center gap-2">
-            <Upload className="w-5 h-5 text-gold" />
-            {t.documents.uploadTitle}
-          </CardTitle>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <CardTitle className="font-serif text-lg text-foreground flex items-center gap-2">
+              <Upload className="w-5 h-5 text-gold" />
+              {t.documents.uploadTitle}
+            </CardTitle>
+            {/* New Folder button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCreateFolderModal(true)}
+              className="rounded-full border-gold/40 text-foreground hover:bg-gold/10 gap-1.5"
+              data-ocid="documents.new_folder_button"
+            >
+              <FolderPlus className="w-4 h-4 text-gold" />
+              {t.documents.newFolder}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {!loading && <StorageBar usedBytes={storageUsed} />}
@@ -792,22 +1779,76 @@ export default function MyPagesDocuments({
         </CardContent>
       </Card>
 
-      {/* Documents table */}
+      {/* Documents & folders table */}
       <Card className="border border-divider shadow-card">
         <CardHeader>
-          <CardTitle className="font-serif text-lg text-foreground flex items-center gap-2">
-            <FileText className="w-5 h-5 text-gold" />
-            {t.documents.tab}
-          </CardTitle>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <CardTitle className="font-serif text-lg text-foreground flex items-center gap-2">
+              <FileText className="w-5 h-5 text-gold" />
+              {t.documents.tab}
+            </CardTitle>
+            {/* Bulk move button — shown when items are selected */}
+            {totalSelected > 0 && (
+              <Button
+                size="sm"
+                onClick={() => setShowBulkMoveModal(true)}
+                className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full gap-1.5"
+                data-ocid="documents.bulk_move_button"
+              >
+                <FolderInput className="w-4 h-4" />
+                {t.documents.bulkMoveButton.replace(
+                  "{n}",
+                  String(totalSelected),
+                )}
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
+          {/* Breadcrumb navigation */}
+          {breadcrumbs.length > 1 && (
+            <nav
+              className="flex items-center gap-1 mb-4 flex-wrap"
+              aria-label="breadcrumb"
+              data-ocid="documents.breadcrumbs"
+            >
+              {breadcrumbs.map((crumb, idx) => {
+                const isLast = idx === breadcrumbs.length - 1;
+                return (
+                  <span
+                    key={crumb.id ?? "root"}
+                    className="flex items-center gap-1"
+                  >
+                    {idx > 0 && (
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                    )}
+                    {isLast ? (
+                      <span className="text-xs font-semibold text-foreground truncate max-w-[160px]">
+                        {crumb.name}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => navigateToBreadcrumbWithClear(crumb)}
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors truncate max-w-[120px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded"
+                        data-ocid="documents.breadcrumb_link"
+                      >
+                        {crumb.name}
+                      </button>
+                    )}
+                  </span>
+                );
+              })}
+            </nav>
+          )}
+
           {loading ? (
             <div className="space-y-3" data-ocid="documents.loading_state">
               {[1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
-          ) : documents.length === 0 ? (
+          ) : isEmpty ? (
             <div
               className="flex flex-col items-center justify-center py-12 gap-3 text-center"
               data-ocid="documents.empty_state"
@@ -822,6 +1863,30 @@ export default function MyPagesDocuments({
               <table className="w-full text-sm font-sans">
                 <thead>
                   <tr className="border-b border-divider">
+                    {/* Select-all checkbox */}
+                    <th
+                      className="py-3 pr-2 w-8 text-left"
+                      aria-label="Select all"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={
+                          totalSelected > 0 &&
+                          totalSelected === documents.length + folders.length
+                        }
+                        ref={(el) => {
+                          if (el) {
+                            el.indeterminate =
+                              totalSelected > 0 &&
+                              totalSelected < documents.length + folders.length;
+                          }
+                        }}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                        className="w-4 h-4 accent-gold cursor-pointer rounded"
+                        data-ocid="documents.select_all"
+                        aria-label="Select all items"
+                      />
+                    </th>
                     <th className="text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                       {t.documents.fileName}
                     </th>
@@ -834,6 +1899,98 @@ export default function MyPagesDocuments({
                   </tr>
                 </thead>
                 <tbody>
+                  {/* ── Folder rows (shown before files) ── */}
+                  {folders.map((folder) => (
+                    <tr
+                      key={`folder-${folder.id}`}
+                      className={`border-b border-divider/50 hover:bg-gold/5 transition-colors ${
+                        selectedFolderIds.has(folder.id)
+                          ? "bg-gold/10"
+                          : "bg-muted/10"
+                      }`}
+                      data-ocid="documents.folder_row"
+                    >
+                      {/* Folder checkbox */}
+                      <td className="py-3 pr-2 w-8">
+                        <input
+                          type="checkbox"
+                          checked={selectedFolderIds.has(folder.id)}
+                          onChange={() => handleToggleFolderSelect(folder.id)}
+                          className="w-4 h-4 accent-gold cursor-pointer rounded"
+                          data-ocid="documents.folder_checkbox"
+                          aria-label={`Select folder ${folder.name}`}
+                        />
+                      </td>
+
+                      {/* Folder name */}
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <FolderOpen className="w-4 h-4 text-gold shrink-0" />
+                          <button
+                            type="button"
+                            className="truncate max-w-[200px] font-medium text-foreground cursor-pointer hover:underline hover:text-gold transition-colors text-left bg-transparent border-0 p-0"
+                            title={folder.name}
+                            onClick={() => navigateIntoFolderWithClear(folder)}
+                            data-ocid="documents.folder_name_link"
+                            aria-label={`${t.documents.openFolder} ${folder.name}`}
+                          >
+                            {folder.name}
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* No size for folders */}
+                      <td className="py-3 pr-4 text-muted-foreground">—</td>
+
+                      {/* Folder actions */}
+                      <td className="py-3 text-right">
+                        <div className="inline-flex items-center gap-1.5 justify-end">
+                          {/* Open button */}
+                          <button
+                            type="button"
+                            onClick={() => navigateIntoFolderWithClear(folder)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-gold/15 hover:bg-gold/25 text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+                            data-ocid="documents.folder_open"
+                            aria-label={`${t.documents.openFolder} ${folder.name}`}
+                          >
+                            <FolderOpen className="w-3.5 h-3.5" />
+                            {t.documents.openFolder}
+                          </button>
+
+                          {/* Delete folder button */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteFolder(folder)}
+                            disabled={deletingFolderId === folder.id}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 disabled:opacity-50"
+                            data-ocid="documents.folder_delete"
+                            aria-label={`${t.documents.deleteFolder} ${folder.name}`}
+                          >
+                            {deletingFolderId === folder.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3.5 h-3.5" />
+                            )}
+                            {t.documents.deleteFolder}
+                          </button>
+
+                          {/* Move folder button */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenMoveFolder(folder)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+                            data-ocid="documents.folder_move"
+                            aria-label={`${t.documents.moveFolder} ${folder.name}`}
+                          >
+                            <FolderInput className="w-3.5 h-3.5" />
+                            {t.documents.moveFolder}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {/* ── File rows ── */}
                   {documents.map((doc) => {
                     const docWithSize = doc as DocumentRecord & {
                       fileSize?: bigint;
@@ -843,33 +2000,58 @@ export default function MyPagesDocuments({
                     const isAudioActive = audioPlayer?.docId === doc.id;
 
                     return (
-                      <>
+                      <React.Fragment key={doc.id}>
                         <tr
-                          key={doc.id}
-                          className="border-b border-divider/50 hover:bg-muted/20 transition-colors"
+                          className={`border-b border-divider/50 hover:bg-muted/20 transition-colors ${
+                            selectedDocIds.has(doc.id) ? "bg-gold/5" : ""
+                          }`}
                           data-ocid="documents.row"
                         >
-                          {/* Filnamn */}
+                          {/* File checkbox */}
+                          <td className="py-3 pr-2 w-8">
+                            <input
+                              type="checkbox"
+                              checked={selectedDocIds.has(doc.id)}
+                              onChange={() => handleToggleDocSelect(doc.id)}
+                              className="w-4 h-4 accent-gold cursor-pointer rounded"
+                              data-ocid="documents.file_checkbox"
+                              aria-label={`Select file ${doc.fileName}`}
+                            />
+                          </td>
+
+                          {/* Filename */}
                           <td className="py-3 pr-4">
                             <div className="flex items-center gap-2 min-w-0">
                               <FileText className="w-4 h-4 text-gold shrink-0" />
-                              <span
-                                className="truncate max-w-[200px]"
+                              <button
+                                type="button"
+                                className="truncate max-w-[200px] text-left cursor-pointer hover:underline hover:text-gold transition-colors bg-transparent border-0 p-0"
                                 title={doc.fileName}
+                                onClick={() => {
+                                  if (isImage) {
+                                    handleImagePreview(doc);
+                                  } else if (isAudio) {
+                                    handleAudioPlay(doc);
+                                  } else {
+                                    handleOpenFile(doc);
+                                  }
+                                }}
+                                data-ocid="documents.filename_link"
+                                aria-label={`${doc.fileName}`}
                               >
                                 {doc.fileName}
-                              </span>
+                              </button>
                             </div>
                           </td>
 
-                          {/* Storlek */}
+                          {/* Size */}
                           <td className="py-3 pr-4 text-muted-foreground whitespace-nowrap">
                             {docWithSize.fileSize != null
                               ? `${(Number(docWithSize.fileSize) / 1024).toFixed(0)} KB`
                               : "—"}
                           </td>
 
-                          {/* Åtgärder */}
+                          {/* Actions */}
                           <td className="py-3 text-right">
                             <div className="inline-flex items-center gap-1.5 justify-end flex-wrap">
                               {/* Image preview button */}
@@ -948,7 +2130,7 @@ export default function MyPagesDocuments({
                                   : t.documents.share}
                               </button>
 
-                              {/* Public/Private toggle button */}
+                              {/* Public/Private toggle */}
                               <button
                                 type="button"
                                 onClick={() => handleTogglePublic(doc)}
@@ -973,11 +2155,23 @@ export default function MyPagesDocuments({
                                   ? t.documents.public
                                   : t.documents.private}
                               </button>
+
+                              {/* Move file button */}
+                              <button
+                                type="button"
+                                onClick={() => handleOpenMove(doc)}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+                                data-ocid="documents.move_button"
+                                aria-label={`${t.documents.moveFile} ${doc.fileName}`}
+                              >
+                                <FolderInput className="w-3.5 h-3.5" />
+                                {t.documents.moveFile}
+                              </button>
                             </div>
                           </td>
                         </tr>
 
-                        {/* Inline audio player row — shown below the doc row when active */}
+                        {/* Inline audio player row */}
                         {isAudioActive && audioPlayer && (
                           <AudioPlayerRow
                             key={`audio-${doc.id}`}
@@ -986,7 +2180,7 @@ export default function MyPagesDocuments({
                             onClose={handleCloseAudioPlayer}
                           />
                         )}
-                      </>
+                      </React.Fragment>
                     );
                   })}
                 </tbody>

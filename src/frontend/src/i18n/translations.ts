@@ -290,6 +290,33 @@ export interface TranslationMap {
     preview: string;
     play: string;
     close: string;
+    // Folder strings
+    newFolder: string;
+    folderName: string;
+    createFolder: string;
+    creating: string;
+    cancel: string;
+    openFolder: string;
+    deleteFolder: string;
+    deleteFolderConfirm: string;
+    folderCreated: string;
+    folderDeleted: string;
+    // Move file/folder strings
+    moveFile: string;
+    moveTitle: string;
+    moveFolder: string;
+    moveFolderTitle: string;
+    moveRoot: string;
+    moveConfirm: string;
+    moveSuccess: string;
+    moveError: string;
+    moveFolderSuccess: string;
+    moveFolderError: string;
+    back: string;
+    bulkMoveButton: string;
+    bulkMoveTitle: string;
+    bulkMoveSuccess: string;
+    bulkMoveError: string;
   };
 }
 
@@ -594,6 +621,31 @@ export const translations: Record<Language, TranslationMap> = {
       preview: "Preview",
       play: "Play",
       close: "Close",
+      newFolder: "New Folder",
+      folderName: "Folder name",
+      createFolder: "Create",
+      creating: "Creating…",
+      cancel: "Cancel",
+      openFolder: "Open",
+      deleteFolder: "Delete",
+      deleteFolderConfirm: "Delete folder and all its contents?",
+      folderCreated: "Folder created.",
+      folderDeleted: "Folder deleted.",
+      moveFile: "Move",
+      moveTitle: "Move file to folder",
+      moveFolder: "Move",
+      moveFolderTitle: "Move folder to another folder",
+      moveRoot: "Root (no folder)",
+      moveConfirm: "Move",
+      moveSuccess: "File moved successfully",
+      moveError: "Failed to move file",
+      moveFolderSuccess: "Folder moved successfully",
+      moveFolderError: "Failed to move folder",
+      back: "Back",
+      bulkMoveButton: "Move selected ({n})",
+      bulkMoveTitle: "Move {n} items to",
+      bulkMoveSuccess: "Moved {n} items",
+      bulkMoveError: "Failed to move some items",
     },
   },
 
@@ -901,6 +953,31 @@ export const translations: Record<Language, TranslationMap> = {
       preview: "Vista previa",
       play: "Reproducir",
       close: "Cerrar",
+      newFolder: "Nueva carpeta",
+      folderName: "Nombre de carpeta",
+      createFolder: "Crear",
+      creating: "Creando…",
+      cancel: "Cancelar",
+      openFolder: "Abrir",
+      deleteFolder: "Eliminar",
+      deleteFolderConfirm: "¿Eliminar carpeta y todo su contenido?",
+      folderCreated: "Carpeta creada.",
+      folderDeleted: "Carpeta eliminada.",
+      moveFile: "Mover",
+      moveTitle: "Mover archivo a carpeta",
+      moveFolder: "Mover",
+      moveFolderTitle: "Mover carpeta a otra carpeta",
+      moveRoot: "Raíz (sin carpeta)",
+      moveConfirm: "Mover",
+      moveSuccess: "Archivo movido con éxito",
+      moveError: "Error al mover el archivo",
+      moveFolderSuccess: "Carpeta movida con éxito",
+      moveFolderError: "Error al mover la carpeta",
+      back: "Volver",
+      bulkMoveButton: "Mover seleccionados ({n})",
+      bulkMoveTitle: "Mover {n} elementos a",
+      bulkMoveSuccess: "{n} elementos movidos",
+      bulkMoveError: "Error al mover algunos elementos",
     },
   },
 
@@ -1207,6 +1284,31 @@ export const translations: Record<Language, TranslationMap> = {
       preview: "Förhandsvisning",
       play: "Spela",
       close: "Stäng",
+      newFolder: "Ny mapp",
+      folderName: "Mappnamn",
+      createFolder: "Skapa",
+      creating: "Skapar…",
+      cancel: "Avbryt",
+      openFolder: "Öppna",
+      deleteFolder: "Ta bort",
+      deleteFolderConfirm: "Ta bort mappen och allt dess innehåll?",
+      folderCreated: "Mapp skapad.",
+      folderDeleted: "Mapp borttagen.",
+      moveFile: "Flytta",
+      moveTitle: "Flytta fil till mapp",
+      moveFolder: "Flytta",
+      moveFolderTitle: "Flytta mapp till annan mapp",
+      moveRoot: "Rot (ingen mapp)",
+      moveConfirm: "Flytta",
+      moveSuccess: "Filen har flyttats",
+      moveError: "Det gick inte att flytta filen",
+      moveFolderSuccess: "Mappen har flyttats",
+      moveFolderError: "Det gick inte att flytta mappen",
+      back: "Tillbaka",
+      bulkMoveButton: "Flytta markerade ({n})",
+      bulkMoveTitle: "Flytta {n} objekt till",
+      bulkMoveSuccess: "{n} objekt har flyttats",
+      bulkMoveError: "Det gick inte att flytta alla objekt",
     },
   },
 };

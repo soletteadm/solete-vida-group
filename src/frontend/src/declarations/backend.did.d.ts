@@ -31,8 +31,17 @@ export interface DocumentRecord {
   'fileName' : string,
   'filePath' : string,
   'fileSize' : bigint,
+  'parentFolderId' : [] | [string],
   'isPublic' : boolean,
   'uploadedAt' : bigint,
+}
+export interface FolderRecord {
+  'id' : string,
+  'ownerName' : string,
+  'ownerPrincipal' : Principal,
+  'name' : string,
+  'createdAt' : bigint,
+  'parentFolderId' : [] | [string],
 }
 export type Holiday = { 'newyear' : null } |
   { 'none' : null } |
@@ -69,6 +78,16 @@ export interface _SERVICE {
       { 'err' : string }
   >,
   'blockUser' : ActorMethod<[string], { 'ok' : null } | { 'err' : string }>,
+  'bulkMove' : ActorMethod<
+    [Array<string>, Array<string>, [] | [string]],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
+  'createFolder' : ActorMethod<
+    [string, [] | [string]],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
   'deleteContactMessage' : ActorMethod<
     [string],
     { 'ok' : null } |
@@ -82,6 +101,11 @@ export interface _SERVICE {
   'deleteDocument' : ActorMethod<
     [string],
     { 'ok' : null } |
+      { 'err' : string }
+  >,
+  'deleteFolder' : ActorMethod<
+    [string],
+    { 'ok' : string } |
       { 'err' : string }
   >,
   'getActiveHoliday' : ActorMethod<[], Holiday>,
@@ -106,11 +130,22 @@ export interface _SERVICE {
     { 'ok' : Array<ContactMessage> } |
       { 'err' : string }
   >,
-  'listMyDocuments' : ActorMethod<[], Array<DocumentRecord>>,
+  'listMyDocuments' : ActorMethod<[[] | [string]], Array<DocumentRecord>>,
+  'listMyFolders' : ActorMethod<[[] | [string]], Array<FolderRecord>>,
   'listPublicDocuments' : ActorMethod<[], Array<DocumentRecord>>,
   'listUsers' : ActorMethod<
     [],
     { 'ok' : Array<UserListEntry> } |
+      { 'err' : string }
+  >,
+  'moveDocument' : ActorMethod<
+    [string, [] | [string]],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
+  'moveFolder' : ActorMethod<
+    [string, [] | [string]],
+    { 'ok' : string } |
       { 'err' : string }
   >,
   'removeUser' : ActorMethod<[string], { 'ok' : null } | { 'err' : string }>,
@@ -165,7 +200,7 @@ export interface _SERVICE {
       { 'err' : string }
   >,
   'uploadDocumentWithData' : ActorMethod<
-    [string, Uint8Array, string, boolean],
+    [string, Uint8Array, string, boolean, [] | [string]],
     { 'ok' : DocumentRecord } |
       { 'err' : string }
   >,

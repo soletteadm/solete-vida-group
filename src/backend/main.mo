@@ -71,7 +71,21 @@ actor {
     uploadedAt : Int;
   };
 
-  // Current DocumentRecord type includes fileSize.
+  // DocumentRecord v2 — has fileSize but no parentFolderId.
+  // Kept for migration purposes only.
+  type DocumentRecord_V2 = {
+    id : Text;
+    ownerPrincipal : Principal;
+    ownerName : Text;
+    fileName : Text;
+    filePath : Text;
+    mimeType : Text;
+    isPublic : Bool;
+    uploadedAt : Int;
+    fileSize : Nat;
+  };
+
+  // Current DocumentRecord type — includes fileSize and parentFolderId.
   type DocumentRecord = {
     id : Text;
     ownerPrincipal : Principal;
@@ -82,6 +96,17 @@ actor {
     isPublic : Bool;
     uploadedAt : Int;
     fileSize : Nat;
+    parentFolderId : ?Text;
+  };
+
+  // FolderRecord type for folder management.
+  type FolderRecord = {
+    id : Text;
+    ownerPrincipal : Principal;
+    ownerName : Text;
+    name : Text;
+    parentFolderId : ?Text;
+    createdAt : Int;
   };
 
   // ---- State ----
@@ -98,18 +123,24 @@ actor {
   // the upgrade compatibility check passes. It receives the previously-deployed data.
   // In postupgrade we copy+migrate all entries into documentRecords_v2 and clear this map.
   stable var documentRecords : Map.Map<Text, DocumentRecord_V1> = Map.empty<Text, DocumentRecord_V1>();
-  // documentRecords_v2: the live store used by all document APIs (new type with fileSize).
-  stable var documentRecords_v2 : Map.Map<Text, DocumentRecord> = Map.empty<Text, DocumentRecord>();
+  // documentRecords_v2: receives V1→V2 migrated data; also migrated to v3 on upgrade.
+  stable var documentRecords_v2 : Map.Map<Text, DocumentRecord_V2> = Map.empty<Text, DocumentRecord_V2>();
+  // documentRecords_v3: live store — includes parentFolderId.
+  stable var documentRecords_v3 : Map.Map<Text, DocumentRecord> = Map.empty<Text, DocumentRecord>();
   stable var documentIdCounter : Nat = 0;
   stable var allowGuestDocumentUpload : Bool = false;
 
   // fileBlobs: raw file bytes stored by docId. Key = docId (same as DocumentRecord.id).
   stable var fileBlobs : Map.Map<Text, [Nat8]> = Map.empty<Text, [Nat8]>();
 
+  // Folder storage
+  stable var folderRecords : Map.Map<Text, FolderRecord> = Map.empty<Text, FolderRecord>();
+  stable var folderIdCounter : Nat = 1;
+
   // ---- Migration ----
 
   system func postupgrade() {
-    // Migrate V1 records (no fileSize) into documentRecords_v2 with fileSize = 0
+    // Step 1: Migrate V1 records (no fileSize) into documentRecords_v2 with fileSize = 0
     for ((id, old) in documentRecords.entries()) {
       switch (documentRecords_v2.get(id)) {
         case (null) {
@@ -131,6 +162,31 @@ actor {
     // Clear the v1 store after migration
     for ((id, _) in documentRecords.entries()) {
       documentRecords.remove(id);
+    };
+
+    // Step 2: Migrate V2 records (no parentFolderId) into documentRecords_v3 with parentFolderId = null
+    for ((id, old) in documentRecords_v2.entries()) {
+      switch (documentRecords_v3.get(id)) {
+        case (null) {
+          documentRecords_v3.add(id, {
+            id = old.id;
+            ownerPrincipal = old.ownerPrincipal;
+            ownerName = old.ownerName;
+            fileName = old.fileName;
+            filePath = old.filePath;
+            mimeType = old.mimeType;
+            isPublic = old.isPublic;
+            uploadedAt = old.uploadedAt;
+            fileSize = old.fileSize;
+            parentFolderId = null;
+          });
+        };
+        case (?_) {}; // already migrated
+      };
+    };
+    // Clear the v2 store after migration
+    for ((id, _) in documentRecords_v2.entries()) {
+      documentRecords_v2.remove(id);
     };
   };
 
@@ -612,7 +668,7 @@ actor {
 
     // Enforce 100MB total storage limit per user
     let maxStorage : Nat = 104857600;
-    let usedStorage = documentRecords_v2.entries().toArray()
+    let usedStorage = documentRecords_v3.entries().toArray()
       .filter(func(pair : (Text, DocumentRecord)) : Bool {
         Principal.equal(pair.1.ownerPrincipal, caller)
       })
@@ -649,18 +705,38 @@ actor {
       isPublic = isPublic;
       uploadedAt = Time.now();
       fileSize = fileSize;
+      parentFolderId = null;
     };
 
-    documentRecords_v2.add(id, doc);
+    documentRecords_v3.add(id, doc);
     return #ok(id);
   };
 
-  // listMyDocuments: returns all documents owned by the caller.
-  public query ({ caller }) func listMyDocuments() : async [DocumentRecord] {
+  // listMyDocuments: returns documents owned by the caller, optionally filtered by folder.
+  // parentFolderId = null returns root-level documents (not in any folder).
+  // parentFolderId = ?id returns documents inside that folder.
+  public query ({ caller }) func listMyDocuments(parentFolderId : ?Text) : async [DocumentRecord] {
     if (caller.isAnonymous()) { return [] };
-    documentRecords_v2.entries().toArray()
+    documentRecords_v3.entries().toArray()
       .filter(func(pair : (Text, DocumentRecord)) : Bool {
-        Principal.equal(pair.1.ownerPrincipal, caller)
+        let doc = pair.1;
+        if (not Principal.equal(doc.ownerPrincipal, caller)) { return false };
+        switch (parentFolderId) {
+          case (null) {
+            // Return root-level documents (parentFolderId is null)
+            switch (doc.parentFolderId) {
+              case (null) { true };
+              case (?_) { false };
+            };
+          };
+          case (?fid) {
+            // Return documents in the specified folder
+            switch (doc.parentFolderId) {
+              case (null) { false };
+              case (?docFid) { docFid == fid };
+            };
+          };
+        };
       })
       .map(func(pair : (Text, DocumentRecord)) : DocumentRecord { pair.1 });
   };
@@ -670,13 +746,13 @@ actor {
     if (caller.isAnonymous()) {
       return #err("Unauthorized: You must be logged in.");
     };
-    switch (documentRecords_v2.get(documentId)) {
+    switch (documentRecords_v3.get(documentId)) {
       case (null) { return #err("Document not found.") };
       case (?doc) {
         if (not Principal.equal(doc.ownerPrincipal, caller) and not isAdmin(caller)) {
           return #err("Unauthorized: You can only update your own documents.");
         };
-        documentRecords_v2.add(documentId, { doc with isPublic = isPublic });
+        documentRecords_v3.add(documentId, { doc with isPublic = isPublic });
         return #ok;
       };
     };
@@ -687,13 +763,13 @@ actor {
     if (caller.isAnonymous()) {
       return #err("Unauthorized: You must be logged in.");
     };
-    switch (documentRecords_v2.get(documentId)) {
+    switch (documentRecords_v3.get(documentId)) {
       case (null) { return #err("Document not found.") };
       case (?doc) {
         if (not Principal.equal(doc.ownerPrincipal, caller) and not isAdmin(caller)) {
           return #err("Unauthorized: You can only delete your own documents.");
         };
-        documentRecords_v2.remove(documentId);
+        documentRecords_v3.remove(documentId);
         fileBlobs.remove(documentId);
         return #ok;
       };
@@ -702,7 +778,7 @@ actor {
 
   // listPublicDocuments: returns all documents marked as public. No auth required.
   public query func listPublicDocuments() : async [DocumentRecord] {
-    documentRecords_v2.entries().toArray()
+    documentRecords_v3.entries().toArray()
       .filter(func(pair : (Text, DocumentRecord)) : Bool { pair.1.isPublic })
       .map(func(pair : (Text, DocumentRecord)) : DocumentRecord { pair.1 });
   };
@@ -710,7 +786,7 @@ actor {
   // getMyStorageUsed: returns total bytes used by the caller across all their documents.
   public query ({ caller }) func getMyStorageUsed() : async Nat {
     if (caller.isAnonymous()) { return 0 };
-    documentRecords_v2.entries().toArray()
+    documentRecords_v3.entries().toArray()
       .filter(func(pair : (Text, DocumentRecord)) : Bool {
         Principal.equal(pair.1.ownerPrincipal, caller)
       })
@@ -734,13 +810,13 @@ actor {
   };
 
   // uploadDocumentWithData: stores raw file bytes in the canister and creates metadata.
-  // Replaces the object-storage-based uploadDocument for actual file content persistence.
-  // mimeType must be application/pdf or application/vnd.openxmlformats-officedocument.wordprocessingml.document.
+  // Supports optional parentFolderId to place the document inside a folder.
   public shared ({ caller }) func uploadDocumentWithData(
     fileName : Text,
     fileData : [Nat8],
     mimeType : Text,
     isPublic : Bool,
+    parentFolderId : ?Text,
   ) : async { #ok : DocumentRecord; #err : Text } {
     if (caller.isAnonymous()) {
       return #err("Unauthorized: You must be logged in to upload documents.");
@@ -772,10 +848,25 @@ actor {
       return #err("File type not supported. Only PDF, Word documents, images (JPEG, PNG, GIF, WebP, SVG), audio (MP3, WAV, OGG, FLAC, AAC, M4A), and video (MP4, MOV, AVI, WebM, MKV, MPEG) are allowed.");
     };
 
+    // Validate parentFolderId: if provided, caller must own that folder
+    switch (parentFolderId) {
+      case (null) {};
+      case (?fid) {
+        switch (folderRecords.get(fid)) {
+          case (null) { return #err("Folder not found.") };
+          case (?folder) {
+            if (not Principal.equal(folder.ownerPrincipal, caller)) {
+              return #err("Unauthorized: You can only upload into your own folders.");
+            };
+          };
+        };
+      };
+    };
+
     // Enforce 100MB total storage limit per user
     let maxStorage : Nat = 104857600;
     let fileSize : Nat = fileData.size();
-    let usedStorage = documentRecords_v2.entries().toArray()
+    let usedStorage = documentRecords_v3.entries().toArray()
       .filter(func(pair : (Text, DocumentRecord)) : Bool {
         Principal.equal(pair.1.ownerPrincipal, caller)
       })
@@ -813,9 +904,10 @@ actor {
       isPublic = isPublic;
       uploadedAt = Time.now();
       fileSize = fileSize;
+      parentFolderId = parentFolderId;
     };
 
-    documentRecords_v2.add(id, doc);
+    documentRecords_v3.add(id, doc);
     fileBlobs.add(id, fileData);
     return #ok(doc);
   };
@@ -825,7 +917,7 @@ actor {
   public query ({ caller }) func getDocumentData(
     docId : Text
   ) : async { #ok : { data : [Nat8]; mimeType : Text; fileName : Text }; #err : Text } {
-    switch (documentRecords_v2.get(docId)) {
+    switch (documentRecords_v3.get(docId)) {
       case (null) { return #err("Document not found.") };
       case (?doc) {
         // Access control: private docs require ownership or admin
@@ -845,6 +937,334 @@ actor {
         };
       };
     };
+  };
+
+  // ---- Folder APIs ----
+
+  // createFolder: creates a new folder for the caller.
+  // parentFolderId = null creates a root folder; Some(id) creates a subfolder.
+  public shared ({ caller }) func createFolder(name : Text, parentFolderId : ?Text) : async { #ok : Text; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in to create folders.");
+    };
+
+    let trimmedName = name.trim(#text(" "));
+    if (textLength(trimmedName) == 0) {
+      return #err("Folder name is required.");
+    };
+    if (textLength(trimmedName) > 100) {
+      return #err("Folder name must be 100 characters or less.");
+    };
+
+    // Validate parentFolderId: if provided, caller must own that folder
+    switch (parentFolderId) {
+      case (null) {};
+      case (?fid) {
+        switch (folderRecords.get(fid)) {
+          case (null) { return #err("Parent folder not found.") };
+          case (?parent) {
+            if (not Principal.equal(parent.ownerPrincipal, caller)) {
+              return #err("Unauthorized: You can only create subfolders in your own folders.");
+            };
+          };
+        };
+      };
+    };
+
+    // Resolve owner name from profile
+    let ownerName = switch (userProfiles.get(caller)) {
+      case (?profile) {
+        if (textLength(profile.name) > 0) { profile.name } else { caller.toText() }
+      };
+      case (null) { caller.toText() };
+    };
+
+    let folderId = "folder-" # folderIdCounter.toText() # "-" # Time.now().toText();
+    folderIdCounter += 1;
+
+    let folder : FolderRecord = {
+      id = folderId;
+      ownerPrincipal = caller;
+      ownerName = ownerName;
+      name = trimmedName;
+      parentFolderId = parentFolderId;
+      createdAt = Time.now();
+    };
+
+    folderRecords.add(folderId, folder);
+    return #ok(folderId);
+  };
+
+  // listMyFolders: returns folders owned by the caller at a specific level.
+  // parentFolderId = null returns root folders; Some(id) returns subfolders of that folder.
+  public query ({ caller }) func listMyFolders(parentFolderId : ?Text) : async [FolderRecord] {
+    if (caller.isAnonymous()) { return [] };
+    folderRecords.entries().toArray()
+      .filter(func(pair : (Text, FolderRecord)) : Bool {
+        let folder = pair.1;
+        if (not Principal.equal(folder.ownerPrincipal, caller)) { return false };
+        switch (parentFolderId) {
+          case (null) {
+            switch (folder.parentFolderId) {
+              case (null) { true };
+              case (?_) { false };
+            };
+          };
+          case (?fid) {
+            switch (folder.parentFolderId) {
+              case (null) { false };
+              case (?pfid) { pfid == fid };
+            };
+          };
+        };
+      })
+      .map(func(pair : (Text, FolderRecord)) : FolderRecord { pair.1 });
+  };
+
+  // deleteFolder: recursively deletes a folder, all its subfolders, and all documents inside.
+  // Caller must own the folder.
+  public shared ({ caller }) func deleteFolder(folderId : Text) : async { #ok : Text; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in.");
+    };
+    switch (folderRecords.get(folderId)) {
+      case (null) { return #err("Folder not found.") };
+      case (?folder) {
+        if (not Principal.equal(folder.ownerPrincipal, caller) and not isAdmin(caller)) {
+          return #err("Unauthorized: You can only delete your own folders.");
+        };
+        // Recursively delete contents
+        deleteFolderContents(folderId);
+        folderRecords.remove(folderId);
+        return #ok("deleted");
+      };
+    };
+  };
+
+  // Helper: recursively deletes all subfolders and documents inside a folder.
+  func deleteFolderContents(folderId : Text) {
+    // Delete all documents in this folder
+    let docsToDelete = documentRecords_v3.entries().toArray()
+      .filter(func(pair : (Text, DocumentRecord)) : Bool {
+        switch (pair.1.parentFolderId) {
+          case (null) { false };
+          case (?pfid) { pfid == folderId };
+        };
+      })
+      .map(func(pair : (Text, DocumentRecord)) : Text { pair.0 });
+
+    for (docId in docsToDelete.vals()) {
+      documentRecords_v3.remove(docId);
+      fileBlobs.remove(docId);
+    };
+
+    // Find and recursively delete all subfolders
+    let subfoldersToDelete = folderRecords.entries().toArray()
+      .filter(func(pair : (Text, FolderRecord)) : Bool {
+        switch (pair.1.parentFolderId) {
+          case (null) { false };
+          case (?pfid) { pfid == folderId };
+        };
+      })
+      .map(func(pair : (Text, FolderRecord)) : Text { pair.0 });
+
+    for (subFolderId in subfoldersToDelete.vals()) {
+      deleteFolderContents(subFolderId);
+      folderRecords.remove(subFolderId);
+    };
+  };
+
+  // moveDocument: moves a document to a different folder (or to root if targetFolderId = null).
+  // Caller must own the document. If targetFolderId is non-null, caller must also own that folder.
+  public shared ({ caller }) func moveDocument(docId : Text, targetFolderId : ?Text) : async { #ok : Text; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in.");
+    };
+    switch (documentRecords_v3.get(docId)) {
+      case (null) { return #err("Document not found.") };
+      case (?doc) {
+        if (not Principal.equal(doc.ownerPrincipal, caller)) {
+          return #err("Unauthorized: You can only move your own documents.");
+        };
+        // If a target folder is specified, verify the caller owns it
+        switch (targetFolderId) {
+          case (null) {};
+          case (?fid) {
+            switch (folderRecords.get(fid)) {
+              case (null) { return #err("Target folder not found.") };
+              case (?folder) {
+                if (not Principal.equal(folder.ownerPrincipal, caller)) {
+                  return #err("Unauthorized: You can only move documents into your own folders.");
+                };
+              };
+            };
+          };
+        };
+        documentRecords_v3.add(docId, { doc with parentFolderId = targetFolderId });
+        return #ok("moved");
+      };
+    };
+  };
+
+  // collectDescendantFolderIds: recursively collects all descendant folder IDs of a given folder.
+  // Used by moveFolder to prevent circular references.
+  func collectDescendantFolderIds(folderId : Text) : [Text] {
+    var result : List.List<Text> = List.empty<Text>();
+    var stack : List.List<Text> = List.empty<Text>();
+    stack.add(folderId);
+
+    label processing while (true) {
+      switch (stack.removeLast()) {
+        case (null) { break processing };
+        case (?currentId) {
+          // Find all direct children of currentId
+          let children = folderRecords.entries().toArray()
+            .filter(func(pair : (Text, FolderRecord)) : Bool {
+              switch (pair.1.parentFolderId) {
+                case (null) { false };
+                case (?pfid) { pfid == currentId };
+              };
+            })
+            .map(func(pair : (Text, FolderRecord)) : Text { pair.0 });
+
+          for (childId in children.vals()) {
+            result.add(childId);
+            stack.add(childId);
+          };
+        };
+      };
+    };
+
+    result.toArray();
+  };
+
+  // moveFolder: moves a folder to a different parent folder (or to root if targetFolderId = null).
+  // Caller must own the source folder. If targetFolderId is non-null, caller must also own that folder.
+  // Cannot move a folder into itself or into any of its descendants (circular reference prevention).
+  public shared ({ caller }) func moveFolder(folderId : Text, targetFolderId : ?Text) : async { #ok : Text; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in.");
+    };
+
+    // Verify source folder exists and caller owns it
+    switch (folderRecords.get(folderId)) {
+      case (null) { return #err("Folder not found.") };
+      case (?sourceFolder) {
+        if (not Principal.equal(sourceFolder.ownerPrincipal, caller)) {
+          return #err("Unauthorized: You can only move your own folders.");
+        };
+
+        // Check target folder ownership and circular references
+        switch (targetFolderId) {
+          case (null) {
+            // Moving to root is always safe (no circular reference possible)
+          };
+          case (?tid) {
+            // Cannot move a folder into itself
+            if (folderId == tid) {
+              return #err("Cannot move a folder into itself.");
+            };
+
+            // Verify the caller owns the target folder
+            switch (folderRecords.get(tid)) {
+              case (null) { return #err("Target folder not found.") };
+              case (?targetFolder) {
+                if (not Principal.equal(targetFolder.ownerPrincipal, caller)) {
+                  return #err("Unauthorized: You can only move folders into your own folders.");
+                };
+              };
+            };
+
+            // Prevent circular reference: target must not be a descendant of source
+            let descendants = collectDescendantFolderIds(folderId);
+            let isDescendant = descendants.any(func(descendantId : Text) : Bool { descendantId == tid });
+            if (isDescendant) {
+              return #err("Cannot move a folder into one of its own subfolders.");
+            };
+          };
+        };
+
+        // All checks passed — update the parentFolderId
+        folderRecords.add(folderId, { sourceFolder with parentFolderId = targetFolderId });
+        return #ok("moved");
+      };
+    };
+  };
+
+  // bulkMove: moves multiple documents and folders to a target folder in one call.
+  // For each item, ownership is validated independently; failures are skipped (not aborted).
+  // Returns #ok("Moved N items") where N is the count of successfully moved items.
+  // Returns #err only if the caller is anonymous.
+  public shared ({ caller }) func bulkMove(
+    docIds : [Text],
+    folderIds : [Text],
+    targetFolderId : ?Text,
+  ) : async { #ok : Text; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in.");
+    };
+
+    // Validate target folder ownership once (if non-null)
+    switch (targetFolderId) {
+      case (null) {};
+      case (?tid) {
+        switch (folderRecords.get(tid)) {
+          case (null) { return #err("Target folder not found.") };
+          case (?targetFolder) {
+            if (not Principal.equal(targetFolder.ownerPrincipal, caller)) {
+              return #err("Unauthorized: You can only move items into your own folders.");
+            };
+          };
+        };
+      };
+    };
+
+    var movedCount : Nat = 0;
+
+    // Move documents
+    for (docId in docIds.vals()) {
+      switch (documentRecords_v3.get(docId)) {
+        case (null) {}; // not found — skip
+        case (?doc) {
+          if (Principal.equal(doc.ownerPrincipal, caller)) {
+            documentRecords_v3.add(docId, { doc with parentFolderId = targetFolderId });
+            movedCount += 1;
+          };
+          // not owner — skip
+        };
+      };
+    };
+
+    // Move folders
+    for (folderId in folderIds.vals()) {
+      switch (folderRecords.get(folderId)) {
+        case (null) {}; // not found — skip
+        case (?folder) {
+          if (not Principal.equal(folder.ownerPrincipal, caller)) {
+            // not owner — skip
+          } else {
+            // Prevent circular reference: skip if target is self or a descendant
+            let skip = switch (targetFolderId) {
+              case (null) { false };
+              case (?tid) {
+                if (folderId == tid) {
+                  true; // moving into itself
+                } else {
+                  let descendants = collectDescendantFolderIds(folderId);
+                  descendants.any(func(descendantId : Text) : Bool { descendantId == tid });
+                };
+              };
+            };
+            if (not skip) {
+              folderRecords.add(folderId, { folder with parentFolderId = targetFolderId });
+              movedCount += 1;
+            };
+          };
+        };
+      };
+    };
+
+    return #ok("Moved " # movedCount.toText() # " items");
   };
 
   // --> Admin operations, USED ONLY WITH CANDID UI, DO NOT USE admin_* operations in front-end

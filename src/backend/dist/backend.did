@@ -30,6 +30,15 @@ type Holiday =
    newyear;
    none;
  };
+type FolderRecord = 
+ record {
+   createdAt: int;
+   id: text;
+   name: text;
+   ownerName: text;
+   ownerPrincipal: principal;
+   parentFolderId: opt text;
+ };
 type DocumentRecord = 
  record {
    fileName: text;
@@ -40,6 +49,7 @@ type DocumentRecord =
    mimeType: text;
    ownerName: text;
    ownerPrincipal: principal;
+   parentFolderId: opt text;
    uploadedAt: int;
  };
 type ContactStatus = 
@@ -75,6 +85,16 @@ service : {
                                          err: text;
                                          ok;
                                        });
+  bulkMove: (docIds: vec text, folderIds: vec text, targetFolderId:
+   opt text) -> (variant {
+                   err: text;
+                   ok: text;
+                 });
+  createFolder: (name: text, parentFolderId: opt text) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
   deleteContactMessage: (id: text) -> (variant {
                                          err: text;
                                          ok;
@@ -87,6 +107,10 @@ service : {
                                            err: text;
                                            ok;
                                          });
+  deleteFolder: (folderId: text) -> (variant {
+                                       err: text;
+                                       ok: text;
+                                     });
   getActiveHoliday: () -> (Holiday) query;
   getBlockedSenders: () -> (variant {
                               err: text;
@@ -109,12 +133,23 @@ service : {
                                 err: text;
                                 ok: vec ContactMessage;
                               });
-  listMyDocuments: () -> (vec DocumentRecord) query;
+  listMyDocuments: (parentFolderId: opt text) -> (vec DocumentRecord) query;
+  listMyFolders: (parentFolderId: opt text) -> (vec FolderRecord) query;
   listPublicDocuments: () -> (vec DocumentRecord) query;
   listUsers: () -> (variant {
                       err: text;
                       ok: vec UserListEntry;
                     });
+  moveDocument: (docId: text, targetFolderId: opt text) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
+  moveFolder: (folderId: text, targetFolderId: opt text) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
   removeUser: (principalText: text) -> (variant {
                                           err: text;
                                           ok;
@@ -168,8 +203,9 @@ service : {
                               ok: text;
                             });
   uploadDocumentWithData: (fileName: text, fileData: vec nat8, mimeType:
-   text, isPublic: bool) -> (variant {
-                               err: text;
-                               ok: DocumentRecord;
-                             });
+   text, isPublic: bool, parentFolderId: opt text) ->
+   (variant {
+      err: text;
+      ok: DocumentRecord;
+    });
 }

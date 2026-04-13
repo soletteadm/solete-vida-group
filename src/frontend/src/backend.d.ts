@@ -19,6 +19,7 @@ export interface DocumentRecord {
     fileName: string;
     filePath: string;
     fileSize: bigint;
+    parentFolderId?: string;
     isPublic: boolean;
     uploadedAt: bigint;
 }
@@ -43,6 +44,14 @@ export interface UserProfile {
     email: string;
     phone: string;
     registeredAt: bigint;
+}
+export interface FolderRecord {
+    id: string;
+    ownerName: string;
+    ownerPrincipal: Principal;
+    name: string;
+    createdAt: bigint;
+    parentFolderId?: string;
 }
 export enum ContactStatus {
     active = "active",
@@ -85,6 +94,20 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    bulkMove(docIds: Array<string>, folderIds: Array<string>, targetFolderId: string | null): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    createFolder(name: string, parentFolderId: string | null): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     deleteContactMessage(id: string): Promise<{
         __kind__: "ok";
         ok: null;
@@ -102,6 +125,13 @@ export interface backendInterface {
     deleteDocument(documentId: string): Promise<{
         __kind__: "ok";
         ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    deleteFolder(folderId: string): Promise<{
+        __kind__: "ok";
+        ok: string;
     } | {
         __kind__: "err";
         err: string;
@@ -136,11 +166,26 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
-    listMyDocuments(): Promise<Array<DocumentRecord>>;
+    listMyDocuments(parentFolderId: string | null): Promise<Array<DocumentRecord>>;
+    listMyFolders(parentFolderId: string | null): Promise<Array<FolderRecord>>;
     listPublicDocuments(): Promise<Array<DocumentRecord>>;
     listUsers(): Promise<{
         __kind__: "ok";
         ok: Array<UserListEntry>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    moveDocument(docId: string, targetFolderId: string | null): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    moveFolder(folderId: string, targetFolderId: string | null): Promise<{
+        __kind__: "ok";
+        ok: string;
     } | {
         __kind__: "err";
         err: string;
@@ -222,7 +267,7 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
-    uploadDocumentWithData(fileName: string, fileData: Uint8Array, mimeType: string, isPublic: boolean): Promise<{
+    uploadDocumentWithData(fileName: string, fileData: Uint8Array, mimeType: string, isPublic: boolean, parentFolderId: string | null): Promise<{
         __kind__: "ok";
         ok: DocumentRecord;
     } | {
