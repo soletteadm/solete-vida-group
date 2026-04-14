@@ -1,4 +1,15 @@
 // Version: 1.0.0
+type ChunkedUploadMeta__1000130 =
+  {
+    fileName : Text;
+    isPublic : Bool;
+    mimeType : Text;
+    ownerName : Text;
+    ownerPrincipal : Principal;
+    parentFolderId : ?Text;
+    totalChunks : Nat;
+    totalFileSize : Nat
+  };
 type ContactMessage__139940291 =
   {
     deviceId : ?Text;
@@ -62,10 +73,16 @@ type FolderRecord__699397301 =
 type Internal__8484328<K, V> =
   {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
 type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
+type Map__158565046<K, V> = Map__297112838<K, V>;
+type Map__297112838<K, V> =
+  {var root : Node__46230540<K, V>; var size : Nat__490723111};
+type Map__605269027<K, V> = Map__158565046<K, V>;
 type Nat__490723111 = Nat__920180692;
 type Nat__920180692 = Nat;
 type Node__46230540<K, V> =
   {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type UserAccessLogEntry__186638093 =
+  {id : Text; metadata : Text; timestamp : Int};
 type UserProfile__491224006 =
   {email : Text; name : Text; phone : Text; registeredAt : Int};
 type UserRole__599675725 = {#admin; #guest; #user};
@@ -104,6 +121,21 @@ actor {
   stable var folderRecords :
     {
       var root : Node__46230540<Text, FolderRecord__699397301>;
+      var size : Nat__490723111
+    };
+  stable var pendingChunkMeta :
+    {
+      var root : Node__46230540<Text, ChunkedUploadMeta__1000130>;
+      var size : Nat__490723111
+    };
+  stable var pendingChunks :
+    {
+      var root : Node__46230540<Text, Map__605269027<Nat, [Nat8]>>;
+      var size : Nat__490723111
+    };
+  stable var userAccessLogs :
+    {
+      var root : Node__46230540<Principal, [UserAccessLogEntry__186638093]>;
       var size : Nat__490723111
     };
   stable var userProfiles :

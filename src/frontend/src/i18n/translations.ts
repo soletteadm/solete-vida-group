@@ -237,6 +237,20 @@ export interface TranslationMap {
     refresh: string;
     loading: string;
   };
+  // Admin Access Log
+  adminAccessLog: {
+    accessLog: string;
+    viewAccessLog: string;
+    lastLogin: string;
+    dateTime: string;
+    metadata: string;
+    clearAll: string;
+    deleteSelected: string;
+    clearAllConfirm: string;
+    deleteConfirm: string;
+    noLogs: string;
+    loadingLogs: string;
+  };
   // Common
   common: {
     loading: string;
@@ -317,6 +331,8 @@ export interface TranslationMap {
     bulkMoveTitle: string;
     bulkMoveSuccess: string;
     bulkMoveError: string;
+    uploadingPart: string;
+    finalizingUpload: string;
   };
 }
 
@@ -576,6 +592,21 @@ export const translations: Record<Language, TranslationMap> = {
       user: "User",
       guest: "Guest",
     },
+    adminAccessLog: {
+      accessLog: "Access Log",
+      viewAccessLog: "View Access Log",
+      lastLogin: "Last Login",
+      dateTime: "Date & Time",
+      metadata: "Device / Browser",
+      clearAll: "Clear All",
+      deleteSelected: "Delete Selected",
+      clearAllConfirm:
+        "Are you sure you want to clear all access logs for this user?",
+      deleteConfirm:
+        "Are you sure you want to delete the selected log entries?",
+      noLogs: "No access logs found.",
+      loadingLogs: "Loading access logs...",
+    },
     sharePage: {
       loading: "Loading document…",
       notFound: "Document not found",
@@ -601,7 +632,7 @@ export const translations: Record<Language, TranslationMap> = {
       delete: "Delete",
       fileTypeError:
         "Only PDF, Word, images (.jpg, .png, .gif, .webp), audio (.mp3, .wav), and video (.mp4, .mov, .webm) files are allowed.",
-      fileSizeError: "File is too large. Maximum size is 10 MB.",
+      fileSizeError: "File is too large. Maximum size is 100 MB.",
       uploadSuccess: "Document uploaded successfully.",
       uploadError: "Failed to upload document.",
       deleteSuccess: "Document deleted successfully.",
@@ -646,6 +677,8 @@ export const translations: Record<Language, TranslationMap> = {
       bulkMoveTitle: "Move {n} items to",
       bulkMoveSuccess: "Moved {n} items",
       bulkMoveError: "Failed to move some items",
+      uploadingPart: "Uploading part {current} of {total}…",
+      finalizingUpload: "Finalizing upload…",
     },
   },
 
@@ -907,6 +940,21 @@ export const translations: Record<Language, TranslationMap> = {
       user: "Usuario",
       guest: "Invitado",
     },
+    adminAccessLog: {
+      accessLog: "Registro de Acceso",
+      viewAccessLog: "Ver Registro de Acceso",
+      lastLogin: "Último Acceso",
+      dateTime: "Fecha y Hora",
+      metadata: "Dispositivo / Navegador",
+      clearAll: "Borrar Todo",
+      deleteSelected: "Eliminar Seleccionados",
+      clearAllConfirm:
+        "¿Estás seguro de que quieres borrar todos los registros de acceso de este usuario?",
+      deleteConfirm:
+        "¿Estás seguro de que quieres eliminar las entradas seleccionadas?",
+      noLogs: "No se encontraron registros de acceso.",
+      loadingLogs: "Cargando registros...",
+    },
     sharePage: {
       loading: "Cargando documento…",
       notFound: "Documento no encontrado",
@@ -933,7 +981,7 @@ export const translations: Record<Language, TranslationMap> = {
       fileTypeError:
         "Solo se permiten archivos PDF, Word, imágenes (.jpg, .png, .gif, .webp), audio (.mp3, .wav) y video (.mp4, .mov, .webm).",
       fileSizeError:
-        "El archivo es demasiado grande. El tamaño máximo es 10 MB.",
+        "El archivo es demasiado grande. El tamaño máximo es 100 MB.",
       uploadSuccess: "Documento subido correctamente.",
       uploadError: "Error al subir el documento.",
       deleteSuccess: "Documento eliminado correctamente.",
@@ -978,6 +1026,8 @@ export const translations: Record<Language, TranslationMap> = {
       bulkMoveTitle: "Mover {n} elementos a",
       bulkMoveSuccess: "{n} elementos movidos",
       bulkMoveError: "Error al mover algunos elementos",
+      uploadingPart: "Subiendo parte {current} de {total}…",
+      finalizingUpload: "Finalizando subida…",
     },
   },
 
@@ -1239,6 +1289,21 @@ export const translations: Record<Language, TranslationMap> = {
       user: "Användare",
       guest: "Gäst",
     },
+    adminAccessLog: {
+      accessLog: "Åtkomstlogg",
+      viewAccessLog: "Visa åtkomstlogg",
+      lastLogin: "Senaste inloggning",
+      dateTime: "Datum och tid",
+      metadata: "Enhet / Webbläsare",
+      clearAll: "Rensa allt",
+      deleteSelected: "Ta bort valda",
+      clearAllConfirm:
+        "Är du säker på att du vill rensa alla åtkomstloggar för denna användare?",
+      deleteConfirm:
+        "Är du säker på att du vill ta bort de valda loggposterna?",
+      noLogs: "Inga åtkomstloggar hittades.",
+      loadingLogs: "Läser in loggar...",
+    },
     sharePage: {
       loading: "Laddar dokument…",
       notFound: "Dokumentet hittades inte",
@@ -1264,7 +1329,7 @@ export const translations: Record<Language, TranslationMap> = {
       delete: "Radera",
       fileTypeError:
         "Endast PDF-, Word-, bild- (.jpg, .png, .gif, .webp), ljud- (.mp3, .wav) och videofiler (.mp4, .mov, .webm) är tillåtna.",
-      fileSizeError: "Filen är för stor. Maximal storlek är 10 MB.",
+      fileSizeError: "Filen är för stor. Maximal storlek är 100 MB.",
       uploadSuccess: "Dokumentet laddades upp.",
       uploadError: "Kunde inte ladda upp dokumentet.",
       deleteSuccess: "Dokumentet raderades.",
@@ -1309,6 +1374,8 @@ export const translations: Record<Language, TranslationMap> = {
       bulkMoveTitle: "Flytta {n} objekt till",
       bulkMoveSuccess: "{n} objekt har flyttats",
       bulkMoveError: "Det gick inte att flytta alla objekt",
+      uploadingPart: "Laddar upp del {current} av {total}…",
+      finalizingUpload: "Slutför uppladdning…",
     },
   },
 };

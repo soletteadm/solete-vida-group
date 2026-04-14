@@ -86,7 +86,22 @@ export function useAuth(): AuthState {
     actor
       .getMyRole()
       .then((r) => {
-        if (!cancelled) setRole(r);
+        if (!cancelled) {
+          setRole(r);
+          // Record access silently — never break login if this fails
+          try {
+            const metadata = JSON.stringify({
+              userAgent: navigator.userAgent,
+              language: navigator.language,
+              timestamp: new Date().toISOString(),
+            });
+            actor.recordMyAccess(metadata).catch(() => {
+              /* silent */
+            });
+          } catch {
+            // silent
+          }
+        }
       })
       .catch(() => {
         if (!cancelled) setRole("guest" as UserRole);

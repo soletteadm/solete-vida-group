@@ -17,6 +17,18 @@ export const UserAccessEntry = IDL.Record({
   'principal' : IDL.Principal,
   'role' : UserRole,
 });
+export const DocumentRecord = IDL.Record({
+  'id' : IDL.Text,
+  'ownerName' : IDL.Text,
+  'ownerPrincipal' : IDL.Principal,
+  'mimeType' : IDL.Text,
+  'fileName' : IDL.Text,
+  'filePath' : IDL.Text,
+  'fileSize' : IDL.Nat,
+  'parentFolderId' : IDL.Opt(IDL.Text),
+  'isPublic' : IDL.Bool,
+  'uploadedAt' : IDL.Int,
+});
 export const Holiday = IDL.Variant({
   'newyear' : IDL.Null,
   'none' : IDL.Null,
@@ -29,6 +41,11 @@ export const UserProfile = IDL.Record({
   'email' : IDL.Text,
   'phone' : IDL.Text,
   'registeredAt' : IDL.Int,
+});
+export const UserAccessLogEntry = IDL.Record({
+  'id' : IDL.Text,
+  'metadata' : IDL.Text,
+  'timestamp' : IDL.Int,
 });
 export const ContactStatus = IDL.Variant({
   'active' : IDL.Null,
@@ -44,18 +61,6 @@ export const ContactMessage = IDL.Record({
   'senderPrincipal' : IDL.Opt(IDL.Text),
   'message' : IDL.Text,
   'deviceId' : IDL.Opt(IDL.Text),
-});
-export const DocumentRecord = IDL.Record({
-  'id' : IDL.Text,
-  'ownerName' : IDL.Text,
-  'ownerPrincipal' : IDL.Principal,
-  'mimeType' : IDL.Text,
-  'fileName' : IDL.Text,
-  'filePath' : IDL.Text,
-  'fileSize' : IDL.Nat,
-  'parentFolderId' : IDL.Opt(IDL.Text),
-  'isPublic' : IDL.Bool,
-  'uploadedAt' : IDL.Int,
 });
 export const FolderRecord = IDL.Record({
   'id' : IDL.Text,
@@ -95,6 +100,11 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
       [],
     ),
+  'clearUserAccessLog' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'createFolder' : IDL.Func(
       [IDL.Text, IDL.Opt(IDL.Text)],
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
@@ -118,6 +128,16 @@ export const idlService = IDL.Service({
   'deleteFolder' : IDL.Func(
       [IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
+  'deleteUserAccessLogEntries' : IDL.Func(
+      [IDL.Principal, IDL.Vec(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'finalizeChunkedUpload' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : DocumentRecord, 'err' : IDL.Text })],
       [],
     ),
   'getActiveHoliday' : IDL.Func([], [Holiday], ['query']),
@@ -144,6 +164,11 @@ export const idlService = IDL.Service({
   'getMyProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getMyRole' : IDL.Func([], [UserRole], ['query']),
   'getMyStorageUsed' : IDL.Func([], [IDL.Nat], ['query']),
+  'getUserAccessLog' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Variant({ 'ok' : IDL.Vec(UserAccessLogEntry), 'err' : IDL.Text })],
+      ['query'],
+    ),
   'listContactMessages' : IDL.Func(
       [],
       [IDL.Variant({ 'ok' : IDL.Vec(ContactMessage), 'err' : IDL.Text })],
@@ -175,6 +200,7 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
       [],
     ),
+  'recordMyAccess' : IDL.Func([IDL.Text], [], []),
   'removeUser' : IDL.Func(
       [IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -193,6 +219,19 @@ export const idlService = IDL.Service({
   'setGuestDocumentUploadPermission' : IDL.Func(
       [IDL.Bool],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'startChunkedUpload' : IDL.Func(
+      [
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Bool,
+        IDL.Opt(IDL.Text),
+        IDL.Nat,
+        IDL.Nat,
+      ],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
       [],
     ),
   'submitContact' : IDL.Func(
@@ -230,6 +269,11 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
       [],
     ),
+  'uploadDocumentChunk' : IDL.Func(
+      [IDL.Text, IDL.Nat, IDL.Vec(IDL.Nat8)],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'uploadDocumentWithData' : IDL.Func(
       [IDL.Text, IDL.Vec(IDL.Nat8), IDL.Text, IDL.Bool, IDL.Opt(IDL.Text)],
       [IDL.Variant({ 'ok' : DocumentRecord, 'err' : IDL.Text })],
@@ -249,6 +293,18 @@ export const idlFactory = ({ IDL }) => {
     'principal' : IDL.Principal,
     'role' : UserRole,
   });
+  const DocumentRecord = IDL.Record({
+    'id' : IDL.Text,
+    'ownerName' : IDL.Text,
+    'ownerPrincipal' : IDL.Principal,
+    'mimeType' : IDL.Text,
+    'fileName' : IDL.Text,
+    'filePath' : IDL.Text,
+    'fileSize' : IDL.Nat,
+    'parentFolderId' : IDL.Opt(IDL.Text),
+    'isPublic' : IDL.Bool,
+    'uploadedAt' : IDL.Int,
+  });
   const Holiday = IDL.Variant({
     'newyear' : IDL.Null,
     'none' : IDL.Null,
@@ -261,6 +317,11 @@ export const idlFactory = ({ IDL }) => {
     'email' : IDL.Text,
     'phone' : IDL.Text,
     'registeredAt' : IDL.Int,
+  });
+  const UserAccessLogEntry = IDL.Record({
+    'id' : IDL.Text,
+    'metadata' : IDL.Text,
+    'timestamp' : IDL.Int,
   });
   const ContactStatus = IDL.Variant({
     'active' : IDL.Null,
@@ -276,18 +337,6 @@ export const idlFactory = ({ IDL }) => {
     'senderPrincipal' : IDL.Opt(IDL.Text),
     'message' : IDL.Text,
     'deviceId' : IDL.Opt(IDL.Text),
-  });
-  const DocumentRecord = IDL.Record({
-    'id' : IDL.Text,
-    'ownerName' : IDL.Text,
-    'ownerPrincipal' : IDL.Principal,
-    'mimeType' : IDL.Text,
-    'fileName' : IDL.Text,
-    'filePath' : IDL.Text,
-    'fileSize' : IDL.Nat,
-    'parentFolderId' : IDL.Opt(IDL.Text),
-    'isPublic' : IDL.Bool,
-    'uploadedAt' : IDL.Int,
   });
   const FolderRecord = IDL.Record({
     'id' : IDL.Text,
@@ -327,6 +376,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),
+    'clearUserAccessLog' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'createFolder' : IDL.Func(
         [IDL.Text, IDL.Opt(IDL.Text)],
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
@@ -350,6 +404,16 @@ export const idlFactory = ({ IDL }) => {
     'deleteFolder' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
+    'deleteUserAccessLogEntries' : IDL.Func(
+        [IDL.Principal, IDL.Vec(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'finalizeChunkedUpload' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : DocumentRecord, 'err' : IDL.Text })],
         [],
       ),
     'getActiveHoliday' : IDL.Func([], [Holiday], ['query']),
@@ -376,6 +440,11 @@ export const idlFactory = ({ IDL }) => {
     'getMyProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getMyRole' : IDL.Func([], [UserRole], ['query']),
     'getMyStorageUsed' : IDL.Func([], [IDL.Nat], ['query']),
+    'getUserAccessLog' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Variant({ 'ok' : IDL.Vec(UserAccessLogEntry), 'err' : IDL.Text })],
+        ['query'],
+      ),
     'listContactMessages' : IDL.Func(
         [],
         [IDL.Variant({ 'ok' : IDL.Vec(ContactMessage), 'err' : IDL.Text })],
@@ -407,6 +476,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),
+    'recordMyAccess' : IDL.Func([IDL.Text], [], []),
     'removeUser' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -425,6 +495,19 @@ export const idlFactory = ({ IDL }) => {
     'setGuestDocumentUploadPermission' : IDL.Func(
         [IDL.Bool],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'startChunkedUpload' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Bool,
+          IDL.Opt(IDL.Text),
+          IDL.Nat,
+          IDL.Nat,
+        ],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),
     'submitContact' : IDL.Func(
@@ -459,6 +542,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'uploadDocument' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Bool, IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
+    'uploadDocumentChunk' : IDL.Func(
+        [IDL.Text, IDL.Nat, IDL.Vec(IDL.Nat8)],
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),

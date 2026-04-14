@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +42,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import {
   AlertTriangle,
   Ban,
+  ClipboardList,
   Loader2,
   Pencil,
   RefreshCw,
@@ -49,7 +51,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { UserListEntry, UserRole } from "../backend.d";
+import type { UserAccessLogEntry, UserListEntry, UserRole } from "../backend.d";
 
 // At runtime the actor accepts/returns Candid variants { admin: null }.
 // These helpers bridge between the enum string type (TS) and Candid objects (runtime).
@@ -71,24 +73,30 @@ function getRoleStr(role: UserRole | null | undefined): string {
 
 // Get principal string — new field is userId, but may be principal at runtime
 function getPrincipalStr(user: UserListEntry): string {
-  // Handle both new (userId) and legacy runtime shape
   const u = user as UserListEntry & { principal?: { toString(): string } };
   if (u.principal) return u.principal.toString();
   return (user as unknown as { userId: string }).userId ?? "";
+}
+
+// Get principal object for backend calls
+function getPrincipalObj(user: UserListEntry): { toString(): string } {
+  const u = user as UserListEntry & { principal?: { toString(): string } };
+  return (
+    u.principal ??
+    ({ toString: () => getPrincipalStr(user) } as { toString(): string })
+  );
 }
 
 // Get profile name — new shape has profile?: UserProfile, old shape has Option<UserProfile>
 function getProfileName(user: UserListEntry): string {
   const u = user as UserListEntry & { profile?: unknown };
   if (!u.profile) return "\u2014";
-  // Option-style (runtime legacy): { __kind__: "Some", value: ... }
   const maybeOpt = u.profile as unknown as {
     __kind__?: string;
     value?: { name?: string };
   };
   if (maybeOpt.__kind__ === "Some") return maybeOpt.value?.name ?? "\u2014";
   if (maybeOpt.__kind__ === "None") return "\u2014";
-  // Direct object style (new bindgen): UserProfile directly
   const p = u.profile as unknown as { name?: string };
   return p.name ?? "\u2014";
 }
@@ -113,7 +121,6 @@ function getProfileFields(user: UserListEntry): {
     };
   }
   if (maybeOpt.__kind__ === "None") return { name: "", email: "", phone: "" };
-  // Direct profile object
   const p = u.profile as unknown as {
     name?: string;
     email?: string;
@@ -125,6 +132,34 @@ function getProfileFields(user: UserListEntry): {
 function truncatePrincipal(p: string): string {
   if (p.length <= 20) return p;
   return `${p.slice(0, 10)}\u2026${p.slice(-8)}`;
+}
+
+// Format nanosecond BigInt timestamp to human-readable string
+function formatTimestamp(ns: bigint): string {
+  try {
+    const ms = Number(ns / 1_000_000n);
+    return new Date(ms).toLocaleString();
+  } catch {
+    return String(ns);
+  }
+}
+
+// Parse metadata JSON and return a short browser/device label
+function parseMetadata(metadata: string): string {
+  try {
+    const obj = JSON.parse(metadata) as Record<string, string>;
+    const ua = obj.userAgent ?? "";
+    if (ua.includes("Chrome") && !ua.includes("Edg"))
+      return `Chrome · ${obj.language ?? ""}`;
+    if (ua.includes("Firefox")) return `Firefox · ${obj.language ?? ""}`;
+    if (ua.includes("Safari") && !ua.includes("Chrome"))
+      return `Safari · ${obj.language ?? ""}`;
+    if (ua.includes("Edg")) return `Edge · ${obj.language ?? ""}`;
+    if (ua.length > 0) return ua.slice(0, 60);
+    return metadata.slice(0, 60);
+  } catch {
+    return metadata.slice(0, 60);
+  }
 }
 
 export default function MyPagesAdmin() {
@@ -152,6 +187,16 @@ export default function MyPagesAdmin() {
   const [editPhone, setEditPhone] = useState("");
   const [editRole, setEditRole] = useState("guest");
   const [saving, setSaving] = useState(false);
+
+  // Access log dialog
+  const [logTarget, setLogTarget] = useState<UserListEntry | null>(null);
+  const [logEntries, setLogEntries] = useState<UserAccessLogEntry[]>([]);
+  const [logLoading, setLogLoading] = useState(false);
+  const [selectedLogIds, setSelectedLogIds] = useState<Set<string>>(new Set());
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showDeleteLogsConfirm, setShowDeleteLogsConfirm] = useState(false);
+  const [clearingLog, setClearingLog] = useState(false);
+  const [deletingLogs, setDeletingLogs] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     if (!actor || isFetching) return;
@@ -194,6 +239,31 @@ export default function MyPagesAdmin() {
     setEditPhone(fields.phone);
     setEditRole(getRoleStr(editTarget.role));
   }, [editTarget]);
+
+  // Fetch access log when logTarget changes
+  useEffect(() => {
+    if (!logTarget || !actor) return;
+    setLogLoading(true);
+    setLogEntries([]);
+    setSelectedLogIds(new Set());
+    const principal = getPrincipalObj(logTarget);
+    actor
+      .getUserAccessLog(
+        principal as Parameters<typeof actor.getUserAccessLog>[0],
+      )
+      .then((result) => {
+        if ("ok" in result) {
+          const sorted = [...result.ok].sort((a, b) =>
+            b.timestamp > a.timestamp ? 1 : b.timestamp < a.timestamp ? -1 : 0,
+          );
+          setLogEntries(sorted);
+        } else {
+          toast.error(result.err || t.common.error);
+        }
+      })
+      .catch(() => toast.error(t.common.error))
+      .finally(() => setLogLoading(false));
+  }, [logTarget, actor, t.common.error]);
 
   const handleUpdateRole = async (principalText: string, newRole: string) => {
     if (!actor) return;
@@ -285,7 +355,7 @@ export default function MyPagesAdmin() {
     console.log("[handleSaveEdit] actor available:", !!actor);
     console.log(
       "[handleSaveEdit] actor.updateUserProfile available:",
-      typeof (actor as any).updateUserProfile,
+      typeof (actor as unknown as Record<string, unknown>).updateUserProfile,
     );
 
     try {
@@ -361,6 +431,70 @@ export default function MyPagesAdmin() {
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleClearLog = async () => {
+    if (!actor || !logTarget) return;
+    setClearingLog(true);
+    const principal = getPrincipalObj(logTarget);
+    try {
+      const result = await actor.clearUserAccessLog(
+        principal as Parameters<typeof actor.clearUserAccessLog>[0],
+      );
+      if ("ok" in result) {
+        setLogEntries([]);
+        setSelectedLogIds(new Set());
+        toast.success(t.adminAccessLog.clearAll);
+      } else {
+        toast.error(result.err || t.common.error);
+      }
+    } catch {
+      toast.error(t.common.error);
+    } finally {
+      setClearingLog(false);
+      setShowClearConfirm(false);
+    }
+  };
+
+  const handleDeleteSelectedLogs = async () => {
+    if (!actor || !logTarget || selectedLogIds.size === 0) return;
+    setDeletingLogs(true);
+    const principal = getPrincipalObj(logTarget);
+    try {
+      const result = await actor.deleteUserAccessLogEntries(
+        principal as Parameters<typeof actor.deleteUserAccessLogEntries>[0],
+        Array.from(selectedLogIds),
+      );
+      if ("ok" in result) {
+        setLogEntries((prev) => prev.filter((e) => !selectedLogIds.has(e.id)));
+        setSelectedLogIds(new Set());
+        toast.success(t.adminAccessLog.deleteSelected);
+      } else {
+        toast.error(result.err || t.common.error);
+      }
+    } catch {
+      toast.error(t.common.error);
+    } finally {
+      setDeletingLogs(false);
+      setShowDeleteLogsConfirm(false);
+    }
+  };
+
+  const toggleLogEntry = (id: string) => {
+    setSelectedLogIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllLogs = () => {
+    if (selectedLogIds.size === logEntries.length) {
+      setSelectedLogIds(new Set());
+    } else {
+      setSelectedLogIds(new Set(logEntries.map((e) => e.id)));
     }
   };
 
@@ -451,9 +585,16 @@ export default function MyPagesAdmin() {
                         data-ocid={`admin.row.${idx + 1}`}
                       >
                         <TableCell className="font-mono text-xs text-muted-foreground max-w-[180px]">
-                          <span title={principalStr}>
-                            {truncatePrincipal(principalStr)}
-                          </span>
+                          <button
+                            type="button"
+                            title={`${t.adminAccessLog.viewAccessLog}: ${principalStr}`}
+                            onClick={() => setLogTarget(user)}
+                            className="flex items-center gap-1.5 hover:text-gold transition-colors duration-150 cursor-pointer group"
+                            data-ocid={`admin.principal_button.${idx + 1}`}
+                          >
+                            <ClipboardList className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-gold flex-shrink-0" />
+                            <span>{truncatePrincipal(principalStr)}</span>
+                          </button>
                         </TableCell>
                         <TableCell className="font-sans text-sm text-foreground">
                           {profileName || "\u2014"}
@@ -541,6 +682,228 @@ export default function MyPagesAdmin() {
           )}
         </CardContent>
       </Card>
+
+      {/* Access Log Dialog */}
+      <Dialog
+        open={!!logTarget}
+        onOpenChange={(open) => {
+          if (!open) {
+            setLogTarget(null);
+            setLogEntries([]);
+            setSelectedLogIds(new Set());
+            setShowClearConfirm(false);
+            setShowDeleteLogsConfirm(false);
+          }
+        }}
+      >
+        <DialogContent
+          className="sm:max-w-2xl font-sans max-h-[85vh] flex flex-col"
+          data-ocid="admin.access_log_dialog"
+        >
+          <DialogHeader>
+            <DialogTitle className="font-serif text-foreground flex items-center gap-2">
+              <ClipboardList className="w-4 h-4 text-gold" />
+              {t.adminAccessLog.accessLog}
+            </DialogTitle>
+            {logTarget && (
+              <p className="text-xs text-muted-foreground font-mono break-all mt-1">
+                {getProfileName(logTarget) !== "\u2014" ? (
+                  <span className="font-sans text-sm text-foreground font-medium mr-2 not-font-mono">
+                    {getProfileName(logTarget)}
+                  </span>
+                ) : null}
+                {getPrincipalStr(logTarget)}
+              </p>
+            )}
+          </DialogHeader>
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 pt-1 pb-2 border-b border-divider">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDeleteLogsConfirm(true)}
+              disabled={selectedLogIds.size === 0 || deletingLogs || logLoading}
+              className="font-sans text-xs text-destructive border-destructive/40 hover:bg-destructive/10"
+              data-ocid="admin.delete_logs_button"
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+              {t.adminAccessLog.deleteSelected}
+              {selectedLogIds.size > 0 && ` (${selectedLogIds.size})`}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowClearConfirm(true)}
+              disabled={logEntries.length === 0 || clearingLog || logLoading}
+              className="font-sans text-xs text-amber-600 border-amber-400/40 hover:bg-amber-50"
+              data-ocid="admin.clear_log_button"
+            >
+              <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+              {t.adminAccessLog.clearAll}
+            </Button>
+          </div>
+
+          {/* Log table */}
+          <div className="overflow-y-auto flex-1 min-h-0">
+            {logLoading ? (
+              <div className="p-6 space-y-3" data-ocid="admin.log_loading">
+                <p className="text-sm text-muted-foreground text-center font-sans">
+                  {t.adminAccessLog.loadingLogs}
+                </p>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton
+                  <Skeleton key={i} className="h-9 w-full" />
+                ))}
+              </div>
+            ) : logEntries.length === 0 ? (
+              <div className="p-10 text-center" data-ocid="admin.log_empty">
+                <ClipboardList className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground font-sans">
+                  {t.adminAccessLog.noLogs}
+                </p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-divider">
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={
+                          selectedLogIds.size === logEntries.length &&
+                          logEntries.length > 0
+                        }
+                        onCheckedChange={toggleAllLogs}
+                        aria-label={t.adminContacts.selectAll}
+                        data-ocid="admin.log_select_all"
+                      />
+                    </TableHead>
+                    <TableHead className="font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                      {t.adminAccessLog.dateTime}
+                    </TableHead>
+                    <TableHead className="font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      {t.adminAccessLog.metadata}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {logEntries.map((entry, idx) => (
+                    <TableRow
+                      key={entry.id}
+                      className="border-divider hover:bg-beige/30"
+                      data-ocid={`admin.log_row.${idx + 1}`}
+                    >
+                      <TableCell className="w-10">
+                        <Checkbox
+                          checked={selectedLogIds.has(entry.id)}
+                          onCheckedChange={() => toggleLogEntry(entry.id)}
+                          aria-label={`Select log entry ${idx + 1}`}
+                        />
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
+                        {formatTimestamp(entry.timestamp)}
+                      </TableCell>
+                      <TableCell className="font-sans text-xs text-foreground max-w-xs truncate">
+                        {parseMetadata(entry.metadata)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+
+          <DialogFooter className="pt-2 border-t border-divider">
+            <Button
+              variant="outline"
+              onClick={() => setLogTarget(null)}
+              className="font-sans"
+              data-ocid="admin.close_log_button"
+            >
+              {t.common.close}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Clear All Logs Confirm */}
+      <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+        <AlertDialogContent data-ocid="admin.clear_log_confirm_dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-serif text-foreground flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              {t.adminAccessLog.clearAll}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="font-sans text-sm text-muted-foreground">
+              {t.adminAccessLog.clearAllConfirm}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              className="font-sans"
+              data-ocid="admin.cancel_button"
+            >
+              {t.admin.cancel}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClearLog}
+              disabled={clearingLog}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-sans"
+              data-ocid="admin.confirm_clear_button"
+            >
+              {clearingLog ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                  {t.adminAccessLog.clearAll}
+                </>
+              ) : (
+                t.adminAccessLog.clearAll
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Selected Logs Confirm */}
+      <AlertDialog
+        open={showDeleteLogsConfirm}
+        onOpenChange={setShowDeleteLogsConfirm}
+      >
+        <AlertDialogContent data-ocid="admin.delete_logs_confirm_dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-serif text-foreground flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              {t.adminAccessLog.deleteSelected}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="font-sans text-sm text-muted-foreground">
+              {t.adminAccessLog.deleteConfirm}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              className="font-sans"
+              data-ocid="admin.cancel_button"
+            >
+              {t.admin.cancel}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSelectedLogs}
+              disabled={deletingLogs}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-sans"
+              data-ocid="admin.confirm_delete_logs_button"
+            >
+              {deletingLogs ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                  {t.adminAccessLog.deleteSelected}
+                </>
+              ) : (
+                t.adminAccessLog.deleteSelected
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Edit User Profile Dialog */}
       <Dialog

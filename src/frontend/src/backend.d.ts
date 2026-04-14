@@ -34,6 +34,11 @@ export interface ContactMessage {
     message: string;
     deviceId?: string;
 }
+export interface UserAccessLogEntry {
+    id: string;
+    metadata: string;
+    timestamp: bigint;
+}
 export interface UserListEntry {
     principal: Principal;
     role: UserRole;
@@ -101,6 +106,13 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    clearUserAccessLog(target: Principal): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     createFolder(name: string, parentFolderId: string | null): Promise<{
         __kind__: "ok";
         ok: string;
@@ -136,6 +148,20 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    deleteUserAccessLogEntries(target: Principal, entryIds: Array<string>): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    finalizeChunkedUpload(sessionId: string): Promise<{
+        __kind__: "ok";
+        ok: DocumentRecord;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     getActiveHoliday(): Promise<Holiday>;
     getBlockedSenders(): Promise<{
         __kind__: "ok";
@@ -159,6 +185,13 @@ export interface backendInterface {
     getMyProfile(): Promise<UserProfile | null>;
     getMyRole(): Promise<UserRole>;
     getMyStorageUsed(): Promise<bigint>;
+    getUserAccessLog(target: Principal): Promise<{
+        __kind__: "ok";
+        ok: Array<UserAccessLogEntry>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     listContactMessages(): Promise<{
         __kind__: "ok";
         ok: Array<ContactMessage>;
@@ -190,6 +223,7 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    recordMyAccess(metadata: string): Promise<void>;
     removeUser(principalText: string): Promise<{
         __kind__: "ok";
         ok: null;
@@ -214,6 +248,13 @@ export interface backendInterface {
     setGuestDocumentUploadPermission(allowed: boolean): Promise<{
         __kind__: "ok";
         ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    startChunkedUpload(sessionId: string, fileName: string, mimeType: string, isPublic: boolean, parentFolderId: string | null, totalChunks: bigint, totalFileSize: bigint): Promise<{
+        __kind__: "ok";
+        ok: string;
     } | {
         __kind__: "err";
         err: string;
@@ -261,6 +302,13 @@ export interface backendInterface {
         err: string;
     }>;
     uploadDocument(fileName: string, filePath: string, mimeType: string, isPublic: boolean, fileSize: bigint): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    uploadDocumentChunk(sessionId: string, chunkIndex: bigint, chunkData: Uint8Array): Promise<{
         __kind__: "ok";
         ok: string;
     } | {

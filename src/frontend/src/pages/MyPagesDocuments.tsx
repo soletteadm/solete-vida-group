@@ -72,8 +72,10 @@ interface Breadcrumb {
   name: string;
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB — chunked upload handles any size up to storage limit
 const MAX_TOTAL_STORAGE = 100 * 1024 * 1024;
+const CHUNK_SIZE = 1 * 1024 * 1024; // 1MB per chunk
+const ICP_MAX_MESSAGE_SIZE = 2 * 1024 * 1024; // 2MB — threshold above which chunking is used
 const ALLOWED_EXTENSIONS = [
   ".pdf",
   ".docx",
@@ -922,6 +924,25 @@ interface ExtendedActor {
     folderIds: string[],
     targetFolderId: string | null,
   ): Promise<{ __kind__: "ok"; ok: null } | { __kind__: "err"; err: string }>;
+  startChunkedUpload(
+    sessionId: string,
+    fileName: string,
+    mimeType: string,
+    isPublic: boolean,
+    parentFolderId: string | null,
+    totalChunks: bigint,
+    totalFileSize: bigint,
+  ): Promise<{ __kind__: "ok"; ok: string } | { __kind__: "err"; err: string }>;
+  uploadDocumentChunk(
+    sessionId: string,
+    chunkIndex: bigint,
+    chunkData: Uint8Array,
+  ): Promise<{ __kind__: "ok"; ok: string } | { __kind__: "err"; err: string }>;
+  finalizeChunkedUpload(
+    sessionId: string,
+  ): Promise<
+    { __kind__: "ok"; ok: DocumentRecord } | { __kind__: "err"; err: string }
+  >;
 }
 
 // ─── Preview state types ──────────────────────────────────────────────────────
@@ -963,6 +984,9 @@ export default function MyPagesDocuments({
   // ─── UI state ─────────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgressMsg, setUploadProgressMsg] = useState<string | null>(
+    null,
+  );
   const [fileError, setFileError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [storageUsed, setStorageUsed] = useState<number>(0);
@@ -1176,6 +1200,7 @@ export default function MyPagesDocuments({
     if (!extActor || !selectedFile) return;
     setUploading(true);
     setFileError(null);
+    setUploadProgressMsg(null);
 
     const err = validateFile(selectedFile);
     if (err) {
@@ -1189,27 +1214,93 @@ export default function MyPagesDocuments({
       const byteArray = new Uint8Array(arrayBuffer);
       const mime = mimeForFile(selectedFile);
 
-      const result = await extActor.uploadDocumentWithData(
-        selectedFile.name,
-        byteArray,
-        mime,
-        false,
-        currentFolderId,
-      );
+      if (byteArray.length <= ICP_MAX_MESSAGE_SIZE) {
+        // ── Small file: existing single-call path (unchanged) ──────────────
+        const result = await extActor.uploadDocumentWithData(
+          selectedFile.name,
+          byteArray,
+          mime,
+          false,
+          currentFolderId,
+        );
 
-      if ("ok" in result) {
-        toast.success(t.documents.uploadSuccess);
-        setSelectedFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        await Promise.all([refreshContents(), refreshStorage()]);
+        if ("ok" in result) {
+          toast.success(t.documents.uploadSuccess);
+          setSelectedFile(null);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          await Promise.all([refreshContents(), refreshStorage()]);
+        } else {
+          toast.error(`${t.documents.uploadError}: ${result.err}`);
+        }
       } else {
-        toast.error(`${t.documents.uploadError}: ${result.err}`);
+        // ── Large file: chunked upload path ────────────────────────────────
+        const totalChunks = Math.ceil(byteArray.length / CHUNK_SIZE);
+        const sessionId = `chunk-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+        // Step 1: start session
+        setUploadProgressMsg(
+          `${t.documents.uploadingPart ?? "Preparing upload..."}`,
+        );
+        const startResult = await extActor.startChunkedUpload(
+          sessionId,
+          selectedFile.name,
+          mime,
+          false,
+          currentFolderId,
+          BigInt(totalChunks),
+          BigInt(byteArray.length),
+        );
+
+        if ("err" in startResult) {
+          toast.error(`${t.documents.uploadError}: ${startResult.err}`);
+          return;
+        }
+
+        // Step 2: upload chunks sequentially
+        for (let i = 0; i < totalChunks; i++) {
+          const start = i * CHUNK_SIZE;
+          const end = Math.min(start + CHUNK_SIZE, byteArray.length);
+          const chunk = byteArray.slice(start, end);
+
+          const partLabel = t.documents.uploadingPart
+            ? t.documents.uploadingPart
+                .replace("{current}", String(i + 1))
+                .replace("{total}", String(totalChunks))
+            : `Uploading part ${i + 1} of ${totalChunks}…`;
+          setUploadProgressMsg(partLabel);
+
+          const chunkResult = await extActor.uploadDocumentChunk(
+            sessionId,
+            BigInt(i),
+            chunk,
+          );
+
+          if ("err" in chunkResult) {
+            toast.error(`${t.documents.uploadError}: ${chunkResult.err}`);
+            setUploadProgressMsg(null);
+            return;
+          }
+        }
+
+        // Step 3: finalize
+        setUploadProgressMsg(t.documents.finalizingUpload ?? "Finalizing…");
+        const finalResult = await extActor.finalizeChunkedUpload(sessionId);
+
+        if ("ok" in finalResult) {
+          toast.success(t.documents.uploadSuccess);
+          setSelectedFile(null);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          await Promise.all([refreshContents(), refreshStorage()]);
+        } else {
+          toast.error(`${t.documents.uploadError}: ${finalResult.err}`);
+        }
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`${t.documents.uploadError}: ${msg}`);
     } finally {
       setUploading(false);
+      setUploadProgressMsg(null);
     }
   };
 
@@ -1765,7 +1856,7 @@ export default function MyPagesDocuments({
                 {uploading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {t.common.loading}
+                    {uploadProgressMsg ?? t.common.loading}
                   </>
                 ) : (
                   <>

@@ -109,6 +109,13 @@ actor {
     createdAt : Int;
   };
 
+  // UserAccessLogEntry: records a single login/access event for a user.
+  type UserAccessLogEntry = {
+    id : Text;
+    timestamp : Int;
+    metadata : Text; // optional info like IP/user-agent, can be ""
+  };
+
   // ---- State ----
 
   stable var userRoles : Map.Map<Principal, UserRole> = Map.empty<Principal, UserRole>();
@@ -133,9 +140,31 @@ actor {
   // fileBlobs: raw file bytes stored by docId. Key = docId (same as DocumentRecord.id).
   stable var fileBlobs : Map.Map<Text, [Nat8]> = Map.empty<Text, [Nat8]>();
 
+  // ChunkedUploadMeta: metadata for an in-progress chunked upload session.
+  type ChunkedUploadMeta = {
+    fileName : Text;
+    mimeType : Text;
+    isPublic : Bool;
+    parentFolderId : ?Text;
+    totalChunks : Nat;
+    totalFileSize : Nat;
+    ownerPrincipal : Principal;
+    ownerName : Text;
+  };
+
+  // pendingChunks: temporary storage for incoming file chunks.
+  // Outer key = sessionId, inner key = chunk index, value = chunk bytes.
+  stable var pendingChunks : Map.Map<Text, Map.Map<Nat, [Nat8]>> = Map.empty<Text, Map.Map<Nat, [Nat8]>>();
+
+  // pendingChunkMeta: metadata for in-progress chunked uploads, keyed by sessionId.
+  stable var pendingChunkMeta : Map.Map<Text, ChunkedUploadMeta> = Map.empty<Text, ChunkedUploadMeta>();
+
   // Folder storage
   stable var folderRecords : Map.Map<Text, FolderRecord> = Map.empty<Text, FolderRecord>();
   stable var folderIdCounter : Nat = 1;
+
+  // userAccessLogs: stores access log entries per principal (max 50 per user).
+  stable var userAccessLogs : Map.Map<Principal, [UserAccessLogEntry]> = Map.empty<Principal, [UserAccessLogEntry]>();
 
   // ---- Migration ----
 
@@ -939,6 +968,203 @@ actor {
     };
   };
 
+  // ---- Chunked Upload APIs ----
+
+  // startChunkedUpload: initiates a multi-chunk upload session.
+  // Validates caller, MIME type, and storage quota before storing session metadata.
+  // Returns the sessionId on success so the caller can reference it in subsequent calls.
+  public shared ({ caller }) func startChunkedUpload(
+    sessionId : Text,
+    fileName : Text,
+    mimeType : Text,
+    isPublic : Bool,
+    parentFolderId : ?Text,
+    totalChunks : Nat,
+    totalFileSize : Nat,
+  ) : async { #ok : Text; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in to upload documents.");
+    };
+
+    // Check guest permission (same as uploadDocumentWithData)
+    let role = getCallerRole(caller);
+    switch (role) {
+      case (#guest) {
+        if (not allowGuestDocumentUpload) {
+          return #err("Guest document upload is not enabled by admin.");
+        };
+      };
+      case (_) {};
+    };
+
+    // Validate MIME type (same set as uploadDocumentWithData)
+    let isPdf = mimeType == "application/pdf";
+    let isWord = mimeType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      or mimeType == "application/msword";
+    let isImage = mimeType == "image/jpeg" or mimeType == "image/png" or mimeType == "image/gif"
+      or mimeType == "image/webp" or mimeType == "image/svg+xml";
+    let isAudio = mimeType == "audio/mpeg" or mimeType == "audio/wav" or mimeType == "audio/ogg"
+      or mimeType == "audio/flac" or mimeType == "audio/aac" or mimeType == "audio/x-m4a";
+    let isVideo = mimeType == "video/mp4" or mimeType == "video/quicktime"
+      or mimeType == "video/x-msvideo" or mimeType == "video/webm"
+      or mimeType == "video/x-matroska" or mimeType == "video/mpeg";
+    if (not isPdf and not isWord and not isImage and not isAudio and not isVideo) {
+      return #err("File type not supported. Only PDF, Word documents, images (JPEG, PNG, GIF, WebP, SVG), audio (MP3, WAV, OGG, FLAC, AAC, M4A), and video (MP4, MOV, AVI, WebM, MKV, MPEG) are allowed.");
+    };
+
+    // Validate parentFolderId ownership
+    switch (parentFolderId) {
+      case (null) {};
+      case (?fid) {
+        switch (folderRecords.get(fid)) {
+          case (null) { return #err("Folder not found.") };
+          case (?folder) {
+            if (not Principal.equal(folder.ownerPrincipal, caller)) {
+              return #err("Unauthorized: You can only upload into your own folders.");
+            };
+          };
+        };
+      };
+    };
+
+    // Enforce 100MB total storage limit per user
+    let maxStorage : Nat = 104857600;
+    let usedStorage = documentRecords_v3.entries().toArray()
+      .filter(func(pair : (Text, DocumentRecord)) : Bool {
+        Principal.equal(pair.1.ownerPrincipal, caller)
+      })
+      .foldLeft(0 : Nat, func(acc : Nat, pair : (Text, DocumentRecord)) : Nat {
+        acc + pair.1.fileSize
+      });
+    if (usedStorage + totalFileSize > maxStorage) {
+      let usedMb = usedStorage / 1048576;
+      return #err("Storage limit exceeded. Used " # usedMb.toText() # " MB of 100 MB.");
+    };
+
+    // Resolve owner name from profile
+    let ownerName = switch (userProfiles.get(caller)) {
+      case (?profile) {
+        if (textLength(profile.name) > 0) { profile.name } else { caller.toText() }
+      };
+      case (null) { caller.toText() };
+    };
+
+    let meta : ChunkedUploadMeta = {
+      fileName = fileName;
+      mimeType = mimeType;
+      isPublic = isPublic;
+      parentFolderId = parentFolderId;
+      totalChunks = totalChunks;
+      totalFileSize = totalFileSize;
+      ownerPrincipal = caller;
+      ownerName = ownerName;
+    };
+
+    pendingChunkMeta.add(sessionId, meta);
+    pendingChunks.add(sessionId, Map.empty<Nat, [Nat8]>());
+    return #ok(sessionId);
+  };
+
+  // uploadDocumentChunk: stores a single chunk for an in-progress upload session.
+  // Caller must match the session owner. chunkIndex must be < totalChunks.
+  public shared ({ caller }) func uploadDocumentChunk(
+    sessionId : Text,
+    chunkIndex : Nat,
+    chunkData : [Nat8],
+  ) : async { #ok : Text; #err : Text } {
+    switch (pendingChunkMeta.get(sessionId)) {
+      case (null) { return #err("Upload session not found.") };
+      case (?meta) {
+        if (not Principal.equal(meta.ownerPrincipal, caller)) {
+          return #err("Unauthorized: You are not the owner of this upload session.");
+        };
+        if (chunkIndex >= meta.totalChunks) {
+          return #err("Chunk index out of range.");
+        };
+        switch (pendingChunks.get(sessionId)) {
+          case (null) { return #err("Upload session chunks not found.") };
+          case (?chunkMap) {
+            chunkMap.add(chunkIndex, chunkData);
+            return #ok("chunk received");
+          };
+        };
+      };
+    };
+  };
+
+  // finalizeChunkedUpload: assembles all chunks into a complete file, creates the DocumentRecord,
+  // stores bytes in fileBlobs, and cleans up the temporary session state.
+  public shared ({ caller }) func finalizeChunkedUpload(
+    sessionId : Text,
+  ) : async { #ok : DocumentRecord; #err : Text } {
+    switch (pendingChunkMeta.get(sessionId)) {
+      case (null) { return #err("Upload session not found.") };
+      case (?meta) {
+        if (not Principal.equal(meta.ownerPrincipal, caller)) {
+          return #err("Unauthorized: You are not the owner of this upload session.");
+        };
+        switch (pendingChunks.get(sessionId)) {
+          case (null) { return #err("Upload session chunks not found.") };
+          case (?chunkMap) {
+            // Verify all expected chunks are present
+            var totalChunks = meta.totalChunks;
+            var i : Nat = 0;
+            while (i < totalChunks) {
+              switch (chunkMap.get(i)) {
+                case (null) { return #err("Missing chunk " # i.toText() # " of " # totalChunks.toText() # ".") };
+                case (?_) {};
+              };
+              i += 1;
+            };
+
+            // Concatenate all chunks in order
+            var assembled : [Nat8] = [];
+            var j : Nat = 0;
+            while (j < totalChunks) {
+              switch (chunkMap.get(j)) {
+                case (null) { return #err("Chunk " # j.toText() # " missing during assembly.") };
+                case (?chunk) {
+                  assembled := assembled.concat(chunk);
+                };
+              };
+              j += 1;
+            };
+
+            let safeFileName = sanitizeFileName(meta.fileName);
+            if (textLength(safeFileName) == 0) {
+              return #err("File name is required.");
+            };
+
+            documentIdCounter += 1;
+            let id = "doc-" # documentIdCounter.toText() # "-" # Time.now().toText();
+
+            let doc : DocumentRecord = {
+              id = id;
+              ownerPrincipal = caller;
+              ownerName = meta.ownerName;
+              fileName = safeFileName;
+              filePath = id;
+              mimeType = meta.mimeType;
+              isPublic = meta.isPublic;
+              uploadedAt = Time.now();
+              fileSize = assembled.size();
+              parentFolderId = meta.parentFolderId;
+            };
+
+            documentRecords_v3.add(id, doc);
+            fileBlobs.add(id, assembled);
+
+            // Clean up temporary session state
+            pendingChunks.remove(sessionId);
+            pendingChunkMeta.remove(sessionId);
+
+            return #ok(doc);
+          };
+        };
+      };
+    };
+  };
+
   // ---- Folder APIs ----
 
   // createFolder: creates a new folder for the caller.
@@ -1265,6 +1491,78 @@ actor {
     };
 
     return #ok("Moved " # movedCount.toText() # " items");
+  };
+
+  // --> Admin operations, USED ONLY WITH CANDID UI, DO NOT USE admin_* operations in front-end
+
+  // ---- User Access Log APIs ----
+
+  // recordMyAccess: called by frontend after login to record an access event.
+  // Keeps at most 50 entries per user (oldest dropped first).
+  public shared ({ caller }) func recordMyAccess(metadata : Text) : async () {
+    if (caller.isAnonymous()) { return };
+    // Ensure every logged-in user appears in listUsers() so admins can view their access log.
+    // If this caller is not yet in userRoles, register them as #guest.
+    if (userRoles.get(caller) == null) {
+      userRoles.add(caller, #guest);
+    };
+    let ts = Time.now();
+    let entryId = caller.toText() # "-" # ts.toText();
+    let entry : UserAccessLogEntry = {
+      id = entryId;
+      timestamp = ts;
+      metadata = metadata;
+    };
+    let existing : [UserAccessLogEntry] = switch (userAccessLogs.get(caller)) {
+      case (?entries) { entries };
+      case (null) { [] };
+    };
+    // Append new entry; if over 50, drop the oldest (first element)
+    let maxEntries : Nat = 50;
+    let appended = existing.concat([entry]);
+    let trimmed : [UserAccessLogEntry] = if (appended.size() > maxEntries) {
+      appended.sliceToArray(appended.size() - maxEntries, appended.size())
+    } else {
+      appended
+    };
+    userAccessLogs.add(caller, trimmed);
+  };
+
+  // getUserAccessLog: admin-only — returns the access log for a target principal.
+  public query ({ caller }) func getUserAccessLog(target : Principal) : async { #ok : [UserAccessLogEntry]; #err : Text } {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized");
+    };
+    let entries = switch (userAccessLogs.get(target)) {
+      case (?e) { e };
+      case (null) { [] };
+    };
+    return #ok(entries);
+  };
+
+  // clearUserAccessLog: admin-only — clears all log entries for a target principal.
+  public shared ({ caller }) func clearUserAccessLog(target : Principal) : async { #ok; #err : Text } {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized");
+    };
+    userAccessLogs.add(target, []);
+    return #ok;
+  };
+
+  // deleteUserAccessLogEntries: admin-only — removes specific entries by id from a target's log.
+  public shared ({ caller }) func deleteUserAccessLogEntries(target : Principal, entryIds : [Text]) : async { #ok; #err : Text } {
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized");
+    };
+    let existing : [UserAccessLogEntry] = switch (userAccessLogs.get(target)) {
+      case (?entries) { entries };
+      case (null) { [] };
+    };
+    let filtered = existing.filter(func(e : UserAccessLogEntry) : Bool {
+      not entryIds.any(func(id : Text) : Bool { id == e.id })
+    });
+    userAccessLogs.add(target, filtered);
+    return #ok;
   };
 
   // --> Admin operations, USED ONLY WITH CANDID UI, DO NOT USE admin_* operations in front-end

@@ -17,6 +17,12 @@ type UserListEntry =
    profile: opt UserProfile;
    role: UserRole;
  };
+type UserAccessLogEntry = 
+ record {
+   id: text;
+   metadata: text;
+   timestamp: int;
+ };
 type UserAccessEntry = 
  record {
    "principal": principal;
@@ -90,6 +96,10 @@ service : {
                    err: text;
                    ok: text;
                  });
+  clearUserAccessLog: (target: principal) -> (variant {
+                                                err: text;
+                                                ok;
+                                              });
   createFolder: (name: text, parentFolderId: opt text) ->
    (variant {
       err: text;
@@ -111,6 +121,16 @@ service : {
                                        err: text;
                                        ok: text;
                                      });
+  deleteUserAccessLogEntries: (target: principal, entryIds: vec text) ->
+   (variant {
+      err: text;
+      ok;
+    });
+  finalizeChunkedUpload: (sessionId: text) ->
+   (variant {
+      err: text;
+      ok: DocumentRecord;
+    });
   getActiveHoliday: () -> (Holiday) query;
   getBlockedSenders: () -> (variant {
                               err: text;
@@ -129,6 +149,11 @@ service : {
   getMyProfile: () -> (opt UserProfile) query;
   getMyRole: () -> (UserRole) query;
   getMyStorageUsed: () -> (nat) query;
+  getUserAccessLog: (target: principal) ->
+   (variant {
+      err: text;
+      ok: vec UserAccessLogEntry;
+    }) query;
   listContactMessages: () -> (variant {
                                 err: text;
                                 ok: vec ContactMessage;
@@ -150,6 +175,7 @@ service : {
       err: text;
       ok: text;
     });
+  recordMyAccess: (metadata: text) -> ();
   removeUser: (principalText: text) -> (variant {
                                           err: text;
                                           ok;
@@ -168,6 +194,12 @@ service : {
       err: text;
       ok;
     });
+  startChunkedUpload: (sessionId: text, fileName: text, mimeType: text,
+   isPublic: bool, parentFolderId: opt text, totalChunks: nat, totalFileSize:
+   nat) -> (variant {
+              err: text;
+              ok: text;
+            });
   submitContact: (name: text, email: text, message: text) ->
    (variant {
       err: text;
@@ -202,6 +234,11 @@ service : {
                               err: text;
                               ok: text;
                             });
+  uploadDocumentChunk: (sessionId: text, chunkIndex: nat, chunkData:
+   vec nat8) -> (variant {
+                   err: text;
+                   ok: text;
+                 });
   uploadDocumentWithData: (fileName: text, fileData: vec nat8, mimeType:
    text, isPublic: bool, parentFolderId: opt text) ->
    (variant {

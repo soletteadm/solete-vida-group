@@ -56,6 +56,12 @@ type FolderRecord = record {
   createdAt: int;
 };
 
+type UserAccessLogEntry = record {
+  id: text;
+  timestamp: int;
+  metadata: text;
+};
+
 type CallResult = variant { ok: null; err: text };
 type SubmitContactResult = variant { ok: text; err: text };
 type UploadDocumentResult = variant { ok: text; err: text };
@@ -68,6 +74,12 @@ type ListBlockedResult = variant { ok: vec text; err: text };
 
 type MoveDocumentResult = variant { ok: text; err: text };
 type BulkMoveResult = variant { ok: text; err: text };
+
+type GetAccessLogResult = variant { ok: vec UserAccessLogEntry; err: text };
+
+type StartChunkedUploadResult = variant { ok: text; err: text };
+type UploadChunkResult = variant { ok: text; err: text };
+type FinalizeChunkedUploadResult = variant { ok: DocumentRecord; err: text };
 
 service : {
   getMyRole: () -> (UserRole) query;
@@ -105,6 +117,13 @@ service : {
   moveDocument: (text, opt text) -> (MoveDocumentResult);
   moveFolder: (text, opt text) -> (MoveDocumentResult);
   bulkMove: (vec text, vec text, opt text) -> (BulkMoveResult);
+  recordMyAccess: (text) -> ();
+  getUserAccessLog: (principal) -> (GetAccessLogResult) query;
+  clearUserAccessLog: (principal) -> (CallResult);
+  deleteUserAccessLogEntries: (principal, vec text) -> (CallResult);
+  startChunkedUpload: (text, text, text, bool, opt text, nat, nat) -> (StartChunkedUploadResult);
+  uploadDocumentChunk: (text, nat, vec nat8) -> (UploadChunkResult);
+  finalizeChunkedUpload: (text) -> (FinalizeChunkedUploadResult);
   admin_addUserAccess: (text, UserRole) -> ();
   admin_updateUserAccess: (text, UserRole) -> ();
   admin_getUserAccess: () -> (vec UserAccessEntry) query;

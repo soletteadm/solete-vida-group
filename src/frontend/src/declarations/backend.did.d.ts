@@ -49,6 +49,11 @@ export type Holiday = { 'newyear' : null } |
   { 'midsommar' : null } |
   { 'christmas' : null };
 export interface UserAccessEntry { 'principal' : Principal, 'role' : UserRole }
+export interface UserAccessLogEntry {
+  'id' : string,
+  'metadata' : string,
+  'timestamp' : bigint,
+}
 export interface UserListEntry {
   'principal' : Principal,
   'role' : UserRole,
@@ -83,6 +88,11 @@ export interface _SERVICE {
     { 'ok' : string } |
       { 'err' : string }
   >,
+  'clearUserAccessLog' : ActorMethod<
+    [Principal],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'createFolder' : ActorMethod<
     [string, [] | [string]],
     { 'ok' : string } |
@@ -108,6 +118,16 @@ export interface _SERVICE {
     { 'ok' : string } |
       { 'err' : string }
   >,
+  'deleteUserAccessLogEntries' : ActorMethod<
+    [Principal, Array<string>],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  'finalizeChunkedUpload' : ActorMethod<
+    [string],
+    { 'ok' : DocumentRecord } |
+      { 'err' : string }
+  >,
   'getActiveHoliday' : ActorMethod<[], Holiday>,
   'getBlockedSenders' : ActorMethod<
     [],
@@ -125,6 +145,11 @@ export interface _SERVICE {
   'getMyProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getMyRole' : ActorMethod<[], UserRole>,
   'getMyStorageUsed' : ActorMethod<[], bigint>,
+  'getUserAccessLog' : ActorMethod<
+    [Principal],
+    { 'ok' : Array<UserAccessLogEntry> } |
+      { 'err' : string }
+  >,
   'listContactMessages' : ActorMethod<
     [],
     { 'ok' : Array<ContactMessage> } |
@@ -148,6 +173,7 @@ export interface _SERVICE {
     { 'ok' : string } |
       { 'err' : string }
   >,
+  'recordMyAccess' : ActorMethod<[string], undefined>,
   'removeUser' : ActorMethod<[string], { 'ok' : null } | { 'err' : string }>,
   'setActiveHoliday' : ActorMethod<
     [Holiday],
@@ -162,6 +188,11 @@ export interface _SERVICE {
   'setGuestDocumentUploadPermission' : ActorMethod<
     [boolean],
     { 'ok' : null } |
+      { 'err' : string }
+  >,
+  'startChunkedUpload' : ActorMethod<
+    [string, string, string, boolean, [] | [string], bigint, bigint],
+    { 'ok' : string } |
       { 'err' : string }
   >,
   'submitContact' : ActorMethod<
@@ -196,6 +227,11 @@ export interface _SERVICE {
   >,
   'uploadDocument' : ActorMethod<
     [string, string, string, boolean, bigint],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
+  'uploadDocumentChunk' : ActorMethod<
+    [string, bigint, Uint8Array],
     { 'ok' : string } |
       { 'err' : string }
   >,
