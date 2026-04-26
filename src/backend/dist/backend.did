@@ -28,6 +28,15 @@ type UserAccessEntry =
    "principal": principal;
    role: UserRole;
  };
+type NoteRecord = 
+ record {
+   content: text;
+   createdAt: int;
+   id: text;
+   owner: principal;
+   rubrik: text;
+   sharedWith: vec principal;
+ };
 type Holiday = 
  variant {
    christmas;
@@ -105,6 +114,11 @@ service : {
       err: text;
       ok: text;
     });
+  createNote: (rubrik: text, content: text) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
   deleteContactMessage: (id: text) -> (variant {
                                          err: text;
                                          ok;
@@ -121,6 +135,10 @@ service : {
                                        err: text;
                                        ok: text;
                                      });
+  deleteNote: (noteId: text) -> (variant {
+                                   err: text;
+                                   ok;
+                                 });
   deleteUserAccessLogEntries: (target: principal, entryIds: vec text) ->
    (variant {
       err: text;
@@ -136,6 +154,15 @@ service : {
                               err: text;
                               ok: vec text;
                             });
+  getDocumentChunk: (docId: text, offset: nat, chunkSize: nat) ->
+   (variant {
+      err: text;
+      ok: record {
+            chunk: vec nat8;
+            hasMore: bool;
+            totalSize: nat;
+          };
+    }) query;
   getDocumentData: (docId: text) ->
    (variant {
       err: text;
@@ -149,6 +176,15 @@ service : {
   getMyProfile: () -> (opt UserProfile) query;
   getMyRole: () -> (UserRole) query;
   getMyStorageUsed: () -> (nat) query;
+  getNoteShares: (noteId: text) ->
+   (variant {
+      err: text;
+      ok: vec principal;
+    }) query;
+  getNotesCount: (search: opt text) -> (variant {
+                                          err: text;
+                                          ok: nat;
+                                        }) query;
   getUserAccessLog: (target: principal) ->
    (variant {
       err: text;
@@ -160,6 +196,11 @@ service : {
                               });
   listMyDocuments: (parentFolderId: opt text) -> (vec DocumentRecord) query;
   listMyFolders: (parentFolderId: opt text) -> (vec FolderRecord) query;
+  listNotes: (limit: nat, offset: nat, search: opt text) ->
+   (variant {
+      err: text;
+      ok: vec NoteRecord;
+    }) query;
   listPublicDocuments: () -> (vec DocumentRecord) query;
   listUsers: () -> (variant {
                       err: text;
@@ -194,6 +235,11 @@ service : {
       err: text;
       ok;
     });
+  shareNote: (noteId: text, targetPrincipal: principal) ->
+   (variant {
+      err: text;
+      ok;
+    });
   startChunkedUpload: (sessionId: text, fileName: text, mimeType: text,
    isPublic: bool, parentFolderId: opt text, totalChunks: nat, totalFileSize:
    nat) -> (variant {
@@ -209,12 +255,22 @@ service : {
                                                     err: text;
                                                     ok;
                                                   });
+  unshareNote: (noteId: text, targetPrincipal: principal) ->
+   (variant {
+      err: text;
+      ok;
+    });
   updateContactStatus: (id: text, status: ContactStatus) ->
    (variant {
       err: text;
       ok;
     });
   updateMyProfile: (name: text, email: text, phone: text) ->
+   (variant {
+      err: text;
+      ok;
+    });
+  updateNote: (noteId: text, rubrik: text, content: text) ->
    (variant {
       err: text;
       ok;

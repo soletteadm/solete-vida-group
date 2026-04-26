@@ -12,10 +12,13 @@ import MyPagesAdmin from "@/pages/MyPagesAdmin";
 import MyPagesCalendar from "@/pages/MyPagesCalendar";
 import MyPagesContacts from "@/pages/MyPagesContacts";
 import MyPagesDocuments from "@/pages/MyPagesDocuments";
+import MyPagesNotes from "@/pages/MyPagesNotes";
 import MyPagesProfile from "@/pages/MyPagesProfile";
 import ShareDocumentPage from "@/pages/ShareDocumentPage";
 import {
+  BookOpen,
   CalendarDays,
+  ChevronDown,
   FileText,
   MessageSquare,
   User,
@@ -45,13 +48,37 @@ function resolveHolidayKey(h: Holiday): string {
 }
 
 type Page = "home" | "myPages";
-type MyPagesTab = "profile" | "admin" | "calendar" | "contacts" | "documents";
+type MyPagesTab =
+  | "profile"
+  | "admin"
+  | "calendar"
+  | "contacts"
+  | "documents"
+  | "notes";
+
+// ─── Tab definitions ──────────────────────────────────────────────────────────
+
+interface TabDef {
+  value: MyPagesTab;
+  labelKey:
+    | "profile"
+    | "users"
+    | "calendar"
+    | "contacts"
+    | "documentsTab"
+    | "notesTab";
+  icon: React.ReactNode;
+  ocid: string;
+  condition?: boolean;
+}
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>("home");
   const [myPagesTab, setMyPagesTab] = useState<MyPagesTab>("profile");
   const [activeHoliday, setActiveHoliday] = useState<string>("none");
   const [showSplash, setShowSplash] = useState(false);
+  // Mobile accordion: which tab is open (null = none)
+  const [mobileOpen, setMobileOpen] = useState<MyPagesTab | null>("profile");
   const { t } = useLanguage();
   const auth = useAuth();
   const { actor, isFetching } = useTypedActor();
@@ -110,6 +137,107 @@ function AppContent() {
     auth.logout();
     setCurrentPage("home");
     setMyPagesTab("profile");
+    setMobileOpen("profile");
+  };
+
+  // Sync accordion open state when desktop tab changes
+  const handleTabChange = (v: string) => {
+    const tab = v as MyPagesTab;
+    setMyPagesTab(tab);
+    setMobileOpen(tab);
+  };
+
+  // Toggle accordion section on mobile
+  const handleMobileToggle = (tab: MyPagesTab) => {
+    setMobileOpen((prev) => {
+      const next = prev === tab ? null : tab;
+      if (next) setMyPagesTab(next);
+      return next;
+    });
+  };
+
+  // Build the ordered list of visible tabs
+  const tabDefs: TabDef[] = [
+    {
+      value: "profile",
+      labelKey: "profile",
+      icon: <User className="w-4 h-4" />,
+      ocid: "mypages.tab",
+      condition: true,
+    },
+    {
+      value: "admin",
+      labelKey: "users",
+      icon: <Users className="w-4 h-4" />,
+      ocid: "mypages.tab",
+      condition: auth.isAdmin,
+    },
+    {
+      value: "calendar",
+      labelKey: "calendar",
+      icon: <CalendarDays className="w-4 h-4" />,
+      ocid: "mypages.calendar.tab",
+      condition: auth.isAdmin,
+    },
+    {
+      value: "contacts",
+      labelKey: "contacts",
+      icon: <MessageSquare className="w-4 h-4" />,
+      ocid: "mypages.contacts.tab",
+      condition: auth.isAdmin,
+    },
+    {
+      value: "documents",
+      labelKey: "documentsTab",
+      icon: <FileText className="w-4 h-4" />,
+      ocid: "mypages.documents.tab",
+      condition: auth.isLoggedIn,
+    },
+    {
+      value: "notes",
+      labelKey: "notesTab",
+      icon: <BookOpen className="w-4 h-4" />,
+      ocid: "mypages.notes.tab",
+      condition: auth.isLoggedIn,
+    },
+  ].filter((tab) => tab.condition !== false) as TabDef[];
+
+  // Map labelKey to actual translation string
+  const getTabLabel = (key: TabDef["labelKey"]) => {
+    if (key === "documentsTab") return t.documents.tab;
+    if (key === "notesTab") return t.myPages.notesTab;
+    return t.myPages[key as "profile" | "users" | "calendar" | "contacts"];
+  };
+
+  // Render the content for a given tab value
+  const renderTabContent = (tab: MyPagesTab) => {
+    switch (tab) {
+      case "profile":
+        return (
+          <MyPagesProfile
+            principalText={auth.principalText}
+            roleLabel={auth.roleLabel}
+          />
+        );
+      case "admin":
+        return auth.isAdmin ? <MyPagesAdmin /> : null;
+      case "calendar":
+        return auth.isAdmin ? <MyPagesCalendar /> : null;
+      case "contacts":
+        return auth.isAdmin ? <MyPagesContacts /> : null;
+      case "documents":
+        return auth.isLoggedIn ? (
+          <MyPagesDocuments
+            principalText={auth.principalText}
+            userName={auth.principalText ?? ""}
+            userRole={auth.roleLabel as "admin" | "user" | "guest"}
+          />
+        ) : null;
+      case "notes":
+        return auth.isLoggedIn ? <MyPagesNotes /> : null;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -143,7 +271,7 @@ function AppContent() {
         ) : (
           /* My Pages */
           <div className="min-h-[calc(100vh-72px)] bg-beige">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-10">
               {/* Page title */}
               <div className="mb-8">
                 <h1 className="font-serif text-3xl font-semibold text-foreground">
@@ -152,100 +280,100 @@ function AppContent() {
                 <div className="mt-1.5 w-10 h-0.5 bg-gold" />
               </div>
 
-              <Tabs
-                value={myPagesTab}
-                onValueChange={(v) => setMyPagesTab(v as MyPagesTab)}
-                className="space-y-6"
-              >
-                <TabsList
-                  className="bg-card border border-divider shadow-card h-auto p-1 rounded-lg"
-                  data-ocid="mypages.tab"
+              {/* ── Desktop: horizontal Tabs (md and above) ── */}
+              <div className="hidden md:block">
+                <Tabs
+                  value={myPagesTab}
+                  onValueChange={handleTabChange}
+                  className="space-y-6"
                 >
-                  <TabsTrigger
-                    value="profile"
-                    className="font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black"
-                    data-ocid="mypages.tab"
-                  >
-                    <User className="w-4 h-4" />
-                    {t.myPages.profile}
-                  </TabsTrigger>
-                  {auth.isAdmin && (
-                    <TabsTrigger
-                      value="admin"
-                      className="font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black"
+                  <div className="overflow-x-auto -mx-1 px-1 pb-0.5">
+                    <TabsList
+                      className="bg-card border border-divider shadow-card h-auto p-1 rounded-lg flex flex-nowrap w-max min-w-full"
                       data-ocid="mypages.tab"
                     >
-                      <Users className="w-4 h-4" />
-                      {t.myPages.users}
-                    </TabsTrigger>
-                  )}
-                  {auth.isAdmin && (
-                    <TabsTrigger
-                      value="calendar"
-                      className="font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black"
-                      data-ocid="mypages.calendar.tab"
+                      {tabDefs.map((tab) => (
+                        <TabsTrigger
+                          key={tab.value}
+                          value={tab.value}
+                          className="font-sans text-sm flex items-center gap-1.5 rounded-md shrink-0 data-[state=active]:bg-gold data-[state=active]:text-black"
+                          data-ocid={tab.ocid}
+                        >
+                          {tab.icon}
+                          <span>{getTabLabel(tab.labelKey)}</span>
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </div>
+
+                  {tabDefs.map((tab) => (
+                    <TabsContent key={tab.value} value={tab.value}>
+                      {renderTabContent(tab.value)}
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              </div>
+
+              {/* ── Mobile: vertical accordion (below md) ── */}
+              <div
+                className="md:hidden space-y-2"
+                data-ocid="mypages.accordion"
+              >
+                {tabDefs.map((tab) => {
+                  const isOpen = mobileOpen === tab.value;
+                  return (
+                    <div
+                      key={tab.value}
+                      className={`rounded-xl border transition-colors overflow-hidden ${
+                        isOpen
+                          ? "border-gold/60 shadow-md"
+                          : "border-divider bg-card"
+                      }`}
+                      data-ocid={`mypages.accordion.${tab.value}`}
                     >
-                      <CalendarDays className="w-4 h-4" />
-                      {t.myPages.calendar}
-                    </TabsTrigger>
-                  )}
-                  {auth.isAdmin && (
-                    <TabsTrigger
-                      value="contacts"
-                      className="font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black"
-                      data-ocid="mypages.contacts.tab"
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                      {t.myPages.contacts}
-                    </TabsTrigger>
-                  )}
-                  {auth.isLoggedIn && (
-                    <TabsTrigger
-                      value="documents"
-                      className="font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black"
-                      data-ocid="mypages.documents.tab"
-                    >
-                      <FileText className="w-4 h-4" />
-                      {t.documents.tab}
-                    </TabsTrigger>
-                  )}
-                </TabsList>
+                      {/* Accordion header button — min 64px touch target */}
+                      <button
+                        type="button"
+                        onClick={() => handleMobileToggle(tab.value)}
+                        className={`w-full flex items-center gap-3 px-5 py-4 min-h-[64px] text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:ring-inset ${
+                          isOpen
+                            ? "bg-gold text-black"
+                            : "bg-card text-foreground active:bg-gold/20"
+                        }`}
+                        aria-expanded={isOpen}
+                        aria-controls={`accordion-content-${tab.value}`}
+                        data-ocid={`mypages.accordion_trigger.${tab.value}`}
+                      >
+                        <span
+                          className={`shrink-0 ${isOpen ? "text-black" : "text-gold"}`}
+                        >
+                          {tab.icon}
+                        </span>
+                        <span className="flex-1 font-sans font-bold text-base">
+                          {getTabLabel(tab.labelKey)}
+                        </span>
+                        <ChevronDown
+                          className={`w-5 h-5 shrink-0 transition-transform duration-200 ${
+                            isOpen
+                              ? "rotate-180 text-black"
+                              : "text-muted-foreground"
+                          }`}
+                        />
+                      </button>
 
-                <TabsContent value="profile">
-                  <MyPagesProfile
-                    principalText={auth.principalText}
-                    roleLabel={auth.roleLabel}
-                  />
-                </TabsContent>
-
-                {auth.isAdmin && (
-                  <TabsContent value="admin">
-                    <MyPagesAdmin />
-                  </TabsContent>
-                )}
-
-                {auth.isAdmin && (
-                  <TabsContent value="calendar">
-                    <MyPagesCalendar />
-                  </TabsContent>
-                )}
-
-                {auth.isAdmin && (
-                  <TabsContent value="contacts">
-                    <MyPagesContacts />
-                  </TabsContent>
-                )}
-
-                {auth.isLoggedIn && (
-                  <TabsContent value="documents">
-                    <MyPagesDocuments
-                      principalText={auth.principalText}
-                      userName={auth.principalText ?? ""}
-                      userRole={auth.roleLabel as "admin" | "user" | "guest"}
-                    />
-                  </TabsContent>
-                )}
-              </Tabs>
+                      {/* Accordion content */}
+                      {isOpen && (
+                        <div
+                          id={`accordion-content-${tab.value}`}
+                          className="px-3 py-5 sm:px-5 bg-background border-t-2 border-gold/30"
+                        >
+                          {renderTabContent(tab.value)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
             <Footer onNavigate={handleNavigate} />
           </div>

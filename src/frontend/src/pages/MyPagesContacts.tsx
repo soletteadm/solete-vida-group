@@ -334,189 +334,319 @@ export default function MyPagesContacts() {
             {t.adminContacts.noMessages}
           </div>
         ) : (
-          <div className="rounded-lg border border-border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/40">
-                  <TableHead className="w-10 pl-4">
-                    <Checkbox
-                      checked={
-                        selected.size === messages.length && messages.length > 0
-                      }
-                      onCheckedChange={toggleSelectAll}
-                      aria-label={t.adminContacts.selectAll}
-                      data-ocid="contacts.checkbox"
-                    />
-                  </TableHead>
-                  <TableHead className="font-sans text-xs uppercase tracking-wide">
-                    {t.adminContacts.name}
-                  </TableHead>
-                  <TableHead className="font-sans text-xs uppercase tracking-wide hidden md:table-cell">
-                    {t.adminContacts.email}
-                  </TableHead>
-                  <TableHead className="font-sans text-xs uppercase tracking-wide hidden lg:table-cell">
-                    {t.adminContacts.message}
-                  </TableHead>
-                  <TableHead className="font-sans text-xs uppercase tracking-wide">
-                    {t.adminContacts.status}
-                  </TableHead>
-                  <TableHead className="font-sans text-xs uppercase tracking-wide hidden sm:table-cell">
-                    {t.adminContacts.submitted}
-                  </TableHead>
-                  <TableHead className="text-right font-sans text-xs uppercase tracking-wide">
-                    {t.adminContacts.actions}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {messages.map((msg, idx) => (
-                  <TableRow
-                    key={msg.id}
-                    className={selected.has(msg.id) ? "bg-muted/30" : undefined}
-                    data-ocid={`contacts.item.${idx + 1}`}
-                  >
-                    <TableCell className="pl-4">
+          <>
+            {/* ── Mobile card layout (below md) ── */}
+            <ul className="divide-y divide-border md:hidden rounded-lg border border-border overflow-hidden">
+              {messages.map((msg, idx) => (
+                <li
+                  key={msg.id}
+                  className={`p-4 space-y-2.5 hover:bg-muted/20 transition-colors ${selected.has(msg.id) ? "bg-muted/30" : ""}`}
+                  data-ocid={`contacts.item.${idx + 1}`}
+                >
+                  <div className="flex items-start gap-3 min-w-0">
+                    {/* Checkbox with large touch target */}
+                    <div className="min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0 -ml-1">
                       <Checkbox
                         checked={selected.has(msg.id)}
                         onCheckedChange={() => toggleSelect(msg.id)}
                         data-ocid={`contacts.checkbox.${idx + 1}`}
+                        aria-label={`Select message from ${msg.name}`}
                       />
-                    </TableCell>
-                    <TableCell className="font-sans text-sm font-medium">
-                      <div className="flex items-center gap-1.5">
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
                         {msg.senderBlocked && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Ban className="h-3.5 w-3.5 text-destructive shrink-0" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {t.adminContacts.senderBlocked}
-                            </TooltipContent>
-                          </Tooltip>
+                          <Ban className="h-3.5 w-3.5 text-destructive shrink-0" />
                         )}
-                        {msg.name}
+                        <span className="font-sans text-sm font-semibold text-foreground truncate">
+                          {msg.name}
+                        </span>
                       </div>
-                    </TableCell>
-                    <TableCell className="font-sans text-sm text-muted-foreground hidden md:table-cell">
-                      {msg.email}
-                    </TableCell>
-                    <TableCell className="font-sans text-sm text-muted-foreground hidden lg:table-cell max-w-[220px]">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="block truncate cursor-default">
-                            {msg.message}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs whitespace-pre-wrap">
-                          {msg.message}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={isActive(msg.status) ? "default" : "secondary"}
-                        className={
-                          isActive(msg.status)
-                            ? "bg-gold/20 text-amber-800 border-gold/40 font-sans text-xs"
-                            : "font-sans text-xs"
-                        }
-                      >
-                        {isActive(msg.status)
-                          ? t.adminContacts.active
-                          : t.adminContacts.notactive}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-sans text-xs text-muted-foreground hidden sm:table-cell whitespace-nowrap">
-                      {formatDate(msg.submittedAt)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            data-ocid={`contacts.dropdown_menu.${idx + 1}`}
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {/* View details */}
+                      <p className="font-sans text-xs text-muted-foreground truncate">
+                        {msg.email}
+                      </p>
+                      <p className="font-sans text-xs text-muted-foreground line-clamp-2">
+                        {msg.message}
+                      </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-sans text-xs text-muted-foreground">
+                          {formatDate(msg.submittedAt)}
+                        </span>
+                        <Badge
+                          variant={
+                            isActive(msg.status) ? "default" : "secondary"
+                          }
+                          className={
+                            isActive(msg.status)
+                              ? "bg-gold/20 text-amber-800 border-gold/40 font-sans text-xs"
+                              : "font-sans text-xs"
+                          }
+                        >
+                          {isActive(msg.status)
+                            ? t.adminContacts.active
+                            : t.adminContacts.notactive}
+                        </Badge>
+                      </div>
+                    </div>
+                    {/* Actions dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="min-w-[44px] min-h-[44px] shrink-0"
+                          data-ocid={`contacts.dropdown_menu.${idx + 1}`}
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => setDetailMsg(msg)}
+                          data-ocid={`contacts.open_modal_button.${idx + 1}`}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          {t.adminContacts.viewDetails}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleStatusToggle(msg)}
+                          disabled={actionLoading === `${msg.id}:status`}
+                          data-ocid={`contacts.toggle.${idx + 1}`}
+                        >
+                          {actionLoading === `${msg.id}:status` ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : isActive(msg.status) ? (
+                            <ToggleLeft className="mr-2 h-4 w-4" />
+                          ) : (
+                            <ToggleRight className="mr-2 h-4 w-4" />
+                          )}
+                          {isActive(msg.status)
+                            ? t.adminContacts.setNotactive
+                            : t.adminContacts.setActive}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {hasPrincipal(msg) && (
                           <DropdownMenuItem
-                            onClick={() => setDetailMsg(msg)}
-                            data-ocid={`contacts.open_modal_button.${idx + 1}`}
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            {t.adminContacts.viewDetails}
-                          </DropdownMenuItem>
-
-                          {/* Toggle status */}
-                          <DropdownMenuItem
-                            onClick={() => handleStatusToggle(msg)}
-                            disabled={actionLoading === `${msg.id}:status`}
+                            onClick={() =>
+                              setConfirmBlock({
+                                msg,
+                                block: !msg.senderBlocked,
+                              })
+                            }
+                            className={
+                              msg.senderBlocked
+                                ? "text-green-700"
+                                : "text-orange-700"
+                            }
                             data-ocid={`contacts.toggle.${idx + 1}`}
                           >
-                            {actionLoading === `${msg.id}:status` ? (
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : isActive(msg.status) ? (
-                              <ToggleLeft className="mr-2 h-4 w-4" />
+                            {msg.senderBlocked ? (
+                              <ShieldCheck className="mr-2 h-4 w-4" />
                             ) : (
-                              <ToggleRight className="mr-2 h-4 w-4" />
+                              <Ban className="mr-2 h-4 w-4" />
                             )}
-                            {isActive(msg.status)
-                              ? t.adminContacts.setNotactive
-                              : t.adminContacts.setActive}
+                            {msg.senderBlocked
+                              ? t.adminContacts.unblock
+                              : t.adminContacts.block}
                           </DropdownMenuItem>
+                        )}
+                        {hasPrincipal(msg) && <DropdownMenuSeparator />}
+                        <DropdownMenuItem
+                          onClick={() => setConfirmDelete(msg)}
+                          className="text-destructive focus:text-destructive"
+                          data-ocid={`contacts.delete_button.${idx + 1}`}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          {t.adminContacts.delete}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </li>
+              ))}
+            </ul>
 
-                          <DropdownMenuSeparator />
-
-                          {/* Block / Unblock */}
-                          {hasPrincipal(msg) && (
+            {/* ── Desktop table layout (md and above) ── */}
+            <div className="hidden md:block rounded-lg border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="w-10 pl-4">
+                      <Checkbox
+                        checked={
+                          selected.size === messages.length &&
+                          messages.length > 0
+                        }
+                        onCheckedChange={toggleSelectAll}
+                        aria-label={t.adminContacts.selectAll}
+                        data-ocid="contacts.checkbox"
+                      />
+                    </TableHead>
+                    <TableHead className="font-sans text-xs uppercase tracking-wide">
+                      {t.adminContacts.name}
+                    </TableHead>
+                    <TableHead className="font-sans text-xs uppercase tracking-wide hidden md:table-cell">
+                      {t.adminContacts.email}
+                    </TableHead>
+                    <TableHead className="font-sans text-xs uppercase tracking-wide hidden lg:table-cell">
+                      {t.adminContacts.message}
+                    </TableHead>
+                    <TableHead className="font-sans text-xs uppercase tracking-wide">
+                      {t.adminContacts.status}
+                    </TableHead>
+                    <TableHead className="font-sans text-xs uppercase tracking-wide hidden sm:table-cell">
+                      {t.adminContacts.submitted}
+                    </TableHead>
+                    <TableHead className="text-right font-sans text-xs uppercase tracking-wide">
+                      {t.adminContacts.actions}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {messages.map((msg, idx) => (
+                    <TableRow
+                      key={msg.id}
+                      className={
+                        selected.has(msg.id) ? "bg-muted/30" : undefined
+                      }
+                      data-ocid={`contacts.item.${idx + 1}`}
+                    >
+                      <TableCell className="pl-4">
+                        <Checkbox
+                          checked={selected.has(msg.id)}
+                          onCheckedChange={() => toggleSelect(msg.id)}
+                          data-ocid={`contacts.checkbox.${idx + 1}`}
+                        />
+                      </TableCell>
+                      <TableCell className="font-sans text-sm font-medium">
+                        <div className="flex items-center gap-1.5">
+                          {msg.senderBlocked && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Ban className="h-3.5 w-3.5 text-destructive shrink-0" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {t.adminContacts.senderBlocked}
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                          {msg.name}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-sans text-sm text-muted-foreground hidden md:table-cell">
+                        {msg.email}
+                      </TableCell>
+                      <TableCell className="font-sans text-sm text-muted-foreground hidden lg:table-cell max-w-[220px]">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="block truncate cursor-default">
+                              {msg.message}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs whitespace-pre-wrap">
+                            {msg.message}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            isActive(msg.status) ? "default" : "secondary"
+                          }
+                          className={
+                            isActive(msg.status)
+                              ? "bg-gold/20 text-amber-800 border-gold/40 font-sans text-xs"
+                              : "font-sans text-xs"
+                          }
+                        >
+                          {isActive(msg.status)
+                            ? t.adminContacts.active
+                            : t.adminContacts.notactive}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-sans text-xs text-muted-foreground hidden sm:table-cell whitespace-nowrap">
+                        {formatDate(msg.submittedAt)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              data-ocid={`contacts.dropdown_menu.${idx + 1}`}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
                             <DropdownMenuItem
-                              onClick={() =>
-                                setConfirmBlock({
-                                  msg,
-                                  block: !msg.senderBlocked,
-                                })
-                              }
-                              className={
-                                msg.senderBlocked
-                                  ? "text-green-700"
-                                  : "text-orange-700"
-                              }
+                              onClick={() => setDetailMsg(msg)}
+                              data-ocid={`contacts.open_modal_button.${idx + 1}`}
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              {t.adminContacts.viewDetails}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleStatusToggle(msg)}
+                              disabled={actionLoading === `${msg.id}:status`}
                               data-ocid={`contacts.toggle.${idx + 1}`}
                             >
-                              {msg.senderBlocked ? (
-                                <ShieldCheck className="mr-2 h-4 w-4" />
+                              {actionLoading === `${msg.id}:status` ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : isActive(msg.status) ? (
+                                <ToggleLeft className="mr-2 h-4 w-4" />
                               ) : (
-                                <Ban className="mr-2 h-4 w-4" />
+                                <ToggleRight className="mr-2 h-4 w-4" />
                               )}
-                              {msg.senderBlocked
-                                ? t.adminContacts.unblock
-                                : t.adminContacts.block}
+                              {isActive(msg.status)
+                                ? t.adminContacts.setNotactive
+                                : t.adminContacts.setActive}
                             </DropdownMenuItem>
-                          )}
-
-                          {hasPrincipal(msg) && <DropdownMenuSeparator />}
-
-                          {/* Delete */}
-                          <DropdownMenuItem
-                            onClick={() => setConfirmDelete(msg)}
-                            className="text-destructive focus:text-destructive"
-                            data-ocid={`contacts.delete_button.${idx + 1}`}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            {t.adminContacts.delete}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                            <DropdownMenuSeparator />
+                            {hasPrincipal(msg) && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setConfirmBlock({
+                                    msg,
+                                    block: !msg.senderBlocked,
+                                  })
+                                }
+                                className={
+                                  msg.senderBlocked
+                                    ? "text-green-700"
+                                    : "text-orange-700"
+                                }
+                                data-ocid={`contacts.toggle.${idx + 1}`}
+                              >
+                                {msg.senderBlocked ? (
+                                  <ShieldCheck className="mr-2 h-4 w-4" />
+                                ) : (
+                                  <Ban className="mr-2 h-4 w-4" />
+                                )}
+                                {msg.senderBlocked
+                                  ? t.adminContacts.unblock
+                                  : t.adminContacts.block}
+                              </DropdownMenuItem>
+                            )}
+                            {hasPrincipal(msg) && <DropdownMenuSeparator />}
+                            <DropdownMenuItem
+                              onClick={() => setConfirmDelete(msg)}
+                              className="text-destructive focus:text-destructive"
+                              data-ocid={`contacts.delete_button.${idx + 1}`}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              {t.adminContacts.delete}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
         )}
 
         {/* ---- Detail Dialog ---- */}

@@ -5,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useTypedActor } from "@/hooks/useTypedActor";
@@ -103,40 +102,40 @@ export default function MyPagesCalendar() {
             holidays.map(({ key, label }) => {
               const isActive = activeHoliday === key;
               return (
-                <div
+                <label
                   key={key}
+                  htmlFor={`switch-${key}`}
                   data-ocid={`calendar.${key}.row`}
-                  className={`flex items-center justify-between rounded-lg border px-4 py-3 transition-all ${
+                  className={`flex items-center justify-between rounded-xl border px-5 min-h-[64px] py-3 transition-all cursor-pointer ${
                     isActive
                       ? "border-gold bg-gold/10 shadow-sm"
-                      : "border-divider bg-card"
+                      : "border-divider bg-card active:bg-gold/5"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <span
-                      className="inline-block w-3 h-3 rounded-full flex-shrink-0"
+                      className="inline-block w-4 h-4 rounded-full flex-shrink-0"
                       style={{ backgroundColor: HOLIDAY_DOTS[key] }}
                     />
-                    <Label
-                      htmlFor={`switch-${key}`}
-                      className="font-sans text-sm font-medium text-foreground cursor-pointer"
-                    >
+                    <span className="font-sans text-base font-medium text-foreground">
                       {label}
-                    </Label>
+                    </span>
                     {isActive && (
                       <span className="text-xs font-medium text-gold bg-gold/20 px-2 py-0.5 rounded-full">
                         {t.calendar.active}
                       </span>
                     )}
                   </div>
-                  <Switch
-                    id={`switch-${key}`}
-                    data-ocid={`calendar.${key}.switch`}
-                    checked={isActive}
-                    disabled={saving}
-                    onCheckedChange={(checked) => handleToggle(key, checked)}
-                  />
-                </div>
+                  <div className="p-3 -mr-3">
+                    <Switch
+                      id={`switch-${key}`}
+                      data-ocid={`calendar.${key}.switch`}
+                      checked={isActive}
+                      disabled={saving}
+                      onCheckedChange={(checked) => handleToggle(key, checked)}
+                    />
+                  </div>
+                </label>
               );
             })
           )}

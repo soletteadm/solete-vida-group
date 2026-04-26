@@ -48,6 +48,14 @@ export type Holiday = { 'newyear' : null } |
   { 'easter' : null } |
   { 'midsommar' : null } |
   { 'christmas' : null };
+export interface NoteRecord {
+  'id' : string,
+  'content' : string,
+  'rubrik' : string,
+  'owner' : Principal,
+  'createdAt' : bigint,
+  'sharedWith' : Array<Principal>,
+}
 export interface UserAccessEntry { 'principal' : Principal, 'role' : UserRole }
 export interface UserAccessLogEntry {
   'id' : string,
@@ -98,6 +106,11 @@ export interface _SERVICE {
     { 'ok' : string } |
       { 'err' : string }
   >,
+  'createNote' : ActorMethod<
+    [string, string],
+    { 'ok' : string } |
+      { 'err' : string }
+  >,
   'deleteContactMessage' : ActorMethod<
     [string],
     { 'ok' : null } |
@@ -118,6 +131,7 @@ export interface _SERVICE {
     { 'ok' : string } |
       { 'err' : string }
   >,
+  'deleteNote' : ActorMethod<[string], { 'ok' : null } | { 'err' : string }>,
   'deleteUserAccessLogEntries' : ActorMethod<
     [Principal, Array<string>],
     { 'ok' : null } |
@@ -134,6 +148,17 @@ export interface _SERVICE {
     { 'ok' : Array<string> } |
       { 'err' : string }
   >,
+  'getDocumentChunk' : ActorMethod<
+    [string, bigint, bigint],
+    {
+        'ok' : {
+          'hasMore' : boolean,
+          'chunk' : Uint8Array,
+          'totalSize' : bigint,
+        }
+      } |
+      { 'err' : string }
+  >,
   'getDocumentData' : ActorMethod<
     [string],
     {
@@ -145,6 +170,16 @@ export interface _SERVICE {
   'getMyProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getMyRole' : ActorMethod<[], UserRole>,
   'getMyStorageUsed' : ActorMethod<[], bigint>,
+  'getNoteShares' : ActorMethod<
+    [string],
+    { 'ok' : Array<Principal> } |
+      { 'err' : string }
+  >,
+  'getNotesCount' : ActorMethod<
+    [[] | [string]],
+    { 'ok' : bigint } |
+      { 'err' : string }
+  >,
   'getUserAccessLog' : ActorMethod<
     [Principal],
     { 'ok' : Array<UserAccessLogEntry> } |
@@ -157,6 +192,11 @@ export interface _SERVICE {
   >,
   'listMyDocuments' : ActorMethod<[[] | [string]], Array<DocumentRecord>>,
   'listMyFolders' : ActorMethod<[[] | [string]], Array<FolderRecord>>,
+  'listNotes' : ActorMethod<
+    [bigint, bigint, [] | [string]],
+    { 'ok' : Array<NoteRecord> } |
+      { 'err' : string }
+  >,
   'listPublicDocuments' : ActorMethod<[], Array<DocumentRecord>>,
   'listUsers' : ActorMethod<
     [],
@@ -190,6 +230,11 @@ export interface _SERVICE {
     { 'ok' : null } |
       { 'err' : string }
   >,
+  'shareNote' : ActorMethod<
+    [string, Principal],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'startChunkedUpload' : ActorMethod<
     [string, string, string, boolean, [] | [string], bigint, bigint],
     { 'ok' : string } |
@@ -205,12 +250,22 @@ export interface _SERVICE {
     { 'ok' : null } |
       { 'err' : string }
   >,
+  'unshareNote' : ActorMethod<
+    [string, Principal],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
   'updateContactStatus' : ActorMethod<
     [string, ContactStatus],
     { 'ok' : null } |
       { 'err' : string }
   >,
   'updateMyProfile' : ActorMethod<
+    [string, string, string],
+    { 'ok' : null } |
+      { 'err' : string }
+  >,
+  'updateNote' : ActorMethod<
     [string, string, string],
     { 'ok' : null } |
       { 'err' : string }

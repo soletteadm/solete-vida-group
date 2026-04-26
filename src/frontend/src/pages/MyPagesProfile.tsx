@@ -174,7 +174,7 @@ export default function MyPagesProfile({
                 variant="ghost"
                 size="icon"
                 onClick={handleCopyPrincipal}
-                className="shrink-0 h-9 w-9"
+                className="shrink-0 min-h-[44px] h-11 w-11"
                 aria-label="Copy principal ID"
                 data-ocid="profile.button"
               >
@@ -218,10 +218,10 @@ export default function MyPagesProfile({
           ) : (
             <div className="space-y-4">
               {/* Name */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <Label
                   htmlFor="profile-name"
-                  className="font-sans text-sm font-medium"
+                  className="font-sans text-sm font-semibold leading-6"
                 >
                   {t.myPages.name}
                 </Label>
@@ -230,16 +230,16 @@ export default function MyPagesProfile({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={t.myPages.name}
-                  className="font-sans text-sm"
+                  className="font-sans text-base min-h-[48px] py-3 px-4"
                   data-ocid="profile.input"
                 />
               </div>
 
               {/* Email */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <Label
                   htmlFor="profile-email"
-                  className="font-sans text-sm font-medium"
+                  className="font-sans text-sm font-semibold leading-6"
                 >
                   {t.myPages.email}
                 </Label>
@@ -249,16 +249,16 @@ export default function MyPagesProfile({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={t.myPages.email}
-                  className="font-sans text-sm"
+                  className="font-sans text-base min-h-[48px] py-3 px-4"
                   data-ocid="profile.input"
                 />
               </div>
 
               {/* Phone */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <Label
                   htmlFor="profile-phone"
-                  className="font-sans text-sm font-medium"
+                  className="font-sans text-sm font-semibold leading-6"
                 >
                   {t.myPages.phone}
                 </Label>
@@ -268,17 +268,17 @@ export default function MyPagesProfile({
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder={t.myPages.phone}
-                  className="font-sans text-sm"
+                  className="font-sans text-base min-h-[48px] py-3 px-4"
                   data-ocid="profile.input"
                 />
               </div>
 
               {/* Save button — always visible for any authenticated user */}
-              <div className="pt-2">
+              <div className="pt-3">
                 <Button
                   onClick={handleSave}
                   disabled={saving || isFetching}
-                  className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full px-6"
+                  className="w-full md:w-auto bg-gold hover:bg-gold/90 text-black font-sans rounded-full px-8 min-h-[52px] md:min-h-[44px] text-base md:text-sm font-semibold"
                   data-ocid="profile.submit_button"
                 >
                   {saving ? (

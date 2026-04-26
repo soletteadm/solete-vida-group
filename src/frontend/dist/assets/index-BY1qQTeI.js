@@ -114,7 +114,7 @@ reactJsxRuntime_production.jsxs = jsxProd;
   jsxRuntime.exports = reactJsxRuntime_production;
 }
 var jsxRuntimeExports = jsxRuntime.exports;
-class ExternalBlob {
+let ExternalBlob$1 = class ExternalBlob {
   constructor(directURL, blob) {
     __publicField(this, "_blob");
     __publicField(this, "directURL");
@@ -149,7 +149,7 @@ class ExternalBlob {
     this.onProgress = onProgress;
     return this;
   }
-}
+};
 var ReplicaRejectCode;
 (function(ReplicaRejectCode2) {
   ReplicaRejectCode2[ReplicaRejectCode2["SysFatal"] = 1] = "SysFatal";
@@ -11230,13 +11230,13 @@ async function createActorWithConfig(createActor2, options) {
     const { hash } = await storageClient.putFile(await file.getBytes(), file.onProgress);
     return new TextEncoder().encode(MOTOKO_DEDUPLICATION_SENTINEL + hash);
   };
-  const downloadFile2 = async (bytes) => {
+  const downloadFile = async (bytes) => {
     const hashWithPrefix = new TextDecoder().decode(new Uint8Array(bytes));
     const hash = hashWithPrefix.substring(MOTOKO_DEDUPLICATION_SENTINEL.length);
     const url = await storageClient.getDirectURL(hash);
-    return ExternalBlob.fromURL(url);
+    return ExternalBlob$1.fromURL(url);
   };
-  return createActor2(config.backend_canister_id, uploadFile, downloadFile2, actorOptions);
+  return createActor2(config.backend_canister_id, uploadFile, downloadFile, actorOptions);
 }
 var Subscribable = class {
   constructor() {
@@ -14112,10 +14112,10 @@ react_production.version = "19.1.5";
   react.exports = react_production;
 }
 var reactExports = react.exports;
-const React2 = /* @__PURE__ */ getDefaultExportFromCjs(reactExports);
-const React$2 = /* @__PURE__ */ _mergeNamespaces({
+const React$2 = /* @__PURE__ */ getDefaultExportFromCjs(reactExports);
+const React$3 = /* @__PURE__ */ _mergeNamespaces({
   __proto__: null,
-  default: React2
+  default: React$2
 }, [reactExports]);
 var QueryClientContext = reactExports.createContext(
   void 0
@@ -27376,6 +27376,7 @@ const translations = {
       users: "Users",
       calendar: "Calendar",
       contacts: "Contacts",
+      notesTab: "Notes",
       principalId: "Principal ID",
       name: "Full Name",
       email: "Email Address",
@@ -27388,6 +27389,43 @@ const translations = {
       registeredAt: "Member Since",
       noProfile: "No profile found.",
       createProfile: "Create Profile"
+    },
+    notes: {
+      newNote: "New Note",
+      editNote: "Edit Note",
+      searchPlaceholder: "Search notes by title or content...",
+      search: "Search",
+      rubrik: "Title",
+      rubrikCol: "Title",
+      previewCol: "Preview",
+      dateCol: "Date",
+      sharesCol: "Shares",
+      actionsCol: "Actions",
+      content: "Content",
+      save: "Save",
+      abort: "Cancel",
+      delete: "Delete",
+      share: "Share",
+      shareButton: "Share",
+      shareAdded: "Note shared successfully.",
+      shareRemoved: "Share removed.",
+      shareWith: "Shared with",
+      addShare: "Share with principal ID",
+      removeShare: "Remove",
+      noShares: "Not shared with anyone yet.",
+      shareDialogTitle: "Share Note",
+      principalPlaceholder: "Enter principal ID…",
+      noNotes: "No notes yet. Create your first note!",
+      noResults: "No notes found matching your search.",
+      noteCreated: "Note created.",
+      noteSaved: "Note saved.",
+      noteDeleted: "Note deleted.",
+      confirmDelete: "Are you sure you want to delete this note?",
+      pageOf: "Page {page} of {total}",
+      prev: "Previous",
+      next: "Next",
+      close: "Close",
+      invalidPrincipal: "Invalid principal ID. Please check and try again."
     },
     admin: {
       title: "User Management",
@@ -27516,6 +27554,28 @@ const translations = {
       user: "User",
       guest: "Guest"
     },
+    adminAccessLog: {
+      accessLog: "Access Log",
+      viewAccessLog: "View Access Log",
+      lastLogin: "Last Login",
+      dateTime: "Date & Time",
+      metadata: "Device / Browser",
+      clearAll: "Clear All",
+      deleteSelected: "Delete Selected",
+      clearAllConfirm: "Are you sure you want to clear all access logs for this user?",
+      deleteConfirm: "Are you sure you want to delete the selected log entries?",
+      noLogs: "No access logs found.",
+      loadingLogs: "Loading access logs..."
+    },
+    sharePage: {
+      loading: "Loading document…",
+      notFound: "Document not found",
+      notFoundMsg: "This link is invalid or the document is no longer available.",
+      sharingIntro: "{name} is sharing this document with you",
+      open: "Download",
+      downloading: "Downloading…",
+      error: "Failed to load document. Please try again."
+    },
     documents: {
       tab: "Documents",
       uploadTitle: "Upload Document",
@@ -27529,8 +27589,8 @@ const translations = {
       actions: "Actions",
       download: "Download",
       delete: "Delete",
-      fileTypeError: "Only PDF and Word documents (.pdf, .docx) are allowed.",
-      fileSizeError: "File is too large. Maximum size is 10 MB.",
+      fileTypeError: "Only PDF, Word, images (.jpg, .png, .gif, .webp), audio (.mp3, .wav), and video (.mp4, .mov, .webm) files are allowed.",
+      fileSizeError: "File is too large. Maximum size is 100 MB.",
       uploadSuccess: "Document uploaded successfully.",
       uploadError: "Failed to upload document.",
       deleteSuccess: "Document deleted successfully.",
@@ -27544,7 +27604,38 @@ const translations = {
       guestUploadEnabled: "Guests can now upload documents",
       guestUploadDisabledMsg: "Guest uploads are now disabled",
       share: "Share",
-      copied: "Copied!"
+      copied: "Copied!",
+      preview: "Preview",
+      play: "Play",
+      close: "Close",
+      audioLoadError: "Could not play audio. The file may be too large or unsupported.",
+      newFolder: "New Folder",
+      folderName: "Folder name",
+      createFolder: "Create",
+      creating: "Creating…",
+      cancel: "Cancel",
+      openFolder: "Open",
+      deleteFolder: "Delete",
+      deleteFolderConfirm: "Delete folder and all its contents?",
+      folderCreated: "Folder created.",
+      folderDeleted: "Folder deleted.",
+      moveFile: "Move",
+      moveTitle: "Move file to folder",
+      moveFolder: "Move",
+      moveFolderTitle: "Move folder to another folder",
+      moveRoot: "Root (no folder)",
+      moveConfirm: "Move",
+      moveSuccess: "File moved successfully",
+      moveError: "Failed to move file",
+      moveFolderSuccess: "Folder moved successfully",
+      moveFolderError: "Failed to move folder",
+      back: "Back",
+      bulkMoveButton: "Move selected ({n})",
+      bulkMoveTitle: "Move {n} items to",
+      bulkMoveSuccess: "Moved {n} items",
+      bulkMoveError: "Failed to move some items",
+      uploadingPart: "Uploading part {current} of {total}…",
+      finalizingUpload: "Finalizing upload…"
     }
   },
   es: {
@@ -27646,6 +27737,7 @@ const translations = {
       users: "Usuarios",
       calendar: "Calendario",
       contacts: "Contactos",
+      notesTab: "Notas",
       principalId: "ID Principal",
       name: "Nombre Completo",
       email: "Correo Electrónico",
@@ -27658,6 +27750,43 @@ const translations = {
       registeredAt: "Miembro Desde",
       noProfile: "Perfil no encontrado.",
       createProfile: "Crear Perfil"
+    },
+    notes: {
+      newNote: "Nueva Nota",
+      editNote: "Editar Nota",
+      searchPlaceholder: "Buscar notas por título o contenido...",
+      search: "Buscar",
+      rubrik: "Título",
+      rubrikCol: "Título",
+      previewCol: "Vista previa",
+      dateCol: "Fecha",
+      sharesCol: "Compartidos",
+      actionsCol: "Acciones",
+      content: "Contenido",
+      save: "Guardar",
+      abort: "Cancelar",
+      delete: "Eliminar",
+      share: "Compartir",
+      shareButton: "Compartir",
+      shareAdded: "Nota compartida con éxito.",
+      shareRemoved: "Compartir eliminado.",
+      shareWith: "Compartido con",
+      addShare: "Compartir con ID de principal",
+      removeShare: "Eliminar",
+      noShares: "Aún no compartida con nadie.",
+      shareDialogTitle: "Compartir Nota",
+      principalPlaceholder: "Ingrese el ID de principal…",
+      noNotes: "Aún no hay notas. ¡Crea tu primera nota!",
+      noResults: "No se encontraron notas que coincidan con tu búsqueda.",
+      noteCreated: "Nota creada.",
+      noteSaved: "Nota guardada.",
+      noteDeleted: "Nota eliminada.",
+      confirmDelete: "¿Está seguro de que desea eliminar esta nota?",
+      pageOf: "Página {page} de {total}",
+      prev: "Anterior",
+      next: "Siguiente",
+      close: "Cerrar",
+      invalidPrincipal: "ID de principal no válido. Por favor, compruébelo e inténtelo de nuevo."
     },
     admin: {
       title: "Gestión de Usuarios",
@@ -27786,6 +27915,28 @@ const translations = {
       user: "Usuario",
       guest: "Invitado"
     },
+    adminAccessLog: {
+      accessLog: "Registro de Acceso",
+      viewAccessLog: "Ver Registro de Acceso",
+      lastLogin: "Último Acceso",
+      dateTime: "Fecha y Hora",
+      metadata: "Dispositivo / Navegador",
+      clearAll: "Borrar Todo",
+      deleteSelected: "Eliminar Seleccionados",
+      clearAllConfirm: "¿Estás seguro de que quieres borrar todos los registros de acceso de este usuario?",
+      deleteConfirm: "¿Estás seguro de que quieres eliminar las entradas seleccionadas?",
+      noLogs: "No se encontraron registros de acceso.",
+      loadingLogs: "Cargando registros..."
+    },
+    sharePage: {
+      loading: "Cargando documento…",
+      notFound: "Documento no encontrado",
+      notFoundMsg: "Este enlace no es válido o el documento ya no está disponible.",
+      sharingIntro: "{name} está compartiendo este documento contigo",
+      open: "Descargar",
+      downloading: "Descargando…",
+      error: "Error al cargar el documento. Por favor, inténtelo de nuevo."
+    },
     documents: {
       tab: "Documentos",
       uploadTitle: "Subir Documento",
@@ -27799,8 +27950,8 @@ const translations = {
       actions: "Acciones",
       download: "Descargar",
       delete: "Eliminar",
-      fileTypeError: "Solo se permiten PDF y documentos Word (.pdf, .docx).",
-      fileSizeError: "El archivo es demasiado grande. El tamaño máximo es 10 MB.",
+      fileTypeError: "Solo se permiten archivos PDF, Word, imágenes (.jpg, .png, .gif, .webp), audio (.mp3, .wav) y video (.mp4, .mov, .webm).",
+      fileSizeError: "El archivo es demasiado grande. El tamaño máximo es 100 MB.",
       uploadSuccess: "Documento subido correctamente.",
       uploadError: "Error al subir el documento.",
       deleteSuccess: "Documento eliminado correctamente.",
@@ -27814,7 +27965,38 @@ const translations = {
       guestUploadEnabled: "Los invitados ya pueden subir documentos",
       guestUploadDisabledMsg: "Las subidas para invitados están desactivadas",
       share: "Compartir",
-      copied: "¡Copiado!"
+      copied: "¡Copiado!",
+      preview: "Vista previa",
+      play: "Reproducir",
+      close: "Cerrar",
+      audioLoadError: "No se pudo reproducir el audio. El archivo puede ser demasiado grande o no compatible.",
+      newFolder: "Nueva carpeta",
+      folderName: "Nombre de carpeta",
+      createFolder: "Crear",
+      creating: "Creando…",
+      cancel: "Cancelar",
+      openFolder: "Abrir",
+      deleteFolder: "Eliminar",
+      deleteFolderConfirm: "¿Eliminar carpeta y todo su contenido?",
+      folderCreated: "Carpeta creada.",
+      folderDeleted: "Carpeta eliminada.",
+      moveFile: "Mover",
+      moveTitle: "Mover archivo a carpeta",
+      moveFolder: "Mover",
+      moveFolderTitle: "Mover carpeta a otra carpeta",
+      moveRoot: "Raíz (sin carpeta)",
+      moveConfirm: "Mover",
+      moveSuccess: "Archivo movido con éxito",
+      moveError: "Error al mover el archivo",
+      moveFolderSuccess: "Carpeta movida con éxito",
+      moveFolderError: "Error al mover la carpeta",
+      back: "Volver",
+      bulkMoveButton: "Mover seleccionados ({n})",
+      bulkMoveTitle: "Mover {n} elementos a",
+      bulkMoveSuccess: "{n} elementos movidos",
+      bulkMoveError: "Error al mover algunos elementos",
+      uploadingPart: "Subiendo parte {current} de {total}…",
+      finalizingUpload: "Finalizando subida…"
     }
   },
   sv: {
@@ -27916,6 +28098,7 @@ const translations = {
       users: "Användare",
       calendar: "Kalender",
       contacts: "Kontakter",
+      notesTab: "Anteckningar",
       principalId: "Huvud-ID",
       name: "Fullständigt Namn",
       email: "E-postadress",
@@ -27928,6 +28111,43 @@ const translations = {
       registeredAt: "Medlem Sedan",
       noProfile: "Ingen profil hittades.",
       createProfile: "Skapa Profil"
+    },
+    notes: {
+      newNote: "Ny Anteckning",
+      editNote: "Redigera Anteckning",
+      searchPlaceholder: "Sök anteckningar efter rubrik eller innehåll...",
+      search: "Sök",
+      rubrik: "Rubrik",
+      rubrikCol: "Rubrik",
+      previewCol: "Förhandsvisning",
+      dateCol: "Datum",
+      sharesCol: "Delningar",
+      actionsCol: "Åtgärder",
+      content: "Innehåll",
+      save: "Spara",
+      abort: "Avbryt",
+      delete: "Radera",
+      share: "Dela",
+      shareButton: "Dela",
+      shareAdded: "Anteckning delad.",
+      shareRemoved: "Delning borttagen.",
+      shareWith: "Delad med",
+      addShare: "Dela med huvud-ID",
+      removeShare: "Ta bort",
+      noShares: "Inte delad med någon ännu.",
+      shareDialogTitle: "Dela Anteckning",
+      principalPlaceholder: "Ange huvud-ID…",
+      noNotes: "Inga anteckningar ännu. Skapa din första anteckning!",
+      noResults: "Inga anteckningar hittades som matchar din sökning.",
+      noteCreated: "Anteckning skapad.",
+      noteSaved: "Anteckning sparad.",
+      noteDeleted: "Anteckning raderad.",
+      confirmDelete: "Är du säker på att du vill radera denna anteckning?",
+      pageOf: "Sida {page} av {total}",
+      prev: "Föregående",
+      next: "Nästa",
+      close: "Stäng",
+      invalidPrincipal: "Ogiltigt principal-ID. Kontrollera och försök igen."
     },
     admin: {
       title: "Användarhantering",
@@ -28056,6 +28276,28 @@ const translations = {
       user: "Användare",
       guest: "Gäst"
     },
+    adminAccessLog: {
+      accessLog: "Åtkomstlogg",
+      viewAccessLog: "Visa åtkomstlogg",
+      lastLogin: "Senaste inloggning",
+      dateTime: "Datum och tid",
+      metadata: "Enhet / Webbläsare",
+      clearAll: "Rensa allt",
+      deleteSelected: "Ta bort valda",
+      clearAllConfirm: "Är du säker på att du vill rensa alla åtkomstloggar för denna användare?",
+      deleteConfirm: "Är du säker på att du vill ta bort de valda loggposterna?",
+      noLogs: "Inga åtkomstloggar hittades.",
+      loadingLogs: "Läser in loggar..."
+    },
+    sharePage: {
+      loading: "Laddar dokument…",
+      notFound: "Dokumentet hittades inte",
+      notFoundMsg: "Den här länken är ogiltig eller dokumentet är inte längre tillgängligt.",
+      sharingIntro: "{name} delar det här dokumentet med dig",
+      open: "Ladda ner",
+      downloading: "Laddar ner…",
+      error: "Kunde inte ladda dokumentet. Försök igen."
+    },
     documents: {
       tab: "Dokument",
       uploadTitle: "Ladda Upp Dokument",
@@ -28069,8 +28311,8 @@ const translations = {
       actions: "Åtgärder",
       download: "Ladda Ner",
       delete: "Radera",
-      fileTypeError: "Endast PDF och Word-dokument (.pdf, .docx) är tillåtna.",
-      fileSizeError: "Filen är för stor. Maximal storlek är 10 MB.",
+      fileTypeError: "Endast PDF-, Word-, bild- (.jpg, .png, .gif, .webp), ljud- (.mp3, .wav) och videofiler (.mp4, .mov, .webm) är tillåtna.",
+      fileSizeError: "Filen är för stor. Maximal storlek är 100 MB.",
       uploadSuccess: "Dokumentet laddades upp.",
       uploadError: "Kunde inte ladda upp dokumentet.",
       deleteSuccess: "Dokumentet raderades.",
@@ -28084,14 +28326,45 @@ const translations = {
       guestUploadEnabled: "Gäster kan nu ladda upp dokument",
       guestUploadDisabledMsg: "Uppladdning för gäster är nu inaktiverat",
       share: "Dela",
-      copied: "Kopierat!"
+      copied: "Kopierat!",
+      preview: "Förhandsvisning",
+      play: "Spela",
+      close: "Stäng",
+      audioLoadError: "Det gick inte att spela upp ljudet. Filen kan vara för stor eller inte stöds.",
+      newFolder: "Ny mapp",
+      folderName: "Mappnamn",
+      createFolder: "Skapa",
+      creating: "Skapar…",
+      cancel: "Avbryt",
+      openFolder: "Öppna",
+      deleteFolder: "Ta bort",
+      deleteFolderConfirm: "Ta bort mappen och allt dess innehåll?",
+      folderCreated: "Mapp skapad.",
+      folderDeleted: "Mapp borttagen.",
+      moveFile: "Flytta",
+      moveTitle: "Flytta fil till mapp",
+      moveFolder: "Flytta",
+      moveFolderTitle: "Flytta mapp till annan mapp",
+      moveRoot: "Rot (ingen mapp)",
+      moveConfirm: "Flytta",
+      moveSuccess: "Filen har flyttats",
+      moveError: "Det gick inte att flytta filen",
+      moveFolderSuccess: "Mappen har flyttats",
+      moveFolderError: "Det gick inte att flytta mappen",
+      back: "Tillbaka",
+      bulkMoveButton: "Flytta markerade ({n})",
+      bulkMoveTitle: "Flytta {n} objekt till",
+      bulkMoveSuccess: "{n} objekt har flyttats",
+      bulkMoveError: "Det gick inte att flytta alla objekt",
+      uploadingPart: "Laddar upp del {current} av {total}…",
+      finalizingUpload: "Slutför uppladdning…"
     }
   }
 };
 const LanguageContext = reactExports.createContext(
   void 0
 );
-const STORAGE_KEY = "solete_language";
+const STORAGE_KEY$1 = "solete_language";
 const SUPPORTED = ["en", "es", "sv"];
 function detectBrowserLanguage() {
   const browserLangs = navigator.languages ?? [navigator.language];
@@ -28105,14 +28378,14 @@ function detectBrowserLanguage() {
 }
 function LanguageProvider({ children }) {
   const [lang, setLangState] = reactExports.useState(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY$1);
     if (stored && SUPPORTED.includes(stored)) {
       return stored;
     }
     return detectBrowserLanguage();
   });
   const setLang = reactExports.useCallback((newLang) => {
-    localStorage.setItem(STORAGE_KEY, newLang);
+    localStorage.setItem(STORAGE_KEY$1, newLang);
     setLangState(newLang);
   }, []);
   const value = {
@@ -28234,18 +28507,46 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$F = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m4.9 4.9 14.2 14.2", key: "1m5liu" }]
+const __iconNode$U = [
+  ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
+  ["path", { d: "M19 12H5", key: "x3x0zl" }]
 ];
-const Ban = createLucideIcon("ban", __iconNode$F);
+const ArrowLeft = createLucideIcon("arrow-left", __iconNode$U);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$E = [
+const __iconNode$T = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m4.9 4.9 14.2 14.2", key: "1m5liu" }]
+];
+const Ban = createLucideIcon("ban", __iconNode$T);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$S = [
+  ["path", { d: "M12 7v14", key: "1akyts" }],
+  [
+    "path",
+    {
+      d: "M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z",
+      key: "ruj8y"
+    }
+  ]
+];
+const BookOpen = createLucideIcon("book-open", __iconNode$S);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$R = [
   ["path", { d: "M8 2v4", key: "1cmpym" }],
   ["path", { d: "M16 2v4", key: "4m81vk" }],
   ["rect", { width: "18", height: "18", x: "3", y: "4", rx: "2", key: "1hopcy" }],
@@ -28257,49 +28558,65 @@ const __iconNode$E = [
   ["path", { d: "M12 18h.01", key: "mhygvu" }],
   ["path", { d: "M16 18h.01", key: "kzsmim" }]
 ];
-const CalendarDays = createLucideIcon("calendar-days", __iconNode$E);
+const CalendarDays = createLucideIcon("calendar-days", __iconNode$R);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$D = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
-const Check = createLucideIcon("check", __iconNode$D);
+const __iconNode$Q = [["path", { d: "M20 6 9 17l-5-5", key: "1gmf2c" }]];
+const Check = createLucideIcon("check", __iconNode$Q);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$C = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
-const ChevronDown = createLucideIcon("chevron-down", __iconNode$C);
+const __iconNode$P = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+const ChevronDown = createLucideIcon("chevron-down", __iconNode$P);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$B = [["path", { d: "m18 15-6-6-6 6", key: "153udz" }]];
-const ChevronUp = createLucideIcon("chevron-up", __iconNode$B);
+const __iconNode$O = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
+const ChevronLeft = createLucideIcon("chevron-left", __iconNode$O);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$A = [
+const __iconNode$N = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+const ChevronRight = createLucideIcon("chevron-right", __iconNode$N);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$M = [["path", { d: "m18 15-6-6-6 6", key: "153udz" }]];
+const ChevronUp = createLucideIcon("chevron-up", __iconNode$M);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$L = [
   ["path", { d: "M21.801 10A10 10 0 1 1 17 3.335", key: "yps3ct" }],
   ["path", { d: "m9 11 3 3L22 4", key: "1pflzl" }]
 ];
-const CircleCheckBig = createLucideIcon("circle-check-big", __iconNode$A);
+const CircleCheckBig = createLucideIcon("circle-check-big", __iconNode$L);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$z = [
+const __iconNode$K = [
   ["rect", { width: "8", height: "4", x: "8", y: "2", rx: "1", ry: "1", key: "tgr4d6" }],
   [
     "path",
@@ -28307,27 +28624,31 @@ const __iconNode$z = [
       d: "M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2",
       key: "116196"
     }
-  ]
+  ],
+  ["path", { d: "M12 11h4", key: "1jrz19" }],
+  ["path", { d: "M12 16h4", key: "n85exb" }],
+  ["path", { d: "M8 11h.01", key: "1dfujw" }],
+  ["path", { d: "M8 16h.01", key: "18s6g9" }]
 ];
-const Clipboard = createLucideIcon("clipboard", __iconNode$z);
+const ClipboardList = createLucideIcon("clipboard-list", __iconNode$K);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$y = [
+const __iconNode$J = [
   ["rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2", key: "17jyea" }],
   ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
 ];
-const Copy = createLucideIcon("copy", __iconNode$y);
+const Copy = createLucideIcon("copy", __iconNode$J);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$x = [
+const __iconNode$I = [
   ["path", { d: "M12 20v2", key: "1lh1kg" }],
   ["path", { d: "M12 2v2", key: "tus03m" }],
   ["path", { d: "M17 20v2", key: "1rnc9c" }],
@@ -28343,38 +28664,38 @@ const __iconNode$x = [
   ["rect", { x: "4", y: "4", width: "16", height: "16", rx: "2", key: "1vbyd7" }],
   ["rect", { x: "8", y: "8", width: "8", height: "8", rx: "1", key: "z9xiuo" }]
 ];
-const Cpu = createLucideIcon("cpu", __iconNode$x);
+const Cpu = createLucideIcon("cpu", __iconNode$I);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$w = [
+const __iconNode$H = [
   ["path", { d: "M12 15V3", key: "m9g1x1" }],
   ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
   ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
 ];
-const Download = createLucideIcon("download", __iconNode$w);
+const Download = createLucideIcon("download", __iconNode$H);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$v = [
+const __iconNode$G = [
   ["circle", { cx: "12", cy: "12", r: "1", key: "41hilf" }],
   ["circle", { cx: "19", cy: "12", r: "1", key: "1wjl8i" }],
   ["circle", { cx: "5", cy: "12", r: "1", key: "1pcz8c" }]
 ];
-const Ellipsis = createLucideIcon("ellipsis", __iconNode$v);
+const Ellipsis = createLucideIcon("ellipsis", __iconNode$G);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$u = [
+const __iconNode$F = [
   [
     "path",
     {
@@ -28384,40 +28705,92 @@ const __iconNode$u = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-const Eye = createLucideIcon("eye", __iconNode$u);
+const Eye = createLucideIcon("eye", __iconNode$F);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$t = [
+const __iconNode$E = [
   ["path", { d: "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z", key: "1rqfz7" }],
   ["path", { d: "M14 2v4a2 2 0 0 0 2 2h4", key: "tnqrlb" }],
   ["path", { d: "M10 9H8", key: "b1mrlr" }],
   ["path", { d: "M16 13H8", key: "t4e002" }],
   ["path", { d: "M16 17H8", key: "z1uh3a" }]
 ];
-const FileText = createLucideIcon("file-text", __iconNode$t);
+const FileText = createLucideIcon("file-text", __iconNode$E);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$s = [
+const __iconNode$D = [
+  [
+    "path",
+    {
+      d: "M2 9V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1",
+      key: "fm4g5t"
+    }
+  ],
+  ["path", { d: "M2 13h10", key: "pgb2dq" }],
+  ["path", { d: "m9 16 3-3-3-3", key: "6m91ic" }]
+];
+const FolderInput = createLucideIcon("folder-input", __iconNode$D);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$C = [
+  [
+    "path",
+    {
+      d: "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2",
+      key: "usdka0"
+    }
+  ]
+];
+const FolderOpen = createLucideIcon("folder-open", __iconNode$C);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$B = [
+  ["path", { d: "M12 10v6", key: "1bos4e" }],
+  ["path", { d: "M9 13h6", key: "1uhe8q" }],
+  [
+    "path",
+    {
+      d: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z",
+      key: "1kt360"
+    }
+  ]
+];
+const FolderPlus = createLucideIcon("folder-plus", __iconNode$B);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$A = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
   ["path", { d: "M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20", key: "13o1zl" }],
   ["path", { d: "M2 12h20", key: "9i4pu4" }]
 ];
-const Globe = createLucideIcon("globe", __iconNode$s);
+const Globe = createLucideIcon("globe", __iconNode$A);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$r = [
+const __iconNode$z = [
   [
     "path",
     {
@@ -28440,15 +28813,111 @@ const __iconNode$r = [
     }
   ]
 ];
-const Layers = createLucideIcon("layers", __iconNode$r);
+const Layers = createLucideIcon("layers", __iconNode$z);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$q = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
-const LoaderCircle = createLucideIcon("loader-circle", __iconNode$q);
+const __iconNode$y = [
+  ["path", { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71", key: "1cjeqo" }],
+  ["path", { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71", key: "19qd67" }]
+];
+const Link = createLucideIcon("link", __iconNode$y);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$x = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
+const LoaderCircle = createLucideIcon("loader-circle", __iconNode$x);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$w = [
+  ["rect", { width: "18", height: "11", x: "3", y: "11", rx: "2", ry: "2", key: "1w4ew1" }],
+  ["path", { d: "M7 11V7a5 5 0 0 1 10 0v4", key: "fwvmzm" }]
+];
+const Lock = createLucideIcon("lock", __iconNode$w);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$v = [
+  ["path", { d: "m10 17 5-5-5-5", key: "1bsop3" }],
+  ["path", { d: "M15 12H3", key: "6jk70r" }],
+  ["path", { d: "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4", key: "u53s6r" }]
+];
+const LogIn = createLucideIcon("log-in", __iconNode$v);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$u = [
+  ["path", { d: "m16 17 5-5-5-5", key: "1bji2h" }],
+  ["path", { d: "M21 12H9", key: "dn1m92" }],
+  ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
+];
+const LogOut = createLucideIcon("log-out", __iconNode$u);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$t = [
+  ["path", { d: "m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7", key: "132q7q" }],
+  ["rect", { x: "2", y: "4", width: "20", height: "16", rx: "2", key: "izxlao" }]
+];
+const Mail = createLucideIcon("mail", __iconNode$t);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$s = [
+  [
+    "path",
+    {
+      d: "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0",
+      key: "1r0f0z"
+    }
+  ],
+  ["circle", { cx: "12", cy: "10", r: "3", key: "ilqhr7" }]
+];
+const MapPin = createLucideIcon("map-pin", __iconNode$s);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$r = [
+  ["path", { d: "M4 12h16", key: "1lakjw" }],
+  ["path", { d: "M4 18h16", key: "19g7jn" }],
+  ["path", { d: "M4 6h16", key: "1o0s65" }]
+];
+const Menu$1 = createLucideIcon("menu", __iconNode$r);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$q = [
+  ["path", { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z", key: "1lielz" }]
+];
+const MessageSquare = createLucideIcon("message-square", __iconNode$q);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28456,11 +28925,11 @@ const LoaderCircle = createLucideIcon("loader-circle", __iconNode$q);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$p = [
-  ["path", { d: "m10 17 5-5-5-5", key: "1bsop3" }],
-  ["path", { d: "M15 12H3", key: "6jk70r" }],
-  ["path", { d: "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4", key: "u53s6r" }]
+  ["path", { d: "M9 18V5l12-2v13", key: "1jmyc2" }],
+  ["circle", { cx: "6", cy: "18", r: "3", key: "fqmcym" }],
+  ["circle", { cx: "18", cy: "16", r: "3", key: "1hluhg" }]
 ];
-const LogIn = createLucideIcon("log-in", __iconNode$p);
+const Music = createLucideIcon("music", __iconNode$p);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28468,11 +28937,13 @@ const LogIn = createLucideIcon("log-in", __iconNode$p);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$o = [
-  ["path", { d: "m16 17 5-5-5-5", key: "1bji2h" }],
-  ["path", { d: "M21 12H9", key: "dn1m92" }],
-  ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
+  ["rect", { x: "16", y: "16", width: "6", height: "6", rx: "1", key: "4q2zg0" }],
+  ["rect", { x: "2", y: "16", width: "6", height: "6", rx: "1", key: "8cvhb9" }],
+  ["rect", { x: "9", y: "2", width: "6", height: "6", rx: "1", key: "1egb70" }],
+  ["path", { d: "M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3", key: "1jsf9p" }],
+  ["path", { d: "M12 12V8", key: "2874zd" }]
 ];
-const LogOut = createLucideIcon("log-out", __iconNode$o);
+const Network = createLucideIcon("network", __iconNode$o);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28480,10 +28951,20 @@ const LogOut = createLucideIcon("log-out", __iconNode$o);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$n = [
-  ["path", { d: "m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7", key: "132q7q" }],
-  ["rect", { x: "2", y: "4", width: "20", height: "16", rx: "2", key: "izxlao" }]
+  ["path", { d: "M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4", key: "re6nr2" }],
+  ["path", { d: "M2 6h4", key: "aawbzj" }],
+  ["path", { d: "M2 10h4", key: "l0bgd4" }],
+  ["path", { d: "M2 14h4", key: "1gsvsf" }],
+  ["path", { d: "M2 18h4", key: "1bu2t1" }],
+  [
+    "path",
+    {
+      d: "M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z",
+      key: "pqwjuv"
+    }
+  ]
 ];
-const Mail = createLucideIcon("mail", __iconNode$n);
+const NotebookPen = createLucideIcon("notebook-pen", __iconNode$n);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28494,13 +28975,13 @@ const __iconNode$m = [
   [
     "path",
     {
-      d: "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0",
-      key: "1r0f0z"
+      d: "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
+      key: "1a8usu"
     }
   ],
-  ["circle", { cx: "12", cy: "10", r: "3", key: "ilqhr7" }]
+  ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-const MapPin = createLucideIcon("map-pin", __iconNode$m);
+const Pencil = createLucideIcon("pencil", __iconNode$m);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28508,11 +28989,15 @@ const MapPin = createLucideIcon("map-pin", __iconNode$m);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$l = [
-  ["path", { d: "M4 12h16", key: "1lakjw" }],
-  ["path", { d: "M4 18h16", key: "19g7jn" }],
-  ["path", { d: "M4 6h16", key: "1o0s65" }]
+  [
+    "path",
+    {
+      d: "M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384",
+      key: "9njp5v"
+    }
+  ]
 ];
-const Menu$1 = createLucideIcon("menu", __iconNode$l);
+const Phone = createLucideIcon("phone", __iconNode$l);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28520,9 +29005,10 @@ const Menu$1 = createLucideIcon("menu", __iconNode$l);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$k = [
-  ["path", { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z", key: "1lielz" }]
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "M12 5v14", key: "s699le" }]
 ];
-const MessageSquare = createLucideIcon("message-square", __iconNode$k);
+const Plus = createLucideIcon("plus", __iconNode$k);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28530,13 +29016,12 @@ const MessageSquare = createLucideIcon("message-square", __iconNode$k);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$j = [
-  ["rect", { x: "16", y: "16", width: "6", height: "6", rx: "1", key: "4q2zg0" }],
-  ["rect", { x: "2", y: "16", width: "6", height: "6", rx: "1", key: "8cvhb9" }],
-  ["rect", { x: "9", y: "2", width: "6", height: "6", rx: "1", key: "1egb70" }],
-  ["path", { d: "M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3", key: "1jsf9p" }],
-  ["path", { d: "M12 12V8", key: "2874zd" }]
+  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
+  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
+  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
+  ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-const Network = createLucideIcon("network", __iconNode$j);
+const RefreshCw = createLucideIcon("refresh-cw", __iconNode$j);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28544,16 +29029,10 @@ const Network = createLucideIcon("network", __iconNode$j);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$i = [
-  [
-    "path",
-    {
-      d: "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
-      key: "1a8usu"
-    }
-  ],
-  ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
+  ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
+  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
 ];
-const Pencil = createLucideIcon("pencil", __iconNode$i);
+const Search = createLucideIcon("search", __iconNode$i);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28564,12 +29043,13 @@ const __iconNode$h = [
   [
     "path",
     {
-      d: "M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384",
-      key: "9njp5v"
+      d: "M3.714 3.048a.498.498 0 0 0-.683.627l2.843 7.627a2 2 0 0 1 0 1.396l-2.842 7.627a.498.498 0 0 0 .682.627l18-8.5a.5.5 0 0 0 0-.904z",
+      key: "117uat"
     }
-  ]
+  ],
+  ["path", { d: "M6 12h16", key: "s4cdu5" }]
 ];
-const Phone = createLucideIcon("phone", __iconNode$h);
+const SendHorizontal = createLucideIcon("send-horizontal", __iconNode$h);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28577,12 +29057,12 @@ const Phone = createLucideIcon("phone", __iconNode$h);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$g = [
-  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
-  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
-  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
-  ["path", { d: "M8 16H3v5", key: "1cv678" }]
+  ["path", { d: "M20 7h-9", key: "3s1dr2" }],
+  ["path", { d: "M14 17H5", key: "gfn3mx" }],
+  ["circle", { cx: "17", cy: "17", r: "3", key: "18b49y" }],
+  ["circle", { cx: "7", cy: "7", r: "3", key: "dfmy0x" }]
 ];
-const RefreshCw = createLucideIcon("refresh-cw", __iconNode$g);
+const Settings2 = createLucideIcon("settings-2", __iconNode$g);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28590,10 +29070,13 @@ const RefreshCw = createLucideIcon("refresh-cw", __iconNode$g);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$f = [
-  ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
-  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
+  ["circle", { cx: "18", cy: "5", r: "3", key: "gq8acd" }],
+  ["circle", { cx: "6", cy: "12", r: "3", key: "w7nqdw" }],
+  ["circle", { cx: "18", cy: "19", r: "3", key: "1xt0gg" }],
+  ["line", { x1: "8.59", x2: "15.42", y1: "13.51", y2: "17.49", key: "47mynk" }],
+  ["line", { x1: "15.41", x2: "8.59", y1: "6.51", y2: "10.49", key: "1n3mei" }]
 ];
-const Search = createLucideIcon("search", __iconNode$f);
+const Share2 = createLucideIcon("share-2", __iconNode$f);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28604,13 +29087,13 @@ const __iconNode$e = [
   [
     "path",
     {
-      d: "M3.714 3.048a.498.498 0 0 0-.683.627l2.843 7.627a2 2 0 0 1 0 1.396l-2.842 7.627a.498.498 0 0 0 .682.627l18-8.5a.5.5 0 0 0 0-.904z",
-      key: "117uat"
+      d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
+      key: "oel41y"
     }
   ],
-  ["path", { d: "M6 12h16", key: "s4cdu5" }]
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const SendHorizontal = createLucideIcon("send-horizontal", __iconNode$e);
+const ShieldCheck = createLucideIcon("shield-check", __iconNode$e);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28618,12 +29101,15 @@ const SendHorizontal = createLucideIcon("send-horizontal", __iconNode$e);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$d = [
-  ["path", { d: "M20 7h-9", key: "3s1dr2" }],
-  ["path", { d: "M14 17H5", key: "gfn3mx" }],
-  ["circle", { cx: "17", cy: "17", r: "3", key: "18b49y" }],
-  ["circle", { cx: "7", cy: "7", r: "3", key: "dfmy0x" }]
+  [
+    "path",
+    {
+      d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
+      key: "oel41y"
+    }
+  ]
 ];
-const Settings2 = createLucideIcon("settings-2", __iconNode$d);
+const Shield = createLucideIcon("shield", __iconNode$d);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28631,16 +29117,10 @@ const Settings2 = createLucideIcon("settings-2", __iconNode$d);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$c = [
-  [
-    "path",
-    {
-      d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
-      key: "oel41y"
-    }
-  ],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+  ["path", { d: "M21 10.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12.5", key: "1uzm8b" }],
+  ["path", { d: "m9 11 3 3L22 4", key: "1pflzl" }]
 ];
-const ShieldCheck = createLucideIcon("shield-check", __iconNode$c);
+const SquareCheckBig = createLucideIcon("square-check-big", __iconNode$c);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28651,12 +29131,12 @@ const __iconNode$b = [
   [
     "path",
     {
-      d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
-      key: "oel41y"
+      d: "M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z",
+      key: "r04s7s"
     }
   ]
 ];
-const Shield = createLucideIcon("shield", __iconNode$b);
+const Star = createLucideIcon("star", __iconNode$b);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28664,22 +29144,6 @@ const Shield = createLucideIcon("shield", __iconNode$b);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$a = [
-  [
-    "path",
-    {
-      d: "M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z",
-      key: "r04s7s"
-    }
-  ]
-];
-const Star = createLucideIcon("star", __iconNode$a);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$9 = [
   ["circle", { cx: "12", cy: "12", r: "4", key: "4exip2" }],
   ["path", { d: "M12 2v2", key: "tus03m" }],
   ["path", { d: "M12 20v2", key: "1lh1kg" }],
@@ -28690,7 +29154,18 @@ const __iconNode$9 = [
   ["path", { d: "m6.34 17.66-1.41 1.41", key: "1m8zz5" }],
   ["path", { d: "m19.07 4.93-1.41 1.41", key: "1shlcs" }]
 ];
-const Sun = createLucideIcon("sun", __iconNode$9);
+const Sun = createLucideIcon("sun", __iconNode$a);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$9 = [
+  ["circle", { cx: "9", cy: "12", r: "3", key: "u3jwor" }],
+  ["rect", { width: "20", height: "14", x: "2", y: "5", rx: "7", key: "g7kal2" }]
+];
+const ToggleLeft = createLucideIcon("toggle-left", __iconNode$9);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28698,10 +29173,10 @@ const Sun = createLucideIcon("sun", __iconNode$9);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$8 = [
-  ["circle", { cx: "9", cy: "12", r: "3", key: "u3jwor" }],
+  ["circle", { cx: "15", cy: "12", r: "3", key: "1afu0r" }],
   ["rect", { width: "20", height: "14", x: "2", y: "5", rx: "7", key: "g7kal2" }]
 ];
-const ToggleLeft = createLucideIcon("toggle-left", __iconNode$8);
+const ToggleRight = createLucideIcon("toggle-right", __iconNode$8);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28709,10 +29184,13 @@ const ToggleLeft = createLucideIcon("toggle-left", __iconNode$8);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$7 = [
-  ["circle", { cx: "15", cy: "12", r: "3", key: "1afu0r" }],
-  ["rect", { width: "20", height: "14", x: "2", y: "5", rx: "7", key: "g7kal2" }]
+  ["path", { d: "M3 6h18", key: "d0wm0j" }],
+  ["path", { d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", key: "4alrt4" }],
+  ["path", { d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2", key: "v07s0e" }],
+  ["line", { x1: "10", x2: "10", y1: "11", y2: "17", key: "1uufr5" }],
+  ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
 ];
-const ToggleRight = createLucideIcon("toggle-right", __iconNode$7);
+const Trash2 = createLucideIcon("trash-2", __iconNode$7);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28720,20 +29198,6 @@ const ToggleRight = createLucideIcon("toggle-right", __iconNode$7);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$6 = [
-  ["path", { d: "M3 6h18", key: "d0wm0j" }],
-  ["path", { d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", key: "4alrt4" }],
-  ["path", { d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2", key: "v07s0e" }],
-  ["line", { x1: "10", x2: "10", y1: "11", y2: "17", key: "1uufr5" }],
-  ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
-];
-const Trash2 = createLucideIcon("trash-2", __iconNode$6);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$5 = [
   [
     "path",
     {
@@ -28744,7 +29208,19 @@ const __iconNode$5 = [
   ["path", { d: "M12 9v4", key: "juzpu7" }],
   ["path", { d: "M12 17h.01", key: "p32p05" }]
 ];
-const TriangleAlert = createLucideIcon("triangle-alert", __iconNode$5);
+const TriangleAlert = createLucideIcon("triangle-alert", __iconNode$6);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$5 = [
+  ["path", { d: "M12 3v12", key: "1x0j5s" }],
+  ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
+];
+const Upload = createLucideIcon("upload", __iconNode$5);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -28752,11 +29228,11 @@ const TriangleAlert = createLucideIcon("triangle-alert", __iconNode$5);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$4 = [
-  ["path", { d: "M12 3v12", key: "1x0j5s" }],
-  ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
-  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
+  ["path", { d: "m16 11 2 2 4-4", key: "9rsbq5" }],
+  ["path", { d: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2", key: "1yyitq" }],
+  ["circle", { cx: "9", cy: "7", r: "4", key: "nufk8" }]
 ];
-const Upload = createLucideIcon("upload", __iconNode$4);
+const UserCheck = createLucideIcon("user-check", __iconNode$4);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -29172,7 +29648,7 @@ function useComposedRefs$1(...refs) {
   return reactExports.useCallback(composeRefs$1(...refs), refs);
 }
 var REACT_LAZY_TYPE = Symbol.for("react.lazy");
-var use = React$2[" use ".trim().toString()];
+var use = React$3[" use ".trim().toString()];
 function isPromiseLike(value) {
   return typeof value === "object" && value !== null && "then" in value;
 }
@@ -31943,7 +32419,7 @@ function composeContextScopes(...scopes) {
 }
 var useLayoutEffect2 = (globalThis == null ? void 0 : globalThis.document) ? reactExports.useLayoutEffect : () => {
 };
-var useReactId = React$2[" useId ".trim().toString()] || (() => void 0);
+var useReactId = React$3[" useId ".trim().toString()] || (() => void 0);
 var count$1 = 0;
 function useId(deterministicId) {
   const [id2, setId] = reactExports.useState(useReactId());
@@ -31952,7 +32428,7 @@ function useId(deterministicId) {
   }, [deterministicId]);
   return deterministicId || (id2 ? `radix-${id2}` : "");
 }
-var useInsertionEffect = React$2[" useInsertionEffect ".trim().toString()] || useLayoutEffect2;
+var useInsertionEffect = React$3[" useInsertionEffect ".trim().toString()] || useLayoutEffect2;
 function useControllableState({
   prop,
   defaultProp,
@@ -33928,7 +34404,7 @@ function Navbar({
             {
               type: "button",
               onClick: () => handleNavClick(link.section),
-              className: "px-4 py-2 text-sm font-sans font-medium text-foreground hover:text-gold transition-colors rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
+              className: "px-4 py-2 text-base font-sans font-medium text-foreground hover:text-gold transition-colors rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
               "data-ocid": "nav.link",
               children: link.label
             }
@@ -33938,7 +34414,7 @@ function Navbar({
             {
               type: "button",
               onClick: handleMyPages,
-              className: `px-4 py-2 text-sm font-sans font-medium transition-colors rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${currentPage === "myPages" ? "text-gold" : "text-foreground hover:text-gold"}`,
+              className: `px-4 py-2 text-base font-sans font-medium transition-colors rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${currentPage === "myPages" ? "text-gold" : "text-foreground hover:text-gold"}`,
               "data-ocid": "nav.link",
               children: t.nav.myPages
             }
@@ -33956,13 +34432,13 @@ function Navbar({
                   {
                     type: "button",
                     onClick: () => setLang(l),
-                    className: `text-xs font-sans font-semibold uppercase tracking-wide px-1 py-0.5 rounded transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold ${lang === l ? "text-gold" : "text-muted-foreground hover:text-foreground"}`,
+                    className: `text-sm font-sans font-semibold uppercase tracking-wide px-1 py-0.5 rounded transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold ${lang === l ? "text-gold" : "text-muted-foreground hover:text-foreground"}`,
                     "aria-pressed": lang === l,
                     "data-ocid": "nav.toggle",
                     children: l.toUpperCase()
                   }
                 ),
-                idx < languages.length - 1 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground mx-0.5 text-xs", children: "|" })
+                idx < languages.length - 1 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground mx-0.5 text-sm", children: "|" })
               ] }, l))
             }
           ),
@@ -33981,7 +34457,7 @@ function Navbar({
                 size: "sm",
                 variant: "ghost",
                 onClick: onLogout,
-                className: "font-sans text-sm",
+                className: "font-sans text-base",
                 "data-ocid": "nav.button",
                 children: [
                   /* @__PURE__ */ jsxRuntimeExports.jsx(LogOut, { className: "w-4 h-4 mr-1" }),
@@ -33995,7 +34471,7 @@ function Navbar({
               size: "sm",
               onClick: onLogin,
               disabled: isLoading,
-              className: "bg-gold hover:bg-gold/90 text-black font-sans rounded-full px-5 text-sm",
+              className: "bg-gold hover:bg-gold/90 text-black font-sans rounded-full px-5 text-base",
               "data-ocid": "nav.primary_button",
               children: [
                 isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 mr-1.5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(LogIn, { className: "w-4 h-4 mr-1.5" }),
@@ -34033,7 +34509,7 @@ function Navbar({
                     {
                       type: "button",
                       onClick: () => handleNavClick(link.section),
-                      className: "w-full text-left px-4 py-3 text-sm font-sans font-medium text-foreground hover:text-gold hover:bg-beige rounded-lg transition-colors",
+                      className: "w-full text-left px-4 py-3 text-base font-sans font-medium text-foreground hover:text-gold hover:bg-beige rounded-lg transition-colors",
                       "data-ocid": "nav.link",
                       children: link.label
                     },
@@ -34044,7 +34520,7 @@ function Navbar({
                     {
                       type: "button",
                       onClick: handleMyPages,
-                      className: "w-full text-left px-4 py-3 text-sm font-sans font-medium text-gold hover:bg-beige rounded-lg transition-colors flex items-center gap-2",
+                      className: "w-full text-left px-4 py-3 text-base font-sans font-medium text-gold hover:bg-beige rounded-lg transition-colors flex items-center gap-2",
                       "data-ocid": "nav.link",
                       children: [
                         /* @__PURE__ */ jsxRuntimeExports.jsx(User, { className: "w-4 h-4" }),
@@ -34060,13 +34536,13 @@ function Navbar({
                       {
                         type: "button",
                         onClick: () => setLang(l),
-                        className: `text-xs font-sans font-semibold uppercase tracking-wide px-1.5 py-1 rounded transition-colors ${lang === l ? "text-gold bg-gold/15" : "text-muted-foreground hover:text-foreground"}`,
+                        className: `text-sm font-sans font-semibold uppercase tracking-wide px-1.5 py-1 rounded transition-colors ${lang === l ? "text-gold bg-gold/15" : "text-muted-foreground hover:text-foreground"}`,
                         "aria-pressed": lang === l,
                         "data-ocid": "nav.toggle",
                         children: l.toUpperCase()
                       }
                     ),
-                    idx < languages.length - 1 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground mx-0.5 text-xs", children: "|" })
+                    idx < languages.length - 1 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground mx-0.5 text-sm", children: "|" })
                   ] }, l)) }),
                   isLoggedIn ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
                     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -34083,7 +34559,7 @@ function Navbar({
                         variant: "ghost",
                         size: "sm",
                         onClick: onLogout,
-                        className: "w-full justify-start font-sans text-sm",
+                        className: "w-full justify-start font-sans text-base",
                         "data-ocid": "nav.button",
                         children: [
                           /* @__PURE__ */ jsxRuntimeExports.jsx(LogOut, { className: "w-4 h-4 mr-2" }),
@@ -34099,7 +34575,7 @@ function Navbar({
                         onLogin();
                       },
                       disabled: isLoading,
-                      className: "w-full bg-gold hover:bg-gold/90 text-black font-sans rounded-full text-sm",
+                      className: "w-full bg-gold hover:bg-gold/90 text-black font-sans rounded-full text-base",
                       "data-ocid": "nav.primary_button",
                       children: [
                         isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 mr-2 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(LogIn, { className: "w-4 h-4 mr-2" }),
@@ -34159,10 +34635,10 @@ var jt = (n) => {
     default:
       return null;
   }
-}, te = Array(12).fill(0), Yt = ({ visible: n, className: e }) => React2.createElement("div", { className: ["sonner-loading-wrapper", e].filter(Boolean).join(" "), "data-visible": n }, React2.createElement("div", { className: "sonner-spinner" }, te.map((t, a2) => React2.createElement("div", { className: "sonner-loading-bar", key: `spinner-bar-${a2}` })))), ee = React2.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 20 20", fill: "currentColor", height: "20", width: "20" }, React2.createElement("path", { fillRule: "evenodd", d: "M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z", clipRule: "evenodd" })), oe = React2.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "currentColor", height: "20", width: "20" }, React2.createElement("path", { fillRule: "evenodd", d: "M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z", clipRule: "evenodd" })), ae = React2.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 20 20", fill: "currentColor", height: "20", width: "20" }, React2.createElement("path", { fillRule: "evenodd", d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z", clipRule: "evenodd" })), se = React2.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 20 20", fill: "currentColor", height: "20", width: "20" }, React2.createElement("path", { fillRule: "evenodd", d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z", clipRule: "evenodd" })), Ot = React2.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "12", height: "12", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }, React2.createElement("line", { x1: "18", y1: "6", x2: "6", y2: "18" }), React2.createElement("line", { x1: "6", y1: "6", x2: "18", y2: "18" }));
+}, te = Array(12).fill(0), Yt = ({ visible: n, className: e }) => React$2.createElement("div", { className: ["sonner-loading-wrapper", e].filter(Boolean).join(" "), "data-visible": n }, React$2.createElement("div", { className: "sonner-spinner" }, te.map((t, a2) => React$2.createElement("div", { className: "sonner-loading-bar", key: `spinner-bar-${a2}` })))), ee = React$2.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 20 20", fill: "currentColor", height: "20", width: "20" }, React$2.createElement("path", { fillRule: "evenodd", d: "M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z", clipRule: "evenodd" })), oe = React$2.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 24 24", fill: "currentColor", height: "20", width: "20" }, React$2.createElement("path", { fillRule: "evenodd", d: "M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z", clipRule: "evenodd" })), ae = React$2.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 20 20", fill: "currentColor", height: "20", width: "20" }, React$2.createElement("path", { fillRule: "evenodd", d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z", clipRule: "evenodd" })), se = React$2.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 20 20", fill: "currentColor", height: "20", width: "20" }, React$2.createElement("path", { fillRule: "evenodd", d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z", clipRule: "evenodd" })), Ot = React$2.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "12", height: "12", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round", strokeLinejoin: "round" }, React$2.createElement("line", { x1: "18", y1: "6", x2: "6", y2: "18" }), React$2.createElement("line", { x1: "6", y1: "6", x2: "18", y2: "18" }));
 var Ft = () => {
-  let [n, e] = React2.useState(document.hidden);
-  return React2.useEffect(() => {
+  let [n, e] = React$2.useState(document.hidden);
+  return React$2.useEffect(() => {
     let t = () => {
       e(document.hidden);
     };
@@ -34200,7 +34676,7 @@ var bt = 1, yt = class {
       let a2;
       t.loading !== void 0 && (a2 = this.create({ ...t, promise: e, type: "loading", message: t.loading, description: typeof t.description != "function" ? t.description : void 0 }));
       let u = e instanceof Promise ? e : e(), f = a2 !== void 0, w2, S2 = u.then(async (i) => {
-        if (w2 = ["resolve", i], React2.isValidElement(i)) f = false, this.create({ id: a2, type: "default", message: i });
+        if (w2 = ["resolve", i], React$2.isValidElement(i)) f = false, this.create({ id: a2, type: "default", message: i });
         else if (ie(i) && !i.ok) {
           f = false;
           let T2 = typeof t.error == "function" ? await t.error(`HTTP error! status: ${i.status}`) : t.error, F2 = typeof t.description == "function" ? await t.description(`HTTP error! status: ${i.status}`) : t.description;
@@ -34253,33 +34729,33 @@ function xe(n) {
 }
 var ve = (n) => {
   var Dt, Pt, Nt, Bt, Ct, kt, It, Mt, Ht, At, Lt;
-  let { invert: e, toast: t, unstyled: a2, interacting: u, setHeights: f, visibleToasts: w2, heights: S2, index: g2, toasts: i, expanded: D, removeToast: T2, defaultRichColors: F2, closeButton: et2, style: ut2, cancelButtonStyle: ft2, actionButtonStyle: l, className: ot2 = "", descriptionClassName: at = "", duration: X2, position: st2, gap: pt, loadingIcon: rt, expandByDefault: B2, classNames: s2, icons: P2, closeButtonAriaLabel: nt2 = "Close toast", pauseWhenPageIsHidden: it2 } = n, [Y2, C2] = React2.useState(null), [lt, J2] = React2.useState(null), [W2, H2] = React2.useState(false), [A2, mt] = React2.useState(false), [L2, z2] = React2.useState(false), [ct2, d2] = React2.useState(false), [h2, y2] = React2.useState(false), [R2, j2] = React2.useState(0), [p2, _2] = React2.useState(0), O2 = React2.useRef(t.duration || X2 || Wt), G2 = React2.useRef(null), k2 = React2.useRef(null), Vt = g2 === 0, Ut = g2 + 1 <= w2, N2 = t.type, V2 = t.dismissible !== false, Kt = t.className || "", Xt = t.descriptionClassName || "", dt2 = React2.useMemo(() => S2.findIndex((r2) => r2.toastId === t.id) || 0, [S2, t.id]), Jt = React2.useMemo(() => {
+  let { invert: e, toast: t, unstyled: a2, interacting: u, setHeights: f, visibleToasts: w2, heights: S2, index: g2, toasts: i, expanded: D, removeToast: T2, defaultRichColors: F2, closeButton: et2, style: ut2, cancelButtonStyle: ft2, actionButtonStyle: l, className: ot2 = "", descriptionClassName: at = "", duration: X2, position: st2, gap: pt, loadingIcon: rt, expandByDefault: B2, classNames: s2, icons: P2, closeButtonAriaLabel: nt2 = "Close toast", pauseWhenPageIsHidden: it2 } = n, [Y2, C2] = React$2.useState(null), [lt, J2] = React$2.useState(null), [W2, H2] = React$2.useState(false), [A2, mt] = React$2.useState(false), [L2, z2] = React$2.useState(false), [ct2, d2] = React$2.useState(false), [h2, y2] = React$2.useState(false), [R2, j2] = React$2.useState(0), [p2, _2] = React$2.useState(0), O2 = React$2.useRef(t.duration || X2 || Wt), G2 = React$2.useRef(null), k2 = React$2.useRef(null), Vt = g2 === 0, Ut = g2 + 1 <= w2, N2 = t.type, V2 = t.dismissible !== false, Kt = t.className || "", Xt = t.descriptionClassName || "", dt2 = React$2.useMemo(() => S2.findIndex((r2) => r2.toastId === t.id) || 0, [S2, t.id]), Jt = React$2.useMemo(() => {
     var r2;
     return (r2 = t.closeButton) != null ? r2 : et2;
-  }, [t.closeButton, et2]), Tt = React2.useMemo(() => t.duration || X2 || Wt, [t.duration, X2]), gt = React2.useRef(0), U2 = React2.useRef(0), St = React2.useRef(0), K2 = React2.useRef(null), [Gt, Qt] = st2.split("-"), Rt = React2.useMemo(() => S2.reduce((r2, m2, c2) => c2 >= dt2 ? r2 : r2 + m2.height, 0), [S2, dt2]), Et = Ft(), qt = t.invert || e, ht = N2 === "loading";
-  U2.current = React2.useMemo(() => dt2 * pt + Rt, [dt2, Rt]), React2.useEffect(() => {
+  }, [t.closeButton, et2]), Tt = React$2.useMemo(() => t.duration || X2 || Wt, [t.duration, X2]), gt = React$2.useRef(0), U2 = React$2.useRef(0), St = React$2.useRef(0), K2 = React$2.useRef(null), [Gt, Qt] = st2.split("-"), Rt = React$2.useMemo(() => S2.reduce((r2, m2, c2) => c2 >= dt2 ? r2 : r2 + m2.height, 0), [S2, dt2]), Et = Ft(), qt = t.invert || e, ht = N2 === "loading";
+  U2.current = React$2.useMemo(() => dt2 * pt + Rt, [dt2, Rt]), React$2.useEffect(() => {
     O2.current = Tt;
-  }, [Tt]), React2.useEffect(() => {
+  }, [Tt]), React$2.useEffect(() => {
     H2(true);
-  }, []), React2.useEffect(() => {
+  }, []), React$2.useEffect(() => {
     let r2 = k2.current;
     if (r2) {
       let m2 = r2.getBoundingClientRect().height;
       return _2(m2), f((c2) => [{ toastId: t.id, height: m2, position: t.position }, ...c2]), () => f((c2) => c2.filter((b2) => b2.toastId !== t.id));
     }
-  }, [f, t.id]), React2.useLayoutEffect(() => {
+  }, [f, t.id]), React$2.useLayoutEffect(() => {
     if (!W2) return;
     let r2 = k2.current, m2 = r2.style.height;
     r2.style.height = "auto";
     let c2 = r2.getBoundingClientRect().height;
     r2.style.height = m2, _2(c2), f((b2) => b2.find((x3) => x3.toastId === t.id) ? b2.map((x3) => x3.toastId === t.id ? { ...x3, height: c2 } : x3) : [{ toastId: t.id, height: c2, position: t.position }, ...b2]);
   }, [W2, t.title, t.description, f, t.id]);
-  let $2 = React2.useCallback(() => {
+  let $2 = React$2.useCallback(() => {
     mt(true), j2(U2.current), f((r2) => r2.filter((m2) => m2.toastId !== t.id)), setTimeout(() => {
       T2(t);
     }, we);
   }, [t, T2, f, U2]);
-  React2.useEffect(() => {
+  React$2.useEffect(() => {
     if (t.promise && N2 === "loading" || t.duration === 1 / 0 || t.type === "loading") return;
     let r2;
     return D || u || it2 && Et ? (() => {
@@ -34294,14 +34770,14 @@ var ve = (n) => {
         (b2 = t.onAutoClose) == null || b2.call(t, t), $2();
       }, O2.current));
     })(), () => clearTimeout(r2);
-  }, [D, u, t, N2, it2, Et, $2]), React2.useEffect(() => {
+  }, [D, u, t, N2, it2, Et, $2]), React$2.useEffect(() => {
     t.delete && $2();
   }, [$2, t.delete]);
   function Zt() {
     var r2, m2, c2;
-    return P2 != null && P2.loading ? React2.createElement("div", { className: M(s2 == null ? void 0 : s2.loader, (r2 = t == null ? void 0 : t.classNames) == null ? void 0 : r2.loader, "sonner-loader"), "data-visible": N2 === "loading" }, P2.loading) : rt ? React2.createElement("div", { className: M(s2 == null ? void 0 : s2.loader, (m2 = t == null ? void 0 : t.classNames) == null ? void 0 : m2.loader, "sonner-loader"), "data-visible": N2 === "loading" }, rt) : React2.createElement(Yt, { className: M(s2 == null ? void 0 : s2.loader, (c2 = t == null ? void 0 : t.classNames) == null ? void 0 : c2.loader), visible: N2 === "loading" });
+    return P2 != null && P2.loading ? React$2.createElement("div", { className: M(s2 == null ? void 0 : s2.loader, (r2 = t == null ? void 0 : t.classNames) == null ? void 0 : r2.loader, "sonner-loader"), "data-visible": N2 === "loading" }, P2.loading) : rt ? React$2.createElement("div", { className: M(s2 == null ? void 0 : s2.loader, (m2 = t == null ? void 0 : t.classNames) == null ? void 0 : m2.loader, "sonner-loader"), "data-visible": N2 === "loading" }, rt) : React$2.createElement(Yt, { className: M(s2 == null ? void 0 : s2.loader, (c2 = t == null ? void 0 : t.classNames) == null ? void 0 : c2.loader), visible: N2 === "loading" });
   }
-  return React2.createElement("li", { tabIndex: 0, ref: k2, className: M(ot2, Kt, s2 == null ? void 0 : s2.toast, (Dt = t == null ? void 0 : t.classNames) == null ? void 0 : Dt.toast, s2 == null ? void 0 : s2.default, s2 == null ? void 0 : s2[N2], (Pt = t == null ? void 0 : t.classNames) == null ? void 0 : Pt[N2]), "data-sonner-toast": "", "data-rich-colors": (Nt = t.richColors) != null ? Nt : F2, "data-styled": !(t.jsx || t.unstyled || a2), "data-mounted": W2, "data-promise": !!t.promise, "data-swiped": h2, "data-removed": A2, "data-visible": Ut, "data-y-position": Gt, "data-x-position": Qt, "data-index": g2, "data-front": Vt, "data-swiping": L2, "data-dismissible": V2, "data-type": N2, "data-invert": qt, "data-swipe-out": ct2, "data-swipe-direction": lt, "data-expanded": !!(D || B2 && W2), style: { "--index": g2, "--toasts-before": g2, "--z-index": i.length - g2, "--offset": `${A2 ? R2 : U2.current}px`, "--initial-height": B2 ? "auto" : `${p2}px`, ...ut2, ...t.style }, onDragEnd: () => {
+  return React$2.createElement("li", { tabIndex: 0, ref: k2, className: M(ot2, Kt, s2 == null ? void 0 : s2.toast, (Dt = t == null ? void 0 : t.classNames) == null ? void 0 : Dt.toast, s2 == null ? void 0 : s2.default, s2 == null ? void 0 : s2[N2], (Pt = t == null ? void 0 : t.classNames) == null ? void 0 : Pt[N2]), "data-sonner-toast": "", "data-rich-colors": (Nt = t.richColors) != null ? Nt : F2, "data-styled": !(t.jsx || t.unstyled || a2), "data-mounted": W2, "data-promise": !!t.promise, "data-swiped": h2, "data-removed": A2, "data-visible": Ut, "data-y-position": Gt, "data-x-position": Qt, "data-index": g2, "data-front": Vt, "data-swiping": L2, "data-dismissible": V2, "data-type": N2, "data-invert": qt, "data-swipe-out": ct2, "data-swipe-direction": lt, "data-expanded": !!(D || B2 && W2), style: { "--index": g2, "--toasts-before": g2, "--z-index": i.length - g2, "--offset": `${A2 ? R2 : U2.current}px`, "--initial-height": B2 ? "auto" : `${p2}px`, ...ut2, ...t.style }, onDragEnd: () => {
     z2(false), C2(null), K2.current = null;
   }, onPointerDown: (r2) => {
     ht || !V2 || (G2.current = /* @__PURE__ */ new Date(), j2(U2.current), r2.target.setPointerCapture(r2.pointerId), r2.target.tagName !== "BUTTON" && (z2(true), K2.current = { x: r2.clientX, y: r2.clientY }));
@@ -34322,14 +34798,14 @@ var ve = (n) => {
     !Y2 && (Math.abs(b2) > 1 || Math.abs(c2) > 1) && C2(Math.abs(b2) > Math.abs(c2) ? "x" : "y");
     let x3 = { x: 0, y: 0 };
     Y2 === "y" ? (I2.includes("top") || I2.includes("bottom")) && (I2.includes("top") && c2 < 0 || I2.includes("bottom") && c2 > 0) && (x3.y = c2) : Y2 === "x" && (I2.includes("left") || I2.includes("right")) && (I2.includes("left") && b2 < 0 || I2.includes("right") && b2 > 0) && (x3.x = b2), (Math.abs(x3.x) > 0 || Math.abs(x3.y) > 0) && y2(true), (Z2 = k2.current) == null || Z2.style.setProperty("--swipe-amount-x", `${x3.x}px`), (zt = k2.current) == null || zt.style.setProperty("--swipe-amount-y", `${x3.y}px`);
-  } }, Jt && !t.jsx ? React2.createElement("button", { "aria-label": nt2, "data-disabled": ht, "data-close-button": true, onClick: ht || !V2 ? () => {
+  } }, Jt && !t.jsx ? React$2.createElement("button", { "aria-label": nt2, "data-disabled": ht, "data-close-button": true, onClick: ht || !V2 ? () => {
   } : () => {
     var r2;
     $2(), (r2 = t.onDismiss) == null || r2.call(t, t);
-  }, className: M(s2 == null ? void 0 : s2.closeButton, (Bt = t == null ? void 0 : t.classNames) == null ? void 0 : Bt.closeButton) }, (Ct = P2 == null ? void 0 : P2.close) != null ? Ct : Ot) : null, t.jsx || reactExports.isValidElement(t.title) ? t.jsx ? t.jsx : typeof t.title == "function" ? t.title() : t.title : React2.createElement(React2.Fragment, null, N2 || t.icon || t.promise ? React2.createElement("div", { "data-icon": "", className: M(s2 == null ? void 0 : s2.icon, (kt = t == null ? void 0 : t.classNames) == null ? void 0 : kt.icon) }, t.promise || t.type === "loading" && !t.icon ? t.icon || Zt() : null, t.type !== "loading" ? t.icon || (P2 == null ? void 0 : P2[N2]) || jt(N2) : null) : null, React2.createElement("div", { "data-content": "", className: M(s2 == null ? void 0 : s2.content, (It = t == null ? void 0 : t.classNames) == null ? void 0 : It.content) }, React2.createElement("div", { "data-title": "", className: M(s2 == null ? void 0 : s2.title, (Mt = t == null ? void 0 : t.classNames) == null ? void 0 : Mt.title) }, typeof t.title == "function" ? t.title() : t.title), t.description ? React2.createElement("div", { "data-description": "", className: M(at, Xt, s2 == null ? void 0 : s2.description, (Ht = t == null ? void 0 : t.classNames) == null ? void 0 : Ht.description) }, typeof t.description == "function" ? t.description() : t.description) : null), reactExports.isValidElement(t.cancel) ? t.cancel : t.cancel && tt(t.cancel) ? React2.createElement("button", { "data-button": true, "data-cancel": true, style: t.cancelButtonStyle || ft2, onClick: (r2) => {
+  }, className: M(s2 == null ? void 0 : s2.closeButton, (Bt = t == null ? void 0 : t.classNames) == null ? void 0 : Bt.closeButton) }, (Ct = P2 == null ? void 0 : P2.close) != null ? Ct : Ot) : null, t.jsx || reactExports.isValidElement(t.title) ? t.jsx ? t.jsx : typeof t.title == "function" ? t.title() : t.title : React$2.createElement(React$2.Fragment, null, N2 || t.icon || t.promise ? React$2.createElement("div", { "data-icon": "", className: M(s2 == null ? void 0 : s2.icon, (kt = t == null ? void 0 : t.classNames) == null ? void 0 : kt.icon) }, t.promise || t.type === "loading" && !t.icon ? t.icon || Zt() : null, t.type !== "loading" ? t.icon || (P2 == null ? void 0 : P2[N2]) || jt(N2) : null) : null, React$2.createElement("div", { "data-content": "", className: M(s2 == null ? void 0 : s2.content, (It = t == null ? void 0 : t.classNames) == null ? void 0 : It.content) }, React$2.createElement("div", { "data-title": "", className: M(s2 == null ? void 0 : s2.title, (Mt = t == null ? void 0 : t.classNames) == null ? void 0 : Mt.title) }, typeof t.title == "function" ? t.title() : t.title), t.description ? React$2.createElement("div", { "data-description": "", className: M(at, Xt, s2 == null ? void 0 : s2.description, (Ht = t == null ? void 0 : t.classNames) == null ? void 0 : Ht.description) }, typeof t.description == "function" ? t.description() : t.description) : null), reactExports.isValidElement(t.cancel) ? t.cancel : t.cancel && tt(t.cancel) ? React$2.createElement("button", { "data-button": true, "data-cancel": true, style: t.cancelButtonStyle || ft2, onClick: (r2) => {
     var m2, c2;
     tt(t.cancel) && V2 && ((c2 = (m2 = t.cancel).onClick) == null || c2.call(m2, r2), $2());
-  }, className: M(s2 == null ? void 0 : s2.cancelButton, (At = t == null ? void 0 : t.classNames) == null ? void 0 : At.cancelButton) }, t.cancel.label) : null, reactExports.isValidElement(t.action) ? t.action : t.action && tt(t.action) ? React2.createElement("button", { "data-button": true, "data-action": true, style: t.actionButtonStyle || l, onClick: (r2) => {
+  }, className: M(s2 == null ? void 0 : s2.cancelButton, (At = t == null ? void 0 : t.classNames) == null ? void 0 : At.cancelButton) }, t.cancel.label) : null, reactExports.isValidElement(t.action) ? t.action : t.action && tt(t.action) ? React$2.createElement("button", { "data-button": true, "data-action": true, style: t.actionButtonStyle || l, onClick: (r2) => {
     var m2, c2;
     tt(t.action) && ((c2 = (m2 = t.action).onClick) == null || c2.call(m2, r2), !r2.defaultPrevented && $2());
   }, className: M(s2 == null ? void 0 : s2.actionButton, (Lt = t == null ? void 0 : t.classNames) == null ? void 0 : Lt.actionButton) }, t.action.label) : null));
@@ -34354,13 +34830,13 @@ function Te(n, e) {
   }), t;
 }
 var $e = reactExports.forwardRef(function(e, t) {
-  let { invert: a2, position: u = "bottom-right", hotkey: f = ["altKey", "KeyT"], expand: w2, closeButton: S2, className: g2, offset: i, mobileOffset: D, theme: T2 = "light", richColors: F2, duration: et2, style: ut2, visibleToasts: ft2 = pe, toastOptions: l, dir: ot2 = _t(), gap: at = be, loadingIcon: X2, icons: st2, containerAriaLabel: pt = "Notifications", pauseWhenPageIsHidden: rt } = e, [B2, s2] = React2.useState([]), P2 = React2.useMemo(() => Array.from(new Set([u].concat(B2.filter((d2) => d2.position).map((d2) => d2.position)))), [B2, u]), [nt2, it2] = React2.useState([]), [Y2, C2] = React2.useState(false), [lt, J2] = React2.useState(false), [W2, H2] = React2.useState(T2 !== "system" ? T2 : typeof window != "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"), A2 = React2.useRef(null), mt = f.join("+").replace(/Key/g, "").replace(/Digit/g, ""), L2 = React2.useRef(null), z2 = React2.useRef(false), ct2 = React2.useCallback((d2) => {
+  let { invert: a2, position: u = "bottom-right", hotkey: f = ["altKey", "KeyT"], expand: w2, closeButton: S2, className: g2, offset: i, mobileOffset: D, theme: T2 = "light", richColors: F2, duration: et2, style: ut2, visibleToasts: ft2 = pe, toastOptions: l, dir: ot2 = _t(), gap: at = be, loadingIcon: X2, icons: st2, containerAriaLabel: pt = "Notifications", pauseWhenPageIsHidden: rt } = e, [B2, s2] = React$2.useState([]), P2 = React$2.useMemo(() => Array.from(new Set([u].concat(B2.filter((d2) => d2.position).map((d2) => d2.position)))), [B2, u]), [nt2, it2] = React$2.useState([]), [Y2, C2] = React$2.useState(false), [lt, J2] = React$2.useState(false), [W2, H2] = React$2.useState(T2 !== "system" ? T2 : typeof window != "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"), A2 = React$2.useRef(null), mt = f.join("+").replace(/Key/g, "").replace(/Digit/g, ""), L2 = React$2.useRef(null), z2 = React$2.useRef(false), ct2 = React$2.useCallback((d2) => {
     s2((h2) => {
       var y2;
       return (y2 = h2.find((R2) => R2.id === d2.id)) != null && y2.delete || v.dismiss(d2.id), h2.filter(({ id: R2 }) => R2 !== d2.id);
     });
   }, []);
-  return React2.useEffect(() => v.subscribe((d2) => {
+  return React$2.useEffect(() => v.subscribe((d2) => {
     if (d2.dismiss) {
       s2((h2) => h2.map((y2) => y2.id === d2.id ? { ...y2, delete: true } : y2));
       return;
@@ -34373,7 +34849,7 @@ var $e = reactExports.forwardRef(function(e, t) {
         });
       });
     });
-  }), []), React2.useEffect(() => {
+  }), []), React$2.useEffect(() => {
     if (T2 !== "system") {
       H2(T2);
       return;
@@ -34393,22 +34869,22 @@ var $e = reactExports.forwardRef(function(e, t) {
         }
       });
     }
-  }, [T2]), React2.useEffect(() => {
+  }, [T2]), React$2.useEffect(() => {
     B2.length <= 1 && C2(false);
-  }, [B2]), React2.useEffect(() => {
+  }, [B2]), React$2.useEffect(() => {
     let d2 = (h2) => {
       var R2, j2;
       f.every((p2) => h2[p2] || h2.code === p2) && (C2(true), (R2 = A2.current) == null || R2.focus()), h2.code === "Escape" && (document.activeElement === A2.current || (j2 = A2.current) != null && j2.contains(document.activeElement)) && C2(false);
     };
     return document.addEventListener("keydown", d2), () => document.removeEventListener("keydown", d2);
-  }, [f]), React2.useEffect(() => {
+  }, [f]), React$2.useEffect(() => {
     if (A2.current) return () => {
       L2.current && (L2.current.focus({ preventScroll: true }), L2.current = null, z2.current = false);
     };
-  }, [A2.current]), React2.createElement("section", { ref: t, "aria-label": `${pt} ${mt}`, tabIndex: -1, "aria-live": "polite", "aria-relevant": "additions text", "aria-atomic": "false", suppressHydrationWarning: true }, P2.map((d2, h2) => {
+  }, [A2.current]), React$2.createElement("section", { ref: t, "aria-label": `${pt} ${mt}`, tabIndex: -1, "aria-live": "polite", "aria-relevant": "additions text", "aria-atomic": "false", suppressHydrationWarning: true }, P2.map((d2, h2) => {
     var j2;
     let [y2, R2] = d2.split("-");
-    return B2.length ? React2.createElement("ol", { key: d2, dir: ot2 === "auto" ? _t() : ot2, tabIndex: -1, ref: A2, className: g2, "data-sonner-toaster": true, "data-theme": W2, "data-y-position": y2, "data-lifted": Y2 && B2.length > 1 && !w2, "data-x-position": R2, style: { "--front-toast-height": `${((j2 = nt2[0]) == null ? void 0 : j2.height) || 0}px`, "--width": `${he}px`, "--gap": `${at}px`, ...ut2, ...Te(i, D) }, onBlur: (p2) => {
+    return B2.length ? React$2.createElement("ol", { key: d2, dir: ot2 === "auto" ? _t() : ot2, tabIndex: -1, ref: A2, className: g2, "data-sonner-toaster": true, "data-theme": W2, "data-y-position": y2, "data-lifted": Y2 && B2.length > 1 && !w2, "data-x-position": R2, style: { "--front-toast-height": `${((j2 = nt2[0]) == null ? void 0 : j2.height) || 0}px`, "--width": `${he}px`, "--gap": `${at}px`, ...ut2, ...Te(i, D) }, onBlur: (p2) => {
       z2.current && !p2.currentTarget.contains(p2.relatedTarget) && (z2.current = false, L2.current && (L2.current.focus({ preventScroll: true }), L2.current = null));
     }, onFocus: (p2) => {
       p2.target instanceof HTMLElement && p2.target.dataset.dismissible === "false" || z2.current || (z2.current = true, L2.current = p2.relatedTarget);
@@ -34418,7 +34894,7 @@ var $e = reactExports.forwardRef(function(e, t) {
       p2.target instanceof HTMLElement && p2.target.dataset.dismissible === "false" || J2(true);
     }, onPointerUp: () => J2(false) }, B2.filter((p2) => !p2.position && h2 === 0 || p2.position === d2).map((p2, _2) => {
       var O2, G2;
-      return React2.createElement(ve, { key: p2.id, icons: st2, index: _2, toast: p2, defaultRichColors: F2, duration: (O2 = l == null ? void 0 : l.duration) != null ? O2 : et2, className: l == null ? void 0 : l.className, descriptionClassName: l == null ? void 0 : l.descriptionClassName, invert: a2, visibleToasts: ft2, closeButton: (G2 = l == null ? void 0 : l.closeButton) != null ? G2 : S2, interacting: lt, position: d2, style: l == null ? void 0 : l.style, unstyled: l == null ? void 0 : l.unstyled, classNames: l == null ? void 0 : l.classNames, cancelButtonStyle: l == null ? void 0 : l.cancelButtonStyle, actionButtonStyle: l == null ? void 0 : l.actionButtonStyle, removeToast: ct2, toasts: B2.filter((k2) => k2.position == p2.position), heights: nt2.filter((k2) => k2.position == p2.position), setHeights: it2, expandByDefault: w2, gap: at, loadingIcon: X2, expanded: Y2, pauseWhenPageIsHidden: rt, swipeDirections: e.swipeDirections });
+      return React$2.createElement(ve, { key: p2.id, icons: st2, index: _2, toast: p2, defaultRichColors: F2, duration: (O2 = l == null ? void 0 : l.duration) != null ? O2 : et2, className: l == null ? void 0 : l.className, descriptionClassName: l == null ? void 0 : l.descriptionClassName, invert: a2, visibleToasts: ft2, closeButton: (G2 = l == null ? void 0 : l.closeButton) != null ? G2 : S2, interacting: lt, position: d2, style: l == null ? void 0 : l.style, unstyled: l == null ? void 0 : l.unstyled, classNames: l == null ? void 0 : l.classNames, cancelButtonStyle: l == null ? void 0 : l.cancelButtonStyle, actionButtonStyle: l == null ? void 0 : l.actionButtonStyle, removeToast: ct2, toasts: B2.filter((k2) => k2.position == p2.position), heights: nt2.filter((k2) => k2.position == p2.position), setHeights: it2, expandByDefault: w2, gap: at, loadingIcon: X2, expanded: Y2, pauseWhenPageIsHidden: rt, swipeDirections: e.swipeDirections });
     })) : null;
   }));
 });
@@ -34447,14 +34923,14 @@ function createCollection(name) {
   );
   const CollectionProvider = (props) => {
     const { scope, children } = props;
-    const ref = React2.useRef(null);
-    const itemMap = React2.useRef(/* @__PURE__ */ new Map()).current;
+    const ref = React$2.useRef(null);
+    const itemMap = React$2.useRef(/* @__PURE__ */ new Map()).current;
     return /* @__PURE__ */ jsxRuntimeExports.jsx(CollectionProviderImpl, { scope, itemMap, collectionRef: ref, children });
   };
   CollectionProvider.displayName = PROVIDER_NAME2;
   const COLLECTION_SLOT_NAME = name + "CollectionSlot";
   const CollectionSlotImpl = /* @__PURE__ */ createSlot(COLLECTION_SLOT_NAME);
-  const CollectionSlot = React2.forwardRef(
+  const CollectionSlot = React$2.forwardRef(
     (props, forwardedRef) => {
       const { scope, children } = props;
       const context = useCollectionContext(COLLECTION_SLOT_NAME, scope);
@@ -34466,13 +34942,13 @@ function createCollection(name) {
   const ITEM_SLOT_NAME = name + "CollectionItemSlot";
   const ITEM_DATA_ATTR = "data-radix-collection-item";
   const CollectionItemSlotImpl = /* @__PURE__ */ createSlot(ITEM_SLOT_NAME);
-  const CollectionItemSlot = React2.forwardRef(
+  const CollectionItemSlot = React$2.forwardRef(
     (props, forwardedRef) => {
       const { scope, children, ...itemData } = props;
-      const ref = React2.useRef(null);
+      const ref = React$2.useRef(null);
       const composedRefs = useComposedRefs$1(forwardedRef, ref);
       const context = useCollectionContext(ITEM_SLOT_NAME, scope);
-      React2.useEffect(() => {
+      React$2.useEffect(() => {
         context.itemMap.set(ref, { ref, ...itemData });
         return () => void context.itemMap.delete(ref);
       });
@@ -34482,7 +34958,7 @@ function createCollection(name) {
   CollectionItemSlot.displayName = ITEM_SLOT_NAME;
   function useCollection2(scope) {
     const context = useCollectionContext(name + "CollectionConsumer", scope);
-    const getItems = React2.useCallback(() => {
+    const getItems = React$2.useCallback(() => {
       const collectionNode = context.collectionRef.current;
       if (!collectionNode) return [];
       const orderedNodes = Array.from(collectionNode.querySelectorAll(`[${ITEM_DATA_ATTR}]`));
@@ -34955,6 +35431,18 @@ const UserAccessEntry = Record({
   "principal": Principal2,
   "role": UserRole
 });
+const DocumentRecord = Record({
+  "id": Text,
+  "ownerName": Text,
+  "ownerPrincipal": Principal2,
+  "mimeType": Text,
+  "fileName": Text,
+  "filePath": Text,
+  "fileSize": Nat,
+  "parentFolderId": Opt(Text),
+  "isPublic": Bool,
+  "uploadedAt": Int
+});
 const Holiday = Variant({
   "newyear": Null,
   "none": Null,
@@ -34967,6 +35455,11 @@ const UserProfile = Record({
   "email": Text,
   "phone": Text,
   "registeredAt": Int
+});
+const UserAccessLogEntry = Record({
+  "id": Text,
+  "metadata": Text,
+  "timestamp": Int
 });
 const ContactStatus = Variant({
   "active": Null,
@@ -34983,16 +35476,21 @@ const ContactMessage = Record({
   "message": Text,
   "deviceId": Opt(Text)
 });
-const DocumentRecord = Record({
+const FolderRecord = Record({
   "id": Text,
   "ownerName": Text,
   "ownerPrincipal": Principal2,
-  "mimeType": Text,
-  "fileName": Text,
-  "filePath": Text,
-  "fileSize": Nat,
-  "isPublic": Bool,
-  "uploadedAt": Int
+  "name": Text,
+  "createdAt": Int,
+  "parentFolderId": Opt(Text)
+});
+const NoteRecord = Record({
+  "id": Text,
+  "content": Text,
+  "rubrik": Text,
+  "owner": Principal2,
+  "createdAt": Int,
+  "sharedWith": Vec(Principal2)
 });
 const UserListEntry = Record({
   "principal": Principal2,
@@ -35018,6 +35516,26 @@ Service({
     [Variant({ "ok": Null, "err": Text })],
     []
   ),
+  "bulkMove": Func(
+    [Vec(Text), Vec(Text), Opt(Text)],
+    [Variant({ "ok": Text, "err": Text })],
+    []
+  ),
+  "clearUserAccessLog": Func(
+    [Principal2],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
+  "createFolder": Func(
+    [Text, Opt(Text)],
+    [Variant({ "ok": Text, "err": Text })],
+    []
+  ),
+  "createNote": Func(
+    [Text, Text],
+    [Variant({ "ok": Text, "err": Text })],
+    []
+  ),
   "deleteContactMessage": Func(
     [Text],
     [Variant({ "ok": Null, "err": Text })],
@@ -35033,28 +35551,116 @@ Service({
     [Variant({ "ok": Null, "err": Text })],
     []
   ),
+  "deleteFolder": Func(
+    [Text],
+    [Variant({ "ok": Text, "err": Text })],
+    []
+  ),
+  "deleteNote": Func(
+    [Text],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
+  "deleteUserAccessLogEntries": Func(
+    [Principal2, Vec(Text)],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
+  "finalizeChunkedUpload": Func(
+    [Text],
+    [Variant({ "ok": DocumentRecord, "err": Text })],
+    []
+  ),
   "getActiveHoliday": Func([], [Holiday], ["query"]),
   "getBlockedSenders": Func(
     [],
     [Variant({ "ok": Vec(Text), "err": Text })],
     []
   ),
+  "getDocumentChunk": Func(
+    [Text, Nat, Nat],
+    [
+      Variant({
+        "ok": Record({
+          "hasMore": Bool,
+          "chunk": Vec(Nat8),
+          "totalSize": Nat
+        }),
+        "err": Text
+      })
+    ],
+    ["query"]
+  ),
+  "getDocumentData": Func(
+    [Text],
+    [
+      Variant({
+        "ok": Record({
+          "data": Vec(Nat8),
+          "mimeType": Text,
+          "fileName": Text
+        }),
+        "err": Text
+      })
+    ],
+    ["query"]
+  ),
   "getGuestDocumentUploadPermission": Func([], [Bool], ["query"]),
   "getMyProfile": Func([], [Opt(UserProfile)], ["query"]),
   "getMyRole": Func([], [UserRole], ["query"]),
   "getMyStorageUsed": Func([], [Nat], ["query"]),
+  "getNoteShares": Func(
+    [Text],
+    [Variant({ "ok": Vec(Principal2), "err": Text })],
+    ["query"]
+  ),
+  "getNotesCount": Func(
+    [Opt(Text)],
+    [Variant({ "ok": Nat, "err": Text })],
+    ["query"]
+  ),
+  "getUserAccessLog": Func(
+    [Principal2],
+    [Variant({ "ok": Vec(UserAccessLogEntry), "err": Text })],
+    ["query"]
+  ),
   "listContactMessages": Func(
     [],
     [Variant({ "ok": Vec(ContactMessage), "err": Text })],
     []
   ),
-  "listMyDocuments": Func([], [Vec(DocumentRecord)], ["query"]),
+  "listMyDocuments": Func(
+    [Opt(Text)],
+    [Vec(DocumentRecord)],
+    ["query"]
+  ),
+  "listMyFolders": Func(
+    [Opt(Text)],
+    [Vec(FolderRecord)],
+    ["query"]
+  ),
+  "listNotes": Func(
+    [Nat, Nat, Opt(Text)],
+    [Variant({ "ok": Vec(NoteRecord), "err": Text })],
+    ["query"]
+  ),
   "listPublicDocuments": Func([], [Vec(DocumentRecord)], ["query"]),
   "listUsers": Func(
     [],
     [Variant({ "ok": Vec(UserListEntry), "err": Text })],
     []
   ),
+  "moveDocument": Func(
+    [Text, Opt(Text)],
+    [Variant({ "ok": Text, "err": Text })],
+    []
+  ),
+  "moveFolder": Func(
+    [Text, Opt(Text)],
+    [Variant({ "ok": Text, "err": Text })],
+    []
+  ),
+  "recordMyAccess": Func([Text], [], []),
   "removeUser": Func(
     [Text],
     [Variant({ "ok": Null, "err": Text })],
@@ -35075,6 +35681,24 @@ Service({
     [Variant({ "ok": Null, "err": Text })],
     []
   ),
+  "shareNote": Func(
+    [Text, Principal2],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
+  "startChunkedUpload": Func(
+    [
+      Text,
+      Text,
+      Text,
+      Bool,
+      Opt(Text),
+      Nat,
+      Nat
+    ],
+    [Variant({ "ok": Text, "err": Text })],
+    []
+  ),
   "submitContact": Func(
     [Text, Text, Text],
     [Variant({ "ok": Text, "err": Text })],
@@ -35085,12 +35709,22 @@ Service({
     [Variant({ "ok": Null, "err": Text })],
     []
   ),
+  "unshareNote": Func(
+    [Text, Principal2],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
   "updateContactStatus": Func(
     [Text, ContactStatus],
     [Variant({ "ok": Null, "err": Text })],
     []
   ),
   "updateMyProfile": Func(
+    [Text, Text, Text],
+    [Variant({ "ok": Null, "err": Text })],
+    []
+  ),
+  "updateNote": Func(
     [Text, Text, Text],
     [Variant({ "ok": Null, "err": Text })],
     []
@@ -35109,6 +35743,16 @@ Service({
     [Text, Text, Text, Bool, Nat],
     [Variant({ "ok": Text, "err": Text })],
     []
+  ),
+  "uploadDocumentChunk": Func(
+    [Text, Nat, Vec(Nat8)],
+    [Variant({ "ok": Text, "err": Text })],
+    []
+  ),
+  "uploadDocumentWithData": Func(
+    [Text, Vec(Nat8), Text, Bool, Opt(Text)],
+    [Variant({ "ok": DocumentRecord, "err": Text })],
+    []
   )
 });
 const idlFactory = ({ IDL: IDL2 }) => {
@@ -35120,6 +35764,18 @@ const idlFactory = ({ IDL: IDL2 }) => {
   const UserAccessEntry2 = IDL2.Record({
     "principal": IDL2.Principal,
     "role": UserRole2
+  });
+  const DocumentRecord2 = IDL2.Record({
+    "id": IDL2.Text,
+    "ownerName": IDL2.Text,
+    "ownerPrincipal": IDL2.Principal,
+    "mimeType": IDL2.Text,
+    "fileName": IDL2.Text,
+    "filePath": IDL2.Text,
+    "fileSize": IDL2.Nat,
+    "parentFolderId": IDL2.Opt(IDL2.Text),
+    "isPublic": IDL2.Bool,
+    "uploadedAt": IDL2.Int
   });
   const Holiday2 = IDL2.Variant({
     "newyear": IDL2.Null,
@@ -35133,6 +35789,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "email": IDL2.Text,
     "phone": IDL2.Text,
     "registeredAt": IDL2.Int
+  });
+  const UserAccessLogEntry2 = IDL2.Record({
+    "id": IDL2.Text,
+    "metadata": IDL2.Text,
+    "timestamp": IDL2.Int
   });
   const ContactStatus2 = IDL2.Variant({
     "active": IDL2.Null,
@@ -35149,16 +35810,21 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "message": IDL2.Text,
     "deviceId": IDL2.Opt(IDL2.Text)
   });
-  const DocumentRecord2 = IDL2.Record({
+  const FolderRecord2 = IDL2.Record({
     "id": IDL2.Text,
     "ownerName": IDL2.Text,
     "ownerPrincipal": IDL2.Principal,
-    "mimeType": IDL2.Text,
-    "fileName": IDL2.Text,
-    "filePath": IDL2.Text,
-    "fileSize": IDL2.Nat,
-    "isPublic": IDL2.Bool,
-    "uploadedAt": IDL2.Int
+    "name": IDL2.Text,
+    "createdAt": IDL2.Int,
+    "parentFolderId": IDL2.Opt(IDL2.Text)
+  });
+  const NoteRecord2 = IDL2.Record({
+    "id": IDL2.Text,
+    "content": IDL2.Text,
+    "rubrik": IDL2.Text,
+    "owner": IDL2.Principal,
+    "createdAt": IDL2.Int,
+    "sharedWith": IDL2.Vec(IDL2.Principal)
   });
   const UserListEntry2 = IDL2.Record({
     "principal": IDL2.Principal,
@@ -35184,6 +35850,26 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
+    "bulkMove": IDL2.Func(
+      [IDL2.Vec(IDL2.Text), IDL2.Vec(IDL2.Text), IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
+      []
+    ),
+    "clearUserAccessLog": IDL2.Func(
+      [IDL2.Principal],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
+    "createFolder": IDL2.Func(
+      [IDL2.Text, IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
+      []
+    ),
+    "createNote": IDL2.Func(
+      [IDL2.Text, IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
+      []
+    ),
     "deleteContactMessage": IDL2.Func(
       [IDL2.Text],
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
@@ -35199,28 +35885,116 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
+    "deleteFolder": IDL2.Func(
+      [IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
+      []
+    ),
+    "deleteNote": IDL2.Func(
+      [IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
+    "deleteUserAccessLogEntries": IDL2.Func(
+      [IDL2.Principal, IDL2.Vec(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
+    "finalizeChunkedUpload": IDL2.Func(
+      [IDL2.Text],
+      [IDL2.Variant({ "ok": DocumentRecord2, "err": IDL2.Text })],
+      []
+    ),
     "getActiveHoliday": IDL2.Func([], [Holiday2], ["query"]),
     "getBlockedSenders": IDL2.Func(
       [],
       [IDL2.Variant({ "ok": IDL2.Vec(IDL2.Text), "err": IDL2.Text })],
       []
     ),
+    "getDocumentChunk": IDL2.Func(
+      [IDL2.Text, IDL2.Nat, IDL2.Nat],
+      [
+        IDL2.Variant({
+          "ok": IDL2.Record({
+            "hasMore": IDL2.Bool,
+            "chunk": IDL2.Vec(IDL2.Nat8),
+            "totalSize": IDL2.Nat
+          }),
+          "err": IDL2.Text
+        })
+      ],
+      ["query"]
+    ),
+    "getDocumentData": IDL2.Func(
+      [IDL2.Text],
+      [
+        IDL2.Variant({
+          "ok": IDL2.Record({
+            "data": IDL2.Vec(IDL2.Nat8),
+            "mimeType": IDL2.Text,
+            "fileName": IDL2.Text
+          }),
+          "err": IDL2.Text
+        })
+      ],
+      ["query"]
+    ),
     "getGuestDocumentUploadPermission": IDL2.Func([], [IDL2.Bool], ["query"]),
     "getMyProfile": IDL2.Func([], [IDL2.Opt(UserProfile2)], ["query"]),
     "getMyRole": IDL2.Func([], [UserRole2], ["query"]),
     "getMyStorageUsed": IDL2.Func([], [IDL2.Nat], ["query"]),
+    "getNoteShares": IDL2.Func(
+      [IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Vec(IDL2.Principal), "err": IDL2.Text })],
+      ["query"]
+    ),
+    "getNotesCount": IDL2.Func(
+      [IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Nat, "err": IDL2.Text })],
+      ["query"]
+    ),
+    "getUserAccessLog": IDL2.Func(
+      [IDL2.Principal],
+      [IDL2.Variant({ "ok": IDL2.Vec(UserAccessLogEntry2), "err": IDL2.Text })],
+      ["query"]
+    ),
     "listContactMessages": IDL2.Func(
       [],
       [IDL2.Variant({ "ok": IDL2.Vec(ContactMessage2), "err": IDL2.Text })],
       []
     ),
-    "listMyDocuments": IDL2.Func([], [IDL2.Vec(DocumentRecord2)], ["query"]),
+    "listMyDocuments": IDL2.Func(
+      [IDL2.Opt(IDL2.Text)],
+      [IDL2.Vec(DocumentRecord2)],
+      ["query"]
+    ),
+    "listMyFolders": IDL2.Func(
+      [IDL2.Opt(IDL2.Text)],
+      [IDL2.Vec(FolderRecord2)],
+      ["query"]
+    ),
+    "listNotes": IDL2.Func(
+      [IDL2.Nat, IDL2.Nat, IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Vec(NoteRecord2), "err": IDL2.Text })],
+      ["query"]
+    ),
     "listPublicDocuments": IDL2.Func([], [IDL2.Vec(DocumentRecord2)], ["query"]),
     "listUsers": IDL2.Func(
       [],
       [IDL2.Variant({ "ok": IDL2.Vec(UserListEntry2), "err": IDL2.Text })],
       []
     ),
+    "moveDocument": IDL2.Func(
+      [IDL2.Text, IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
+      []
+    ),
+    "moveFolder": IDL2.Func(
+      [IDL2.Text, IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
+      []
+    ),
+    "recordMyAccess": IDL2.Func([IDL2.Text], [], []),
     "removeUser": IDL2.Func(
       [IDL2.Text],
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
@@ -35241,6 +36015,24 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
+    "shareNote": IDL2.Func(
+      [IDL2.Text, IDL2.Principal],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
+    "startChunkedUpload": IDL2.Func(
+      [
+        IDL2.Text,
+        IDL2.Text,
+        IDL2.Text,
+        IDL2.Bool,
+        IDL2.Opt(IDL2.Text),
+        IDL2.Nat,
+        IDL2.Nat
+      ],
+      [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
+      []
+    ),
     "submitContact": IDL2.Func(
       [IDL2.Text, IDL2.Text, IDL2.Text],
       [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
@@ -35251,12 +36043,22 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
+    "unshareNote": IDL2.Func(
+      [IDL2.Text, IDL2.Principal],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
     "updateContactStatus": IDL2.Func(
       [IDL2.Text, ContactStatus2],
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
     ),
     "updateMyProfile": IDL2.Func(
+      [IDL2.Text, IDL2.Text, IDL2.Text],
+      [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
+      []
+    ),
+    "updateNote": IDL2.Func(
       [IDL2.Text, IDL2.Text, IDL2.Text],
       [IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text })],
       []
@@ -35275,11 +36077,67 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [IDL2.Text, IDL2.Text, IDL2.Text, IDL2.Bool, IDL2.Nat],
       [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
       []
+    ),
+    "uploadDocumentChunk": IDL2.Func(
+      [IDL2.Text, IDL2.Nat, IDL2.Vec(IDL2.Nat8)],
+      [IDL2.Variant({ "ok": IDL2.Text, "err": IDL2.Text })],
+      []
+    ),
+    "uploadDocumentWithData": IDL2.Func(
+      [IDL2.Text, IDL2.Vec(IDL2.Nat8), IDL2.Text, IDL2.Bool, IDL2.Opt(IDL2.Text)],
+      [IDL2.Variant({ "ok": DocumentRecord2, "err": IDL2.Text })],
+      []
     )
   });
 };
+function candid_some(value) {
+  return [
+    value
+  ];
+}
+function candid_none() {
+  return [];
+}
 function record_opt_to_undefined(arg) {
   return arg == null ? void 0 : arg;
+}
+class ExternalBlob2 {
+  constructor(directURL, blob) {
+    __publicField(this, "_blob");
+    __publicField(this, "directURL");
+    __publicField(this, "onProgress");
+    if (blob) {
+      this._blob = blob;
+    }
+    this.directURL = directURL;
+  }
+  static fromURL(url) {
+    return new ExternalBlob2(url, null);
+  }
+  static fromBytes(blob) {
+    const url = URL.createObjectURL(new Blob([
+      new Uint8Array(blob)
+    ], {
+      type: "application/octet-stream"
+    }));
+    return new ExternalBlob2(url, blob);
+  }
+  async getBytes() {
+    if (this._blob) {
+      return this._blob;
+    }
+    const response = await fetch(this.directURL);
+    const blob = await response.blob();
+    this._blob = new Uint8Array(await blob.arrayBuffer());
+    return this._blob;
+  }
+  getDirectURL() {
+    return this.directURL;
+  }
+  withUploadProgress(onProgress) {
+    this.onProgress = onProgress;
+    return this;
+  }
 }
 class Backend {
   constructor(actor, _uploadFile, _downloadFile, processError2) {
@@ -35372,6 +36230,62 @@ class Backend {
       return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
     }
   }
+  async bulkMove(arg0, arg1, arg2) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.bulkMove(arg0, arg1, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg2));
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.bulkMove(arg0, arg1, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg2));
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async clearUserAccessLog(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.clearUserAccessLog(arg0);
+        return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.clearUserAccessLog(arg0);
+      return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async createFolder(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.createFolder(arg0, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg1));
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.createFolder(arg0, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg1));
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async createNote(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.createNote(arg0, arg1);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.createNote(arg0, arg1);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async deleteContactMessage(arg0) {
     if (this.processError) {
       try {
@@ -35414,32 +36328,116 @@ class Backend {
       return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
     }
   }
-  async getActiveHoliday() {
+  async deleteFolder(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.getActiveHoliday();
-        return from_candid_Holiday_n9(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.deleteFolder(arg0);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getActiveHoliday();
-      return from_candid_Holiday_n9(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.deleteFolder(arg0);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
-  async getBlockedSenders() {
+  async deleteNote(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.getBlockedSenders();
+        const result = await this.actor.deleteNote(arg0);
+        return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.deleteNote(arg0);
+      return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async deleteUserAccessLogEntries(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.deleteUserAccessLogEntries(arg0, arg1);
+        return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.deleteUserAccessLogEntries(arg0, arg1);
+      return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async finalizeChunkedUpload(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.finalizeChunkedUpload(arg0);
         return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.getBlockedSenders();
+      const result = await this.actor.finalizeChunkedUpload(arg0);
       return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getActiveHoliday() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getActiveHoliday();
+        return from_candid_Holiday_n15(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getActiveHoliday();
+      return from_candid_Holiday_n15(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getBlockedSenders() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getBlockedSenders();
+        return from_candid_variant_n17(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getBlockedSenders();
+      return from_candid_variant_n17(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getDocumentChunk(arg0, arg1, arg2) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getDocumentChunk(arg0, arg1, arg2);
+        return from_candid_variant_n18(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getDocumentChunk(arg0, arg1, arg2);
+      return from_candid_variant_n18(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getDocumentData(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getDocumentData(arg0);
+        return from_candid_variant_n19(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getDocumentData(arg0);
+      return from_candid_variant_n19(this._uploadFile, this._downloadFile, result);
     }
   }
   async getGuestDocumentUploadPermission() {
@@ -35460,14 +36458,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getMyProfile();
-        return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getMyProfile();
-      return from_candid_opt_n12(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
     }
   }
   async getMyRole() {
@@ -35498,60 +36496,172 @@ class Backend {
       return result;
     }
   }
+  async getNoteShares(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getNoteShares(arg0);
+        return from_candid_variant_n21(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getNoteShares(arg0);
+      return from_candid_variant_n21(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getNotesCount(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getNotesCount(to_candid_opt_n9(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_variant_n22(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getNotesCount(to_candid_opt_n9(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_variant_n22(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getUserAccessLog(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getUserAccessLog(arg0);
+        return from_candid_variant_n23(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getUserAccessLog(arg0);
+      return from_candid_variant_n23(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async listContactMessages() {
     if (this.processError) {
       try {
         const result = await this.actor.listContactMessages();
-        return from_candid_variant_n13(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n24(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.listContactMessages();
-      return from_candid_variant_n13(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n24(this._uploadFile, this._downloadFile, result);
     }
   }
-  async listMyDocuments() {
+  async listMyDocuments(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.listMyDocuments();
-        return result;
+        const result = await this.actor.listMyDocuments(to_candid_opt_n9(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_vec_n30(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.listMyDocuments();
-      return result;
+      const result = await this.actor.listMyDocuments(to_candid_opt_n9(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_vec_n30(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async listMyFolders(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.listMyFolders(to_candid_opt_n9(this._uploadFile, this._downloadFile, arg0));
+        return from_candid_vec_n31(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.listMyFolders(to_candid_opt_n9(this._uploadFile, this._downloadFile, arg0));
+      return from_candid_vec_n31(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async listNotes(arg0, arg1, arg2) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.listNotes(arg0, arg1, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg2));
+        return from_candid_variant_n34(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.listNotes(arg0, arg1, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg2));
+      return from_candid_variant_n34(this._uploadFile, this._downloadFile, result);
     }
   }
   async listPublicDocuments() {
     if (this.processError) {
       try {
         const result = await this.actor.listPublicDocuments();
-        return result;
+        return from_candid_vec_n30(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.listPublicDocuments();
-      return result;
+      return from_candid_vec_n30(this._uploadFile, this._downloadFile, result);
     }
   }
   async listUsers() {
     if (this.processError) {
       try {
         const result = await this.actor.listUsers();
-        return from_candid_variant_n20(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n35(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.listUsers();
-      return from_candid_variant_n20(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n35(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async moveDocument(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.moveDocument(arg0, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg1));
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.moveDocument(arg0, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg1));
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async moveFolder(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.moveFolder(arg0, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg1));
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.moveFolder(arg0, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg1));
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async recordMyAccess(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.recordMyAccess(arg0);
+        return result;
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.recordMyAccess(arg0);
+      return result;
     }
   }
   async removeUser(arg0) {
@@ -35571,14 +36681,14 @@ class Backend {
   async setActiveHoliday(arg0) {
     if (this.processError) {
       try {
-        const result = await this.actor.setActiveHoliday(to_candid_Holiday_n24(this._uploadFile, this._downloadFile, arg0));
+        const result = await this.actor.setActiveHoliday(to_candid_Holiday_n39(this._uploadFile, this._downloadFile, arg0));
         return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.setActiveHoliday(to_candid_Holiday_n24(this._uploadFile, this._downloadFile, arg0));
+      const result = await this.actor.setActiveHoliday(to_candid_Holiday_n39(this._uploadFile, this._downloadFile, arg0));
       return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -35610,18 +36720,46 @@ class Backend {
       return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
     }
   }
+  async shareNote(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.shareNote(arg0, arg1);
+        return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.shareNote(arg0, arg1);
+      return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async startChunkedUpload(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.startChunkedUpload(arg0, arg1, arg2, arg3, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg4), arg5, arg6);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.startChunkedUpload(arg0, arg1, arg2, arg3, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg4), arg5, arg6);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
   async submitContact(arg0, arg1, arg2) {
     if (this.processError) {
       try {
         const result = await this.actor.submitContact(arg0, arg1, arg2);
-        return from_candid_variant_n26(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.submitContact(arg0, arg1, arg2);
-      return from_candid_variant_n26(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
     }
   }
   async unblockContactSender(arg0) {
@@ -35638,17 +36776,31 @@ class Backend {
       return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
     }
   }
-  async updateContactStatus(arg0, arg1) {
+  async unshareNote(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.updateContactStatus(arg0, to_candid_ContactStatus_n27(this._uploadFile, this._downloadFile, arg1));
+        const result = await this.actor.unshareNote(arg0, arg1);
         return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.updateContactStatus(arg0, to_candid_ContactStatus_n27(this._uploadFile, this._downloadFile, arg1));
+      const result = await this.actor.unshareNote(arg0, arg1);
+      return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async updateContactStatus(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.updateContactStatus(arg0, to_candid_ContactStatus_n41(this._uploadFile, this._downloadFile, arg1));
+        return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.updateContactStatus(arg0, to_candid_ContactStatus_n41(this._uploadFile, this._downloadFile, arg1));
       return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -35663,6 +36815,20 @@ class Backend {
       }
     } else {
       const result = await this.actor.updateMyProfile(arg0, arg1, arg2);
+      return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async updateNote(arg0, arg1, arg2) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.updateNote(arg0, arg1, arg2);
+        return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.updateNote(arg0, arg1, arg2);
       return from_candid_variant_n3(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -35698,59 +36864,117 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.uploadDocument(arg0, arg1, arg2, arg3, arg4);
-        return from_candid_variant_n26(this._uploadFile, this._downloadFile, result);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.uploadDocument(arg0, arg1, arg2, arg3, arg4);
-      return from_candid_variant_n26(this._uploadFile, this._downloadFile, result);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async uploadDocumentChunk(arg0, arg1, arg2) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.uploadDocumentChunk(arg0, arg1, arg2);
+        return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.uploadDocumentChunk(arg0, arg1, arg2);
+      return from_candid_variant_n10(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async uploadDocumentWithData(arg0, arg1, arg2, arg3, arg4) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.uploadDocumentWithData(arg0, arg1, arg2, arg3, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg4));
+        return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.uploadDocumentWithData(arg0, arg1, arg2, arg3, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg4));
+      return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
     }
   }
 }
-function from_candid_ContactMessage_n15(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n16(_uploadFile, _downloadFile, value);
+function from_candid_ContactMessage_n26(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n27(_uploadFile, _downloadFile, value);
 }
-function from_candid_ContactStatus_n17(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n18(_uploadFile, _downloadFile, value);
+function from_candid_ContactStatus_n28(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n29(_uploadFile, _downloadFile, value);
 }
-function from_candid_Holiday_n9(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n10(_uploadFile, _downloadFile, value);
+function from_candid_DocumentRecord_n12(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n13(_uploadFile, _downloadFile, value);
+}
+function from_candid_FolderRecord_n32(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n33(_uploadFile, _downloadFile, value);
+}
+function from_candid_Holiday_n15(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n16(_uploadFile, _downloadFile, value);
 }
 function from_candid_UserAccessEntry_n5(_uploadFile, _downloadFile, value) {
   return from_candid_record_n6(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserListEntry_n22(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n23(_uploadFile, _downloadFile, value);
+function from_candid_UserListEntry_n37(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n38(_uploadFile, _downloadFile, value);
 }
 function from_candid_UserRole_n7(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n8(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n12(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n14(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n19(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n20(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n16(_uploadFile, _downloadFile, value) {
+function from_candid_record_n13(_uploadFile, _downloadFile, value) {
   return {
     id: value.id,
-    status: from_candid_ContactStatus_n17(_uploadFile, _downloadFile, value.status),
+    ownerName: value.ownerName,
+    ownerPrincipal: value.ownerPrincipal,
+    mimeType: value.mimeType,
+    fileName: value.fileName,
+    filePath: value.filePath,
+    fileSize: value.fileSize,
+    parentFolderId: record_opt_to_undefined(from_candid_opt_n14(_uploadFile, _downloadFile, value.parentFolderId)),
+    isPublic: value.isPublic,
+    uploadedAt: value.uploadedAt
+  };
+}
+function from_candid_record_n27(_uploadFile, _downloadFile, value) {
+  return {
+    id: value.id,
+    status: from_candid_ContactStatus_n28(_uploadFile, _downloadFile, value.status),
     name: value.name,
     submittedAt: value.submittedAt,
     email: value.email,
     senderBlocked: value.senderBlocked,
-    senderPrincipal: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.senderPrincipal)),
+    senderPrincipal: record_opt_to_undefined(from_candid_opt_n14(_uploadFile, _downloadFile, value.senderPrincipal)),
     message: value.message,
-    deviceId: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.deviceId))
+    deviceId: record_opt_to_undefined(from_candid_opt_n14(_uploadFile, _downloadFile, value.deviceId))
   };
 }
-function from_candid_record_n23(_uploadFile, _downloadFile, value) {
+function from_candid_record_n33(_uploadFile, _downloadFile, value) {
+  return {
+    id: value.id,
+    ownerName: value.ownerName,
+    ownerPrincipal: value.ownerPrincipal,
+    name: value.name,
+    createdAt: value.createdAt,
+    parentFolderId: record_opt_to_undefined(from_candid_opt_n14(_uploadFile, _downloadFile, value.parentFolderId))
+  };
+}
+function from_candid_record_n38(_uploadFile, _downloadFile, value) {
   return {
     principal: value.principal,
     role: from_candid_UserRole_n7(_uploadFile, _downloadFile, value.role),
-    profile: record_opt_to_undefined(from_candid_opt_n12(_uploadFile, _downloadFile, value.profile))
+    profile: record_opt_to_undefined(from_candid_opt_n20(_uploadFile, _downloadFile, value.profile))
   };
 }
 function from_candid_record_n6(_uploadFile, _downloadFile, value) {
@@ -35760,9 +36984,6 @@ function from_candid_record_n6(_uploadFile, _downloadFile, value) {
   };
 }
 function from_candid_variant_n10(_uploadFile, _downloadFile, value) {
-  return "newyear" in value ? "newyear" : "none" in value ? "none" : "easter" in value ? "easter" : "midsommar" in value ? "midsommar" : "christmas" in value ? "christmas" : value;
-}
-function from_candid_variant_n11(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
@@ -35771,28 +36992,28 @@ function from_candid_variant_n11(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
-function from_candid_variant_n13(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n11(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
-    ok: from_candid_vec_n14(_uploadFile, _downloadFile, value.ok)
+    ok: from_candid_DocumentRecord_n12(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n16(_uploadFile, _downloadFile, value) {
+  return "newyear" in value ? "newyear" : "none" in value ? "none" : "easter" in value ? "easter" : "midsommar" in value ? "midsommar" : "christmas" in value ? "christmas" : value;
+}
+function from_candid_variant_n17(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
   } : "err" in value ? {
     __kind__: "err",
     err: value.err
   } : value;
 }
 function from_candid_variant_n18(_uploadFile, _downloadFile, value) {
-  return "active" in value ? "active" : "notactive" in value ? "notactive" : value;
-}
-function from_candid_variant_n20(_uploadFile, _downloadFile, value) {
-  return "ok" in value ? {
-    __kind__: "ok",
-    ok: from_candid_vec_n21(_uploadFile, _downloadFile, value.ok)
-  } : "err" in value ? {
-    __kind__: "err",
-    err: value.err
-  } : value;
-}
-function from_candid_variant_n26(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
@@ -35800,6 +37021,54 @@ function from_candid_variant_n26(_uploadFile, _downloadFile, value) {
     __kind__: "err",
     err: value.err
   } : value;
+}
+function from_candid_variant_n19(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n21(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n22(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n23(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n24(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_vec_n25(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n29(_uploadFile, _downloadFile, value) {
+  return "active" in value ? "active" : "notactive" in value ? "notactive" : value;
 }
 function from_candid_variant_n3(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
@@ -35810,26 +37079,53 @@ function from_candid_variant_n3(_uploadFile, _downloadFile, value) {
     err: value.err
   } : value;
 }
+function from_candid_variant_n34(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n35(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: from_candid_vec_n36(_uploadFile, _downloadFile, value.ok)
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
 function from_candid_variant_n8(_uploadFile, _downloadFile, value) {
   return "admin" in value ? "admin" : "user" in value ? "user" : "guest" in value ? "guest" : value;
 }
-function from_candid_vec_n14(_uploadFile, _downloadFile, value) {
-  return value.map((x3) => from_candid_ContactMessage_n15(_uploadFile, _downloadFile, x3));
+function from_candid_vec_n25(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_ContactMessage_n26(_uploadFile, _downloadFile, x3));
 }
-function from_candid_vec_n21(_uploadFile, _downloadFile, value) {
-  return value.map((x3) => from_candid_UserListEntry_n22(_uploadFile, _downloadFile, x3));
+function from_candid_vec_n30(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_DocumentRecord_n12(_uploadFile, _downloadFile, x3));
+}
+function from_candid_vec_n31(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_FolderRecord_n32(_uploadFile, _downloadFile, x3));
+}
+function from_candid_vec_n36(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_UserListEntry_n37(_uploadFile, _downloadFile, x3));
 }
 function from_candid_vec_n4(_uploadFile, _downloadFile, value) {
   return value.map((x3) => from_candid_UserAccessEntry_n5(_uploadFile, _downloadFile, x3));
 }
-function to_candid_ContactStatus_n27(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n28(_uploadFile, _downloadFile, value);
+function to_candid_ContactStatus_n41(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n42(_uploadFile, _downloadFile, value);
 }
-function to_candid_Holiday_n24(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n25(_uploadFile, _downloadFile, value);
+function to_candid_Holiday_n39(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n40(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n1(_uploadFile, _downloadFile, value) {
   return to_candid_variant_n2(_uploadFile, _downloadFile, value);
+}
+function to_candid_opt_n9(_uploadFile, _downloadFile, value) {
+  return value === null ? candid_none() : candid_some(value);
 }
 function to_candid_variant_n2(_uploadFile, _downloadFile, value) {
   return value == "admin" ? {
@@ -35840,7 +37136,7 @@ function to_candid_variant_n2(_uploadFile, _downloadFile, value) {
     guest: null
   } : value;
 }
-function to_candid_variant_n25(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n40(_uploadFile, _downloadFile, value) {
   return value == "newyear" ? {
     newyear: null
   } : value == "none" ? {
@@ -35853,7 +37149,7 @@ function to_candid_variant_n25(_uploadFile, _downloadFile, value) {
     christmas: null
   } : value;
 }
-function to_candid_variant_n28(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n42(_uploadFile, _downloadFile, value) {
   return value == "active" ? {
     active: null
   } : value == "notactive" ? {
@@ -35875,7 +37171,8 @@ function createActor(canisterId, _uploadFile, _downloadFile, options = {}) {
   return new Backend(actor, _uploadFile, _downloadFile, options.processError);
 }
 function useTypedActor() {
-  return useActor(createActor);
+  const { actor, isFetching } = useActor(createActor);
+  return { actor, isFetching };
 }
 const ADMIN_CONTROLLERS = [
   "atewe-etgil-mre73-twlmx-z2o2f-goui6-glmiq-qulqx-osud5-xdxsn-aqe",
@@ -35924,7 +37221,19 @@ function useAuth() {
     let cancelled = false;
     setRoleFetching(true);
     actor.getMyRole().then((r2) => {
-      if (!cancelled) setRole(r2);
+      if (!cancelled) {
+        setRole(r2);
+        try {
+          const metadata = JSON.stringify({
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            timestamp: (/* @__PURE__ */ new Date()).toISOString()
+          });
+          actor.recordMyAccess(metadata).catch(() => {
+          });
+        } catch {
+        }
+      }
     }).catch(() => {
       if (!cancelled) setRole("guest");
     }).finally(() => {
@@ -45588,6 +46897,331 @@ function AlertDialogCancel({
     }
   );
 }
+function usePrevious(value) {
+  const ref = reactExports.useRef({ value, previous: value });
+  return reactExports.useMemo(() => {
+    if (ref.current.value !== value) {
+      ref.current.previous = ref.current.value;
+      ref.current.value = value;
+    }
+    return ref.current.previous;
+  }, [value]);
+}
+function useSize(element) {
+  const [size2, setSize] = reactExports.useState(void 0);
+  useLayoutEffect2(() => {
+    if (element) {
+      setSize({ width: element.offsetWidth, height: element.offsetHeight });
+      const resizeObserver = new ResizeObserver((entries) => {
+        if (!Array.isArray(entries)) {
+          return;
+        }
+        if (!entries.length) {
+          return;
+        }
+        const entry = entries[0];
+        let width;
+        let height;
+        if ("borderBoxSize" in entry) {
+          const borderSizeEntry = entry["borderBoxSize"];
+          const borderSize = Array.isArray(borderSizeEntry) ? borderSizeEntry[0] : borderSizeEntry;
+          width = borderSize["inlineSize"];
+          height = borderSize["blockSize"];
+        } else {
+          width = element.offsetWidth;
+          height = element.offsetHeight;
+        }
+        setSize({ width, height });
+      });
+      resizeObserver.observe(element, { box: "border-box" });
+      return () => resizeObserver.unobserve(element);
+    } else {
+      setSize(void 0);
+    }
+  }, [element]);
+  return size2;
+}
+var CHECKBOX_NAME = "Checkbox";
+var [createCheckboxContext] = createContextScope(CHECKBOX_NAME);
+var [CheckboxProviderImpl, useCheckboxContext] = createCheckboxContext(CHECKBOX_NAME);
+function CheckboxProvider(props) {
+  const {
+    __scopeCheckbox,
+    checked: checkedProp,
+    children,
+    defaultChecked,
+    disabled,
+    form,
+    name,
+    onCheckedChange,
+    required,
+    value = "on",
+    // @ts-expect-error
+    internal_do_not_use_render
+  } = props;
+  const [checked, setChecked] = useControllableState({
+    prop: checkedProp,
+    defaultProp: defaultChecked ?? false,
+    onChange: onCheckedChange,
+    caller: CHECKBOX_NAME
+  });
+  const [control, setControl] = reactExports.useState(null);
+  const [bubbleInput, setBubbleInput] = reactExports.useState(null);
+  const hasConsumerStoppedPropagationRef = reactExports.useRef(false);
+  const isFormControl = control ? !!form || !!control.closest("form") : (
+    // We set this to true by default so that events bubble to forms without JS (SSR)
+    true
+  );
+  const context = {
+    checked,
+    disabled,
+    setChecked,
+    control,
+    setControl,
+    name,
+    form,
+    value,
+    hasConsumerStoppedPropagationRef,
+    required,
+    defaultChecked: isIndeterminate$1(defaultChecked) ? false : defaultChecked,
+    isFormControl,
+    bubbleInput,
+    setBubbleInput
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    CheckboxProviderImpl,
+    {
+      scope: __scopeCheckbox,
+      ...context,
+      children: isFunction(internal_do_not_use_render) ? internal_do_not_use_render(context) : children
+    }
+  );
+}
+var TRIGGER_NAME$3 = "CheckboxTrigger";
+var CheckboxTrigger = reactExports.forwardRef(
+  ({ __scopeCheckbox, onKeyDown, onClick, ...checkboxProps }, forwardedRef) => {
+    const {
+      control,
+      value,
+      disabled,
+      checked,
+      required,
+      setControl,
+      setChecked,
+      hasConsumerStoppedPropagationRef,
+      isFormControl,
+      bubbleInput
+    } = useCheckboxContext(TRIGGER_NAME$3, __scopeCheckbox);
+    const composedRefs = useComposedRefs$1(forwardedRef, setControl);
+    const initialCheckedStateRef = reactExports.useRef(checked);
+    reactExports.useEffect(() => {
+      const form = control == null ? void 0 : control.form;
+      if (form) {
+        const reset = () => setChecked(initialCheckedStateRef.current);
+        form.addEventListener("reset", reset);
+        return () => form.removeEventListener("reset", reset);
+      }
+    }, [control, setChecked]);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Primitive$1.button,
+      {
+        type: "button",
+        role: "checkbox",
+        "aria-checked": isIndeterminate$1(checked) ? "mixed" : checked,
+        "aria-required": required,
+        "data-state": getState$1(checked),
+        "data-disabled": disabled ? "" : void 0,
+        disabled,
+        value,
+        ...checkboxProps,
+        ref: composedRefs,
+        onKeyDown: composeEventHandlers(onKeyDown, (event) => {
+          if (event.key === "Enter") event.preventDefault();
+        }),
+        onClick: composeEventHandlers(onClick, (event) => {
+          setChecked((prevChecked) => isIndeterminate$1(prevChecked) ? true : !prevChecked);
+          if (bubbleInput && isFormControl) {
+            hasConsumerStoppedPropagationRef.current = event.isPropagationStopped();
+            if (!hasConsumerStoppedPropagationRef.current) event.stopPropagation();
+          }
+        })
+      }
+    );
+  }
+);
+CheckboxTrigger.displayName = TRIGGER_NAME$3;
+var Checkbox$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const {
+      __scopeCheckbox,
+      name,
+      checked,
+      defaultChecked,
+      required,
+      disabled,
+      value,
+      onCheckedChange,
+      form,
+      ...checkboxProps
+    } = props;
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      CheckboxProvider,
+      {
+        __scopeCheckbox,
+        checked,
+        defaultChecked,
+        disabled,
+        required,
+        onCheckedChange,
+        name,
+        form,
+        value,
+        internal_do_not_use_render: ({ isFormControl }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            CheckboxTrigger,
+            {
+              ...checkboxProps,
+              ref: forwardedRef,
+              __scopeCheckbox
+            }
+          ),
+          isFormControl && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            CheckboxBubbleInput,
+            {
+              __scopeCheckbox
+            }
+          )
+        ] })
+      }
+    );
+  }
+);
+Checkbox$1.displayName = CHECKBOX_NAME;
+var INDICATOR_NAME$1 = "CheckboxIndicator";
+var CheckboxIndicator = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeCheckbox, forceMount, ...indicatorProps } = props;
+    const context = useCheckboxContext(INDICATOR_NAME$1, __scopeCheckbox);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Presence,
+      {
+        present: forceMount || isIndeterminate$1(context.checked) || context.checked === true,
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Primitive$1.span,
+          {
+            "data-state": getState$1(context.checked),
+            "data-disabled": context.disabled ? "" : void 0,
+            ...indicatorProps,
+            ref: forwardedRef,
+            style: { pointerEvents: "none", ...props.style }
+          }
+        )
+      }
+    );
+  }
+);
+CheckboxIndicator.displayName = INDICATOR_NAME$1;
+var BUBBLE_INPUT_NAME$2 = "CheckboxBubbleInput";
+var CheckboxBubbleInput = reactExports.forwardRef(
+  ({ __scopeCheckbox, ...props }, forwardedRef) => {
+    const {
+      control,
+      hasConsumerStoppedPropagationRef,
+      checked,
+      defaultChecked,
+      required,
+      disabled,
+      name,
+      value,
+      form,
+      bubbleInput,
+      setBubbleInput
+    } = useCheckboxContext(BUBBLE_INPUT_NAME$2, __scopeCheckbox);
+    const composedRefs = useComposedRefs$1(forwardedRef, setBubbleInput);
+    const prevChecked = usePrevious(checked);
+    const controlSize = useSize(control);
+    reactExports.useEffect(() => {
+      const input = bubbleInput;
+      if (!input) return;
+      const inputProto = window.HTMLInputElement.prototype;
+      const descriptor = Object.getOwnPropertyDescriptor(
+        inputProto,
+        "checked"
+      );
+      const setChecked = descriptor.set;
+      const bubbles = !hasConsumerStoppedPropagationRef.current;
+      if (prevChecked !== checked && setChecked) {
+        const event = new Event("click", { bubbles });
+        input.indeterminate = isIndeterminate$1(checked);
+        setChecked.call(input, isIndeterminate$1(checked) ? false : checked);
+        input.dispatchEvent(event);
+      }
+    }, [bubbleInput, prevChecked, checked, hasConsumerStoppedPropagationRef]);
+    const defaultCheckedRef = reactExports.useRef(isIndeterminate$1(checked) ? false : checked);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Primitive$1.input,
+      {
+        type: "checkbox",
+        "aria-hidden": true,
+        defaultChecked: defaultChecked ?? defaultCheckedRef.current,
+        required,
+        disabled,
+        name,
+        value,
+        form,
+        ...props,
+        tabIndex: -1,
+        ref: composedRefs,
+        style: {
+          ...props.style,
+          ...controlSize,
+          position: "absolute",
+          pointerEvents: "none",
+          opacity: 0,
+          margin: 0,
+          // We transform because the input is absolutely positioned but we have
+          // rendered it **after** the button. This pulls it back to sit on top
+          // of the button.
+          transform: "translateX(-100%)"
+        }
+      }
+    );
+  }
+);
+CheckboxBubbleInput.displayName = BUBBLE_INPUT_NAME$2;
+function isFunction(value) {
+  return typeof value === "function";
+}
+function isIndeterminate$1(checked) {
+  return checked === "indeterminate";
+}
+function getState$1(checked) {
+  return isIndeterminate$1(checked) ? "indeterminate" : checked ? "checked" : "unchecked";
+}
+function Checkbox({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Checkbox$1,
+    {
+      "data-slot": "checkbox",
+      className: cn(
+        "peer border-input dark:bg-input/30 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:data-[state=checked]:bg-primary data-[state=checked]:border-primary focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive size-4 shrink-0 rounded-[4px] border shadow-xs transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
+        className
+      ),
+      ...props,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        CheckboxIndicator,
+        {
+          "data-slot": "checkbox-indicator",
+          className: "flex items-center justify-center text-current transition-none",
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "size-3.5" })
+        }
+      )
+    }
+  );
+}
 function Dialog({
   ...props
 }) {
@@ -47634,40 +49268,6 @@ var Arrow$1 = reactExports.forwardRef((props, forwardedRef) => {
 });
 Arrow$1.displayName = NAME$1;
 var Root$2 = Arrow$1;
-function useSize(element) {
-  const [size2, setSize] = reactExports.useState(void 0);
-  useLayoutEffect2(() => {
-    if (element) {
-      setSize({ width: element.offsetWidth, height: element.offsetHeight });
-      const resizeObserver = new ResizeObserver((entries) => {
-        if (!Array.isArray(entries)) {
-          return;
-        }
-        if (!entries.length) {
-          return;
-        }
-        const entry = entries[0];
-        let width;
-        let height;
-        if ("borderBoxSize" in entry) {
-          const borderSizeEntry = entry["borderBoxSize"];
-          const borderSize = Array.isArray(borderSizeEntry) ? borderSizeEntry[0] : borderSizeEntry;
-          width = borderSize["inlineSize"];
-          height = borderSize["blockSize"];
-        } else {
-          width = element.offsetWidth;
-          height = element.offsetHeight;
-        }
-        setSize({ width, height });
-      });
-      resizeObserver.observe(element, { box: "border-box" });
-      return () => resizeObserver.unobserve(element);
-    } else {
-      setSize(void 0);
-    }
-  }, [element]);
-  return size2;
-}
 var POPPER_NAME = "Popper";
 var [createPopperContext, createPopperScope] = createContextScope(POPPER_NAME);
 var [PopperProvider, usePopperContext] = createPopperContext(POPPER_NAME);
@@ -47939,16 +49539,6 @@ var Root2$2 = Popper;
 var Anchor = PopperAnchor;
 var Content = PopperContent;
 var Arrow = PopperArrow;
-function usePrevious(value) {
-  const ref = reactExports.useRef({ value, previous: value });
-  return reactExports.useMemo(() => {
-    if (ref.current.value !== value) {
-      ref.current.previous = ref.current.value;
-      ref.current.value = value;
-    }
-    return ref.current.previous;
-  }, [value]);
-}
 var VISUALLY_HIDDEN_STYLES = Object.freeze({
   // See: https://github.com/twbs/bootstrap/blob/main/scss/mixins/_visually-hidden.scss
   position: "absolute",
@@ -48087,12 +49677,12 @@ var Select$1 = (props) => {
   ) });
 };
 Select$1.displayName = SELECT_NAME;
-var TRIGGER_NAME$3 = "SelectTrigger";
+var TRIGGER_NAME$2 = "SelectTrigger";
 var SelectTrigger$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { __scopeSelect, disabled = false, ...triggerProps } = props;
     const popperScope = usePopperScope$2(__scopeSelect);
-    const context = useSelectContext(TRIGGER_NAME$3, __scopeSelect);
+    const context = useSelectContext(TRIGGER_NAME$2, __scopeSelect);
     const isDisabled = context.disabled || disabled;
     const composedRefs = useComposedRefs$1(forwardedRef, context.onTriggerChange);
     const getItems = useCollection$1(__scopeSelect);
@@ -48164,7 +49754,7 @@ var SelectTrigger$1 = reactExports.forwardRef(
     ) });
   }
 );
-SelectTrigger$1.displayName = TRIGGER_NAME$3;
+SelectTrigger$1.displayName = TRIGGER_NAME$2;
 var VALUE_NAME = "SelectValue";
 var SelectValue$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
@@ -49028,7 +50618,7 @@ var SelectArrow = reactExports.forwardRef(
   }
 );
 SelectArrow.displayName = ARROW_NAME$3;
-var BUBBLE_INPUT_NAME$2 = "SelectBubbleInput";
+var BUBBLE_INPUT_NAME$1 = "SelectBubbleInput";
 var SelectBubbleInput = reactExports.forwardRef(
   ({ __scopeSelect, value, ...props }, forwardedRef) => {
     const ref = reactExports.useRef(null);
@@ -49060,7 +50650,7 @@ var SelectBubbleInput = reactExports.forwardRef(
     );
   }
 );
-SelectBubbleInput.displayName = BUBBLE_INPUT_NAME$2;
+SelectBubbleInput.displayName = BUBBLE_INPUT_NAME$1;
 function shouldShowPlaceholder(value) {
   return value === "" || value === void 0;
 }
@@ -49342,6 +50932,10 @@ function getPrincipalStr(user) {
   if (u.principal) return u.principal.toString();
   return user.userId ?? "";
 }
+function getPrincipalObj(user) {
+  const u = user;
+  return u.principal ?? { toString: () => getPrincipalStr(user) };
+}
 function getProfileName(user) {
   var _a3;
   const u = user;
@@ -49372,6 +50966,30 @@ function truncatePrincipal(p2) {
   if (p2.length <= 20) return p2;
   return `${p2.slice(0, 10)}…${p2.slice(-8)}`;
 }
+function formatTimestamp(ns) {
+  try {
+    const ms = Number(ns / 1000000n);
+    return new Date(ms).toLocaleString();
+  } catch {
+    return String(ns);
+  }
+}
+function parseMetadata(metadata) {
+  try {
+    const obj = JSON.parse(metadata);
+    const ua = obj.userAgent ?? "";
+    if (ua.includes("Chrome") && !ua.includes("Edg"))
+      return `Chrome · ${obj.language ?? ""}`;
+    if (ua.includes("Firefox")) return `Firefox · ${obj.language ?? ""}`;
+    if (ua.includes("Safari") && !ua.includes("Chrome"))
+      return `Safari · ${obj.language ?? ""}`;
+    if (ua.includes("Edg")) return `Edge · ${obj.language ?? ""}`;
+    if (ua.length > 0) return ua.slice(0, 60);
+    return metadata.slice(0, 60);
+  } catch {
+    return metadata.slice(0, 60);
+  }
+}
 function MyPagesAdmin() {
   const { t } = useLanguage();
   const { actor, isFetching } = useTypedActor();
@@ -49388,6 +51006,14 @@ function MyPagesAdmin() {
   const [editPhone, setEditPhone] = reactExports.useState("");
   const [editRole, setEditRole] = reactExports.useState("guest");
   const [saving, setSaving] = reactExports.useState(false);
+  const [logTarget, setLogTarget] = reactExports.useState(null);
+  const [logEntries, setLogEntries] = reactExports.useState([]);
+  const [logLoading, setLogLoading] = reactExports.useState(false);
+  const [selectedLogIds, setSelectedLogIds] = reactExports.useState(/* @__PURE__ */ new Set());
+  const [showClearConfirm, setShowClearConfirm] = reactExports.useState(false);
+  const [showDeleteLogsConfirm, setShowDeleteLogsConfirm] = reactExports.useState(false);
+  const [clearingLog, setClearingLog] = reactExports.useState(false);
+  const [deletingLogs, setDeletingLogs] = reactExports.useState(false);
   const fetchUsers = reactExports.useCallback(async () => {
     if (!actor || isFetching) return;
     setLoading(true);
@@ -49426,6 +51052,25 @@ function MyPagesAdmin() {
     setEditPhone(fields.phone);
     setEditRole(getRoleStr(editTarget.role));
   }, [editTarget]);
+  reactExports.useEffect(() => {
+    if (!logTarget || !actor) return;
+    setLogLoading(true);
+    setLogEntries([]);
+    setSelectedLogIds(/* @__PURE__ */ new Set());
+    const principal = getPrincipalObj(logTarget);
+    actor.getUserAccessLog(
+      principal
+    ).then((result) => {
+      if ("ok" in result) {
+        const sorted = [...result.ok].sort(
+          (a2, b2) => b2.timestamp > a2.timestamp ? 1 : b2.timestamp < a2.timestamp ? -1 : 0
+        );
+        setLogEntries(sorted);
+      } else {
+        ue.error(result.err || t.common.error);
+      }
+    }).catch(() => ue.error(t.common.error)).finally(() => setLogLoading(false));
+  }, [logTarget, actor, t.common.error]);
   const handleUpdateRole = async (principalText, newRole) => {
     if (!actor) return;
     setUpdatingRole(principalText);
@@ -49582,6 +51227,66 @@ function MyPagesAdmin() {
       setSaving(false);
     }
   };
+  const handleClearLog = async () => {
+    if (!actor || !logTarget) return;
+    setClearingLog(true);
+    const principal = getPrincipalObj(logTarget);
+    try {
+      const result = await actor.clearUserAccessLog(
+        principal
+      );
+      if ("ok" in result) {
+        setLogEntries([]);
+        setSelectedLogIds(/* @__PURE__ */ new Set());
+        ue.success(t.adminAccessLog.clearAll);
+      } else {
+        ue.error(result.err || t.common.error);
+      }
+    } catch {
+      ue.error(t.common.error);
+    } finally {
+      setClearingLog(false);
+      setShowClearConfirm(false);
+    }
+  };
+  const handleDeleteSelectedLogs = async () => {
+    if (!actor || !logTarget || selectedLogIds.size === 0) return;
+    setDeletingLogs(true);
+    const principal = getPrincipalObj(logTarget);
+    try {
+      const result = await actor.deleteUserAccessLogEntries(
+        principal,
+        Array.from(selectedLogIds)
+      );
+      if ("ok" in result) {
+        setLogEntries((prev) => prev.filter((e) => !selectedLogIds.has(e.id)));
+        setSelectedLogIds(/* @__PURE__ */ new Set());
+        ue.success(t.adminAccessLog.deleteSelected);
+      } else {
+        ue.error(result.err || t.common.error);
+      }
+    } catch {
+      ue.error(t.common.error);
+    } finally {
+      setDeletingLogs(false);
+      setShowDeleteLogsConfirm(false);
+    }
+  };
+  const toggleLogEntry = (id2) => {
+    setSelectedLogIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id2)) next.delete(id2);
+      else next.add(id2);
+      return next;
+    });
+  };
+  const toggleAllLogs = () => {
+    if (selectedLogIds.size === logEntries.length) {
+      setSelectedLogIds(/* @__PURE__ */ new Set());
+    } else {
+      setSelectedLogIds(new Set(logEntries.map((e) => e.id)));
+    }
+  };
   const getRoleBadgeClass = (roleStr) => {
     if (roleStr === "admin") return "border-gold text-gold";
     if (roleStr === "user") return "border-blue-400 text-blue-600";
@@ -49627,108 +51332,427 @@ function MyPagesAdmin() {
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-sans text-sm text-muted-foreground", children: t.admin.noUsers })
         ]
       }
-    ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Table, { "data-ocid": "admin.table", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(TableHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(TableRow, { className: "border-divider", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide", children: t.admin.principal }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide", children: t.admin.name }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide", children: t.admin.role }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right", children: t.admin.actions })
-      ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(TableBody, { children: users.map((user, idx) => {
-        const principalStr = getPrincipalStr(user);
-        const roleStr = getRoleStr(user.role);
-        const profileName = getProfileName(user);
-        const isUpdating = updatingRole === principalStr;
-        const isBlocked = roleStr === "guest";
-        return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          TableRow,
-          {
-            className: "border-divider hover:bg-beige/50",
-            "data-ocid": `admin.row.${idx + 1}`,
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-mono text-xs text-muted-foreground max-w-[180px]", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { title: principalStr, children: truncatePrincipal(principalStr) }) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-sans text-sm text-foreground", children: profileName || "—" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  Badge,
-                  {
-                    variant: "outline",
-                    className: `text-xs capitalize font-sans ${getRoleBadgeClass(roleStr)}`,
-                    children: t.common[roleStr] || roleStr
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  Select,
-                  {
-                    value: roleStr,
-                    onValueChange: (v2) => handleUpdateRole(principalStr, v2),
-                    disabled: isUpdating,
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        SelectTrigger,
+    ) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "ul",
+        {
+          className: "divide-y divide-divider md:hidden",
+          "data-ocid": "admin.table",
+          children: users.map((user, idx) => {
+            const principalStr = getPrincipalStr(user);
+            const roleStr = getRoleStr(user.role);
+            const profileName = getProfileName(user);
+            const isUpdating = updatingRole === principalStr;
+            const isBlocked = roleStr === "guest";
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "li",
+              {
+                className: "p-4 space-y-3 hover:bg-beige/30 transition-colors",
+                "data-ocid": `admin.row.${idx + 1}`,
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-2 min-w-0", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0 space-y-1", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-sans text-sm font-semibold text-foreground truncate", children: profileName || "—" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "button",
                         {
-                          className: "h-7 w-24 font-sans text-xs",
-                          "data-ocid": `admin.select.${idx + 1}`,
-                          children: isUpdating ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3 h-3 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(SelectValue, {})
+                          type: "button",
+                          title: `${t.adminAccessLog.viewAccessLog}: ${principalStr}`,
+                          onClick: () => setLogTarget(user),
+                          className: "flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-gold transition-colors group",
+                          "data-ocid": `admin.principal_button.${idx + 1}`,
+                          children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(ClipboardList, { className: "w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-gold shrink-0" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate max-w-[200px]", children: truncatePrincipal(principalStr) })
+                          ]
+                        }
+                      )
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      Badge,
+                      {
+                        variant: "outline",
+                        className: `text-xs capitalize font-sans shrink-0 ${getRoleBadgeClass(roleStr)}`,
+                        children: t.common[roleStr] || roleStr
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-2 flex-wrap", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      Select,
+                      {
+                        value: roleStr,
+                        onValueChange: (v2) => handleUpdateRole(principalStr, v2),
+                        disabled: isUpdating,
+                        children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            SelectTrigger,
+                            {
+                              className: "h-8 w-28 font-sans text-xs",
+                              "data-ocid": `admin.select.${idx + 1}`,
+                              children: isUpdating ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3 h-3 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(SelectValue, {})
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs(SelectContent, { children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(SelectItem, { value: "admin", children: t.common.admin }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(SelectItem, { value: "user", children: t.common.user }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(SelectItem, { value: "guest", children: t.common.guest })
+                          ] })
+                        ]
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        Button,
+                        {
+                          variant: "ghost",
+                          size: "sm",
+                          onClick: () => setEditTarget(user),
+                          className: "min-w-[44px] min-h-[44px] text-muted-foreground hover:text-foreground hover:bg-muted",
+                          "data-ocid": `admin.edit_button.${idx + 1}`,
+                          children: /* @__PURE__ */ jsxRuntimeExports.jsx(Pencil, { className: "w-4 h-4" })
                         }
                       ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs(SelectContent, { children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(SelectItem, { value: "admin", children: t.common.admin }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(SelectItem, { value: "user", children: t.common.user }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(SelectItem, { value: "guest", children: t.common.guest })
-                      ] })
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        Button,
+                        {
+                          variant: "ghost",
+                          size: "sm",
+                          onClick: () => setBlockTarget(principalStr),
+                          disabled: isBlocked,
+                          className: "min-w-[44px] min-h-[44px] text-amber-600 hover:text-amber-600 hover:bg-amber-50",
+                          "data-ocid": `admin.secondary_button.${idx + 1}`,
+                          children: /* @__PURE__ */ jsxRuntimeExports.jsx(Ban, { className: "w-4 h-4" })
+                        }
+                      ),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        Button,
+                        {
+                          variant: "ghost",
+                          size: "sm",
+                          onClick: () => setRemoveTarget(principalStr),
+                          className: "min-w-[44px] min-h-[44px] text-destructive hover:text-destructive hover:bg-destructive/10",
+                          "data-ocid": `admin.delete_button.${idx + 1}`,
+                          children: /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-4 h-4" })
+                        }
+                      )
+                    ] })
+                  ] })
+                ]
+              },
+              principalStr
+            );
+          })
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden md:block overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Table, { "data-ocid": "admin.table", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(TableRow, { className: "border-divider", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide", children: t.admin.principal }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide", children: t.admin.name }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide", children: t.admin.role }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right", children: t.admin.actions })
+        ] }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(TableBody, { children: users.map((user, idx) => {
+          const principalStr = getPrincipalStr(user);
+          const roleStr = getRoleStr(user.role);
+          const profileName = getProfileName(user);
+          const isUpdating = updatingRole === principalStr;
+          const isBlocked = roleStr === "guest";
+          return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            TableRow,
+            {
+              className: "border-divider hover:bg-beige/50",
+              "data-ocid": `admin.row.${idx + 1}`,
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-mono text-xs text-muted-foreground max-w-[180px]", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "button",
+                  {
+                    type: "button",
+                    title: `${t.adminAccessLog.viewAccessLog}: ${principalStr}`,
+                    onClick: () => setLogTarget(user),
+                    className: "flex items-center gap-1.5 hover:text-gold transition-colors duration-150 cursor-pointer group",
+                    "data-ocid": `admin.principal_button.${idx + 1}`,
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(ClipboardList, { className: "w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-gold flex-shrink-0" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: truncatePrincipal(principalStr) })
+                    ]
+                  }
+                ) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-sans text-sm text-foreground", children: profileName || "—" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    Badge,
+                    {
+                      variant: "outline",
+                      className: `text-xs capitalize font-sans ${getRoleBadgeClass(roleStr)}`,
+                      children: t.common[roleStr] || roleStr
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    Select,
+                    {
+                      value: roleStr,
+                      onValueChange: (v2) => handleUpdateRole(principalStr, v2),
+                      disabled: isUpdating,
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          SelectTrigger,
+                          {
+                            className: "h-7 w-24 font-sans text-xs",
+                            "data-ocid": `admin.select.${idx + 1}`,
+                            children: isUpdating ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3 h-3 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(SelectValue, {})
+                          }
+                        ),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs(SelectContent, { children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(SelectItem, { value: "admin", children: t.common.admin }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(SelectItem, { value: "user", children: t.common.user }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(SelectItem, { value: "guest", children: t.common.guest })
+                        ] })
+                      ]
+                    }
+                  )
+                ] }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-end gap-1", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    Button,
+                    {
+                      variant: "ghost",
+                      size: "sm",
+                      onClick: () => setEditTarget(user),
+                      className: "text-muted-foreground hover:text-foreground hover:bg-muted font-sans text-xs",
+                      "data-ocid": `admin.edit_button.${idx + 1}`,
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(Pencil, { className: "w-3.5 h-3.5" })
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    Button,
+                    {
+                      variant: "ghost",
+                      size: "sm",
+                      onClick: () => setBlockTarget(principalStr),
+                      disabled: isBlocked,
+                      className: "text-amber-600 hover:text-amber-600 hover:bg-amber-50 font-sans text-xs",
+                      "data-ocid": `admin.secondary_button.${idx + 1}`,
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Ban, { className: "w-3.5 h-3.5 mr-1" }),
+                        t.admin.blockUser
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    Button,
+                    {
+                      variant: "ghost",
+                      size: "sm",
+                      onClick: () => setRemoveTarget(principalStr),
+                      className: "text-destructive hover:text-destructive hover:bg-destructive/10 font-sans text-xs",
+                      "data-ocid": `admin.delete_button.${idx + 1}`,
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3.5 h-3.5 mr-1" }),
+                        t.admin.removeUser
+                      ]
+                    }
+                  )
+                ] }) })
+              ]
+            },
+            principalStr
+          );
+        }) })
+      ] }) })
+    ] }) }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Dialog,
+      {
+        open: !!logTarget,
+        onOpenChange: (open) => {
+          if (!open) {
+            setLogTarget(null);
+            setLogEntries([]);
+            setSelectedLogIds(/* @__PURE__ */ new Set());
+            setShowClearConfirm(false);
+            setShowDeleteLogsConfirm(false);
+          }
+        },
+        children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          DialogContent,
+          {
+            className: "sm:max-w-2xl font-sans max-h-[85vh] flex flex-col",
+            "data-ocid": "admin.access_log_dialog",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogTitle, { className: "font-serif text-foreground flex items-center gap-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(ClipboardList, { className: "w-4 h-4 text-gold" }),
+                  t.adminAccessLog.accessLog
+                ] }),
+                logTarget && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground font-mono break-all mt-1", children: [
+                  getProfileName(logTarget) !== "—" ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-sans text-sm text-foreground font-medium mr-2 not-font-mono", children: getProfileName(logTarget) }) : null,
+                  getPrincipalStr(logTarget)
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 pt-1 pb-2 border-b border-divider", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  Button,
+                  {
+                    variant: "outline",
+                    size: "sm",
+                    onClick: () => setShowDeleteLogsConfirm(true),
+                    disabled: selectedLogIds.size === 0 || deletingLogs || logLoading,
+                    className: "font-sans text-xs text-destructive border-destructive/40 hover:bg-destructive/10",
+                    "data-ocid": "admin.delete_logs_button",
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3.5 h-3.5 mr-1.5" }),
+                      t.adminAccessLog.deleteSelected,
+                      selectedLogIds.size > 0 && ` (${selectedLogIds.size})`
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  Button,
+                  {
+                    variant: "outline",
+                    size: "sm",
+                    onClick: () => setShowClearConfirm(true),
+                    disabled: logEntries.length === 0 || clearingLog || logLoading,
+                    className: "font-sans text-xs text-amber-600 border-amber-400/40 hover:bg-amber-50",
+                    "data-ocid": "admin.clear_log_button",
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: "w-3.5 h-3.5 mr-1.5" }),
+                      t.adminAccessLog.clearAll
                     ]
                   }
                 )
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-y-auto flex-1 min-h-0", children: logLoading ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-6 space-y-3", "data-ocid": "admin.log_loading", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground text-center font-sans", children: t.adminAccessLog.loadingLogs }),
+                Array.from({ length: 4 }).map((_2, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static skeleton
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-9 w-full" }, i)
+                ))
+              ] }) : logEntries.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-10 text-center", "data-ocid": "admin.log_empty", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(ClipboardList, { className: "w-10 h-10 text-muted-foreground mx-auto mb-2" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground font-sans", children: t.adminAccessLog.noLogs })
+              ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(Table, { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(TableRow, { className: "border-divider", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "w-10", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    Checkbox,
+                    {
+                      checked: selectedLogIds.size === logEntries.length && logEntries.length > 0,
+                      onCheckedChange: toggleAllLogs,
+                      "aria-label": t.adminContacts.selectAll,
+                      "data-ocid": "admin.log_select_all"
+                    }
+                  ) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap", children: t.adminAccessLog.dateTime }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide", children: t.adminAccessLog.metadata })
+                ] }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableBody, { children: logEntries.map((entry, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  TableRow,
+                  {
+                    className: "border-divider hover:bg-beige/30",
+                    "data-ocid": `admin.log_row.${idx + 1}`,
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "w-10", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        Checkbox,
+                        {
+                          checked: selectedLogIds.has(entry.id),
+                          onCheckedChange: () => toggleLogEntry(entry.id),
+                          "aria-label": `Select log entry ${idx + 1}`
+                        }
+                      ) }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-mono text-xs text-muted-foreground whitespace-nowrap", children: formatTimestamp(entry.timestamp) }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-sans text-xs text-foreground max-w-xs truncate", children: parseMetadata(entry.metadata) })
+                    ]
+                  },
+                  entry.id
+                )) })
               ] }) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-end gap-1", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  Button,
-                  {
-                    variant: "ghost",
-                    size: "sm",
-                    onClick: () => setEditTarget(user),
-                    className: "text-muted-foreground hover:text-foreground hover:bg-muted font-sans text-xs",
-                    "data-ocid": `admin.edit_button.${idx + 1}`,
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(Pencil, { className: "w-3.5 h-3.5" })
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  Button,
-                  {
-                    variant: "ghost",
-                    size: "sm",
-                    onClick: () => setBlockTarget(principalStr),
-                    disabled: isBlocked,
-                    className: "text-amber-600 hover:text-amber-600 hover:bg-amber-50 font-sans text-xs",
-                    "data-ocid": `admin.secondary_button.${idx + 1}`,
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(Ban, { className: "w-3.5 h-3.5 mr-1" }),
-                      t.admin.blockUser
-                    ]
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  Button,
-                  {
-                    variant: "ghost",
-                    size: "sm",
-                    onClick: () => setRemoveTarget(principalStr),
-                    className: "text-destructive hover:text-destructive hover:bg-destructive/10 font-sans text-xs",
-                    "data-ocid": `admin.delete_button.${idx + 1}`,
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3.5 h-3.5 mr-1" }),
-                      t.admin.removeUser
-                    ]
-                  }
-                )
-              ] }) })
+              /* @__PURE__ */ jsxRuntimeExports.jsx(DialogFooter, { className: "pt-2 border-t border-divider", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Button,
+                {
+                  variant: "outline",
+                  onClick: () => setLogTarget(null),
+                  className: "font-sans",
+                  "data-ocid": "admin.close_log_button",
+                  children: t.common.close
+                }
+              ) })
             ]
-          },
-          principalStr
-        );
-      }) })
-    ] }) }) }) }),
+          }
+        )
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialog, { open: showClearConfirm, onOpenChange: setShowClearConfirm, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogContent, { "data-ocid": "admin.clear_log_confirm_dialog", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogHeader, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogTitle, { className: "font-serif text-foreground flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TriangleAlert, { className: "w-5 h-5 text-amber-600" }),
+          t.adminAccessLog.clearAll
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogDescription, { className: "font-sans text-sm text-muted-foreground", children: t.adminAccessLog.clearAllConfirm })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogFooter, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          AlertDialogCancel,
+          {
+            className: "font-sans",
+            "data-ocid": "admin.cancel_button",
+            children: t.admin.cancel
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          AlertDialogAction,
+          {
+            onClick: handleClearLog,
+            disabled: clearingLog,
+            className: "bg-amber-600 hover:bg-amber-700 text-white font-sans",
+            "data-ocid": "admin.confirm_clear_button",
+            children: clearingLog ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 mr-1.5 animate-spin" }),
+              t.adminAccessLog.clearAll
+            ] }) : t.adminAccessLog.clearAll
+          }
+        )
+      ] })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      AlertDialog,
+      {
+        open: showDeleteLogsConfirm,
+        onOpenChange: setShowDeleteLogsConfirm,
+        children: /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogContent, { "data-ocid": "admin.delete_logs_confirm_dialog", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogHeader, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogTitle, { className: "font-serif text-foreground flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(TriangleAlert, { className: "w-5 h-5 text-destructive" }),
+              t.adminAccessLog.deleteSelected
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogDescription, { className: "font-sans text-sm text-muted-foreground", children: t.adminAccessLog.deleteConfirm })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogFooter, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              AlertDialogCancel,
+              {
+                className: "font-sans",
+                "data-ocid": "admin.cancel_button",
+                children: t.admin.cancel
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              AlertDialogAction,
+              {
+                onClick: handleDeleteSelectedLogs,
+                disabled: deletingLogs,
+                className: "bg-destructive hover:bg-destructive/90 text-destructive-foreground font-sans",
+                "data-ocid": "admin.confirm_delete_logs_button",
+                children: deletingLogs ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 mr-1.5 animate-spin" }),
+                  t.adminAccessLog.deleteSelected
+                ] }) : t.adminAccessLog.deleteSelected
+              }
+            )
+          ] })
+        ] })
+      }
+    ),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       Dialog,
       {
@@ -49975,7 +51999,7 @@ var Switch$1 = reactExports.forwardRef(
           role: "switch",
           "aria-checked": checked,
           "aria-required": required,
-          "data-state": getState$1(checked),
+          "data-state": getState(checked),
           "data-disabled": disabled ? "" : void 0,
           disabled,
           value,
@@ -50016,7 +52040,7 @@ var SwitchThumb = reactExports.forwardRef(
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       Primitive$1.span,
       {
-        "data-state": getState$1(context.checked),
+        "data-state": getState(context.checked),
         "data-disabled": context.disabled ? "" : void 0,
         ...thumbProps,
         ref: forwardedRef
@@ -50025,7 +52049,7 @@ var SwitchThumb = reactExports.forwardRef(
   }
 );
 SwitchThumb.displayName = THUMB_NAME;
-var BUBBLE_INPUT_NAME$1 = "SwitchBubbleInput";
+var BUBBLE_INPUT_NAME = "SwitchBubbleInput";
 var SwitchBubbleInput = reactExports.forwardRef(
   ({
     __scopeSwitch,
@@ -50074,8 +52098,8 @@ var SwitchBubbleInput = reactExports.forwardRef(
     );
   }
 );
-SwitchBubbleInput.displayName = BUBBLE_INPUT_NAME$1;
-function getState$1(checked) {
+SwitchBubbleInput.displayName = BUBBLE_INPUT_NAME;
+function getState(checked) {
   return checked ? "checked" : "unchecked";
 }
 var Root = Switch$1;
@@ -50174,30 +52198,24 @@ function MyPagesCalendar() {
       /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "space-y-4", children: loading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-4", "data-ocid": "calendar.loading_state", children: [1, 2, 3, 4].map((i) => /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-12 w-full rounded-md" }, i)) }) : holidays.map(({ key, label }) => {
         const isActive2 = activeHoliday === key;
         return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "div",
+          "label",
           {
+            htmlFor: `switch-${key}`,
             "data-ocid": `calendar.${key}.row`,
-            className: `flex items-center justify-between rounded-lg border px-4 py-3 transition-all ${isActive2 ? "border-gold bg-gold/10 shadow-sm" : "border-divider bg-card"}`,
+            className: `flex items-center justify-between rounded-xl border px-5 min-h-[64px] py-3 transition-all cursor-pointer ${isActive2 ? "border-gold bg-gold/10 shadow-sm" : "border-divider bg-card active:bg-gold/5"}`,
             children: [
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3", children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx(
                   "span",
                   {
-                    className: "inline-block w-3 h-3 rounded-full flex-shrink-0",
+                    className: "inline-block w-4 h-4 rounded-full flex-shrink-0",
                     style: { backgroundColor: HOLIDAY_DOTS[key] }
                   }
                 ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  Label$1,
-                  {
-                    htmlFor: `switch-${key}`,
-                    className: "font-sans text-sm font-medium text-foreground cursor-pointer",
-                    children: label
-                  }
-                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-sans text-base font-medium text-foreground", children: label }),
                 isActive2 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs font-medium text-gold bg-gold/20 px-2 py-0.5 rounded-full", children: t.calendar.active })
               ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-3 -mr-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
                 Switch,
                 {
                   id: `switch-${key}`,
@@ -50206,7 +52224,7 @@ function MyPagesCalendar() {
                   disabled: saving,
                   onCheckedChange: (checked) => handleToggle(key, checked)
                 }
-              )
+              ) })
             ]
           },
           key
@@ -50225,287 +52243,6 @@ function MyPagesCalendar() {
       }
     )
   ] });
-}
-var CHECKBOX_NAME = "Checkbox";
-var [createCheckboxContext] = createContextScope(CHECKBOX_NAME);
-var [CheckboxProviderImpl, useCheckboxContext] = createCheckboxContext(CHECKBOX_NAME);
-function CheckboxProvider(props) {
-  const {
-    __scopeCheckbox,
-    checked: checkedProp,
-    children,
-    defaultChecked,
-    disabled,
-    form,
-    name,
-    onCheckedChange,
-    required,
-    value = "on",
-    // @ts-expect-error
-    internal_do_not_use_render
-  } = props;
-  const [checked, setChecked] = useControllableState({
-    prop: checkedProp,
-    defaultProp: defaultChecked ?? false,
-    onChange: onCheckedChange,
-    caller: CHECKBOX_NAME
-  });
-  const [control, setControl] = reactExports.useState(null);
-  const [bubbleInput, setBubbleInput] = reactExports.useState(null);
-  const hasConsumerStoppedPropagationRef = reactExports.useRef(false);
-  const isFormControl = control ? !!form || !!control.closest("form") : (
-    // We set this to true by default so that events bubble to forms without JS (SSR)
-    true
-  );
-  const context = {
-    checked,
-    disabled,
-    setChecked,
-    control,
-    setControl,
-    name,
-    form,
-    value,
-    hasConsumerStoppedPropagationRef,
-    required,
-    defaultChecked: isIndeterminate$1(defaultChecked) ? false : defaultChecked,
-    isFormControl,
-    bubbleInput,
-    setBubbleInput
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    CheckboxProviderImpl,
-    {
-      scope: __scopeCheckbox,
-      ...context,
-      children: isFunction(internal_do_not_use_render) ? internal_do_not_use_render(context) : children
-    }
-  );
-}
-var TRIGGER_NAME$2 = "CheckboxTrigger";
-var CheckboxTrigger = reactExports.forwardRef(
-  ({ __scopeCheckbox, onKeyDown, onClick, ...checkboxProps }, forwardedRef) => {
-    const {
-      control,
-      value,
-      disabled,
-      checked,
-      required,
-      setControl,
-      setChecked,
-      hasConsumerStoppedPropagationRef,
-      isFormControl,
-      bubbleInput
-    } = useCheckboxContext(TRIGGER_NAME$2, __scopeCheckbox);
-    const composedRefs = useComposedRefs$1(forwardedRef, setControl);
-    const initialCheckedStateRef = reactExports.useRef(checked);
-    reactExports.useEffect(() => {
-      const form = control == null ? void 0 : control.form;
-      if (form) {
-        const reset = () => setChecked(initialCheckedStateRef.current);
-        form.addEventListener("reset", reset);
-        return () => form.removeEventListener("reset", reset);
-      }
-    }, [control, setChecked]);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Primitive$1.button,
-      {
-        type: "button",
-        role: "checkbox",
-        "aria-checked": isIndeterminate$1(checked) ? "mixed" : checked,
-        "aria-required": required,
-        "data-state": getState(checked),
-        "data-disabled": disabled ? "" : void 0,
-        disabled,
-        value,
-        ...checkboxProps,
-        ref: composedRefs,
-        onKeyDown: composeEventHandlers(onKeyDown, (event) => {
-          if (event.key === "Enter") event.preventDefault();
-        }),
-        onClick: composeEventHandlers(onClick, (event) => {
-          setChecked((prevChecked) => isIndeterminate$1(prevChecked) ? true : !prevChecked);
-          if (bubbleInput && isFormControl) {
-            hasConsumerStoppedPropagationRef.current = event.isPropagationStopped();
-            if (!hasConsumerStoppedPropagationRef.current) event.stopPropagation();
-          }
-        })
-      }
-    );
-  }
-);
-CheckboxTrigger.displayName = TRIGGER_NAME$2;
-var Checkbox$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const {
-      __scopeCheckbox,
-      name,
-      checked,
-      defaultChecked,
-      required,
-      disabled,
-      value,
-      onCheckedChange,
-      form,
-      ...checkboxProps
-    } = props;
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      CheckboxProvider,
-      {
-        __scopeCheckbox,
-        checked,
-        defaultChecked,
-        disabled,
-        required,
-        onCheckedChange,
-        name,
-        form,
-        value,
-        internal_do_not_use_render: ({ isFormControl }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            CheckboxTrigger,
-            {
-              ...checkboxProps,
-              ref: forwardedRef,
-              __scopeCheckbox
-            }
-          ),
-          isFormControl && /* @__PURE__ */ jsxRuntimeExports.jsx(
-            CheckboxBubbleInput,
-            {
-              __scopeCheckbox
-            }
-          )
-        ] })
-      }
-    );
-  }
-);
-Checkbox$1.displayName = CHECKBOX_NAME;
-var INDICATOR_NAME$1 = "CheckboxIndicator";
-var CheckboxIndicator = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeCheckbox, forceMount, ...indicatorProps } = props;
-    const context = useCheckboxContext(INDICATOR_NAME$1, __scopeCheckbox);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Presence,
-      {
-        present: forceMount || isIndeterminate$1(context.checked) || context.checked === true,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Primitive$1.span,
-          {
-            "data-state": getState(context.checked),
-            "data-disabled": context.disabled ? "" : void 0,
-            ...indicatorProps,
-            ref: forwardedRef,
-            style: { pointerEvents: "none", ...props.style }
-          }
-        )
-      }
-    );
-  }
-);
-CheckboxIndicator.displayName = INDICATOR_NAME$1;
-var BUBBLE_INPUT_NAME = "CheckboxBubbleInput";
-var CheckboxBubbleInput = reactExports.forwardRef(
-  ({ __scopeCheckbox, ...props }, forwardedRef) => {
-    const {
-      control,
-      hasConsumerStoppedPropagationRef,
-      checked,
-      defaultChecked,
-      required,
-      disabled,
-      name,
-      value,
-      form,
-      bubbleInput,
-      setBubbleInput
-    } = useCheckboxContext(BUBBLE_INPUT_NAME, __scopeCheckbox);
-    const composedRefs = useComposedRefs$1(forwardedRef, setBubbleInput);
-    const prevChecked = usePrevious(checked);
-    const controlSize = useSize(control);
-    reactExports.useEffect(() => {
-      const input = bubbleInput;
-      if (!input) return;
-      const inputProto = window.HTMLInputElement.prototype;
-      const descriptor = Object.getOwnPropertyDescriptor(
-        inputProto,
-        "checked"
-      );
-      const setChecked = descriptor.set;
-      const bubbles = !hasConsumerStoppedPropagationRef.current;
-      if (prevChecked !== checked && setChecked) {
-        const event = new Event("click", { bubbles });
-        input.indeterminate = isIndeterminate$1(checked);
-        setChecked.call(input, isIndeterminate$1(checked) ? false : checked);
-        input.dispatchEvent(event);
-      }
-    }, [bubbleInput, prevChecked, checked, hasConsumerStoppedPropagationRef]);
-    const defaultCheckedRef = reactExports.useRef(isIndeterminate$1(checked) ? false : checked);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Primitive$1.input,
-      {
-        type: "checkbox",
-        "aria-hidden": true,
-        defaultChecked: defaultChecked ?? defaultCheckedRef.current,
-        required,
-        disabled,
-        name,
-        value,
-        form,
-        ...props,
-        tabIndex: -1,
-        ref: composedRefs,
-        style: {
-          ...props.style,
-          ...controlSize,
-          position: "absolute",
-          pointerEvents: "none",
-          opacity: 0,
-          margin: 0,
-          // We transform because the input is absolutely positioned but we have
-          // rendered it **after** the button. This pulls it back to sit on top
-          // of the button.
-          transform: "translateX(-100%)"
-        }
-      }
-    );
-  }
-);
-CheckboxBubbleInput.displayName = BUBBLE_INPUT_NAME;
-function isFunction(value) {
-  return typeof value === "function";
-}
-function isIndeterminate$1(checked) {
-  return checked === "indeterminate";
-}
-function getState(checked) {
-  return isIndeterminate$1(checked) ? "indeterminate" : checked ? "checked" : "unchecked";
-}
-function Checkbox({
-  className,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Checkbox$1,
-    {
-      "data-slot": "checkbox",
-      className: cn(
-        "peer border-input dark:bg-input/30 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:data-[state=checked]:bg-primary data-[state=checked]:border-primary focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive size-4 shrink-0 rounded-[4px] border shadow-xs transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      ),
-      ...props,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-        CheckboxIndicator,
-        {
-          "data-slot": "checkbox-indicator",
-          className: "flex items-center justify-center text-current transition-none",
-          children: /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "size-3.5" })
-        }
-      )
-    }
-  );
 }
 var SELECTION_KEYS = ["Enter", " "];
 var FIRST_KEYS = ["ArrowDown", "PageUp", "Home"];
@@ -52335,66 +54072,48 @@ function MyPagesContacts() {
         "data-ocid": "contacts.empty_state",
         children: t.adminContacts.noMessages
       }
-    ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "rounded-lg border border-border overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Table, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(TableHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(TableRow, { className: "bg-muted/40", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "w-10 pl-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Checkbox,
-          {
-            checked: selected.size === messages.length && messages.length > 0,
-            onCheckedChange: toggleSelectAll,
-            "aria-label": t.adminContacts.selectAll,
-            "data-ocid": "contacts.checkbox"
-          }
-        ) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs uppercase tracking-wide", children: t.adminContacts.name }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs uppercase tracking-wide hidden md:table-cell", children: t.adminContacts.email }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs uppercase tracking-wide hidden lg:table-cell", children: t.adminContacts.message }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs uppercase tracking-wide", children: t.adminContacts.status }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs uppercase tracking-wide hidden sm:table-cell", children: t.adminContacts.submitted }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-right font-sans text-xs uppercase tracking-wide", children: t.adminContacts.actions })
-      ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(TableBody, { children: messages.map((msg, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        TableRow,
+    ) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "divide-y divide-border md:hidden rounded-lg border border-border overflow-hidden", children: messages.map((msg, idx) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "li",
         {
-          className: selected.has(msg.id) ? "bg-muted/30" : void 0,
+          className: `p-4 space-y-2.5 hover:bg-muted/20 transition-colors ${selected.has(msg.id) ? "bg-muted/30" : ""}`,
           "data-ocid": `contacts.item.${idx + 1}`,
-          children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "pl-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-3 min-w-0", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0 -ml-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
               Checkbox,
               {
                 checked: selected.has(msg.id),
                 onCheckedChange: () => toggleSelect(msg.id),
-                "data-ocid": `contacts.checkbox.${idx + 1}`
+                "data-ocid": `contacts.checkbox.${idx + 1}`,
+                "aria-label": `Select message from ${msg.name}`
               }
             ) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-sans text-sm font-medium", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5", children: [
-              msg.senderBlocked && /* @__PURE__ */ jsxRuntimeExports.jsxs(Tooltip, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Ban, { className: "h-3.5 w-3.5 text-destructive shrink-0" }) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContent, { children: t.adminContacts.senderBlocked })
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 min-w-0 space-y-1", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 min-w-0", children: [
+                msg.senderBlocked && /* @__PURE__ */ jsxRuntimeExports.jsx(Ban, { className: "h-3.5 w-3.5 text-destructive shrink-0" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-sans text-sm font-semibold text-foreground truncate", children: msg.name })
               ] }),
-              msg.name
-            ] }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-sans text-sm text-muted-foreground hidden md:table-cell", children: msg.email }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-sans text-sm text-muted-foreground hidden lg:table-cell max-w-[220px]", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Tooltip, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block truncate cursor-default", children: msg.message }) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContent, { className: "max-w-xs whitespace-pre-wrap", children: msg.message })
-            ] }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Badge,
-              {
-                variant: isActive(msg.status) ? "default" : "secondary",
-                className: isActive(msg.status) ? "bg-gold/20 text-amber-800 border-gold/40 font-sans text-xs" : "font-sans text-xs",
-                children: isActive(msg.status) ? t.adminContacts.active : t.adminContacts.notactive
-              }
-            ) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-sans text-xs text-muted-foreground hidden sm:table-cell whitespace-nowrap", children: formatDate$2(msg.submittedAt) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-sans text-xs text-muted-foreground truncate", children: msg.email }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-sans text-xs text-muted-foreground line-clamp-2", children: msg.message }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 flex-wrap", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-sans text-xs text-muted-foreground", children: formatDate$2(msg.submittedAt) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  Badge,
+                  {
+                    variant: isActive(msg.status) ? "default" : "secondary",
+                    className: isActive(msg.status) ? "bg-gold/20 text-amber-800 border-gold/40 font-sans text-xs" : "font-sans text-xs",
+                    children: isActive(msg.status) ? t.adminContacts.active : t.adminContacts.notactive
+                  }
+                )
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
                 Button,
                 {
                   variant: "ghost",
                   size: "icon",
-                  className: "h-8 w-8",
+                  className: "min-w-[44px] min-h-[44px] shrink-0",
                   "data-ocid": `contacts.dropdown_menu.${idx + 1}`,
                   children: /* @__PURE__ */ jsxRuntimeExports.jsx(Ellipsis, { className: "h-4 w-4" })
                 }
@@ -52453,12 +54172,136 @@ function MyPagesContacts() {
                   }
                 )
               ] })
-            ] }) })
-          ]
+            ] })
+          ] })
         },
         msg.id
-      )) })
-    ] }) }),
+      )) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden md:block rounded-lg border border-border overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Table, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(TableRow, { className: "bg-muted/40", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "w-10 pl-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Checkbox,
+            {
+              checked: selected.size === messages.length && messages.length > 0,
+              onCheckedChange: toggleSelectAll,
+              "aria-label": t.adminContacts.selectAll,
+              "data-ocid": "contacts.checkbox"
+            }
+          ) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs uppercase tracking-wide", children: t.adminContacts.name }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs uppercase tracking-wide hidden md:table-cell", children: t.adminContacts.email }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs uppercase tracking-wide hidden lg:table-cell", children: t.adminContacts.message }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs uppercase tracking-wide", children: t.adminContacts.status }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "font-sans text-xs uppercase tracking-wide hidden sm:table-cell", children: t.adminContacts.submitted }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-right font-sans text-xs uppercase tracking-wide", children: t.adminContacts.actions })
+        ] }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(TableBody, { children: messages.map((msg, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          TableRow,
+          {
+            className: selected.has(msg.id) ? "bg-muted/30" : void 0,
+            "data-ocid": `contacts.item.${idx + 1}`,
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "pl-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Checkbox,
+                {
+                  checked: selected.has(msg.id),
+                  onCheckedChange: () => toggleSelect(msg.id),
+                  "data-ocid": `contacts.checkbox.${idx + 1}`
+                }
+              ) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-sans text-sm font-medium", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5", children: [
+                msg.senderBlocked && /* @__PURE__ */ jsxRuntimeExports.jsxs(Tooltip, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Ban, { className: "h-3.5 w-3.5 text-destructive shrink-0" }) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContent, { children: t.adminContacts.senderBlocked })
+                ] }),
+                msg.name
+              ] }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-sans text-sm text-muted-foreground hidden md:table-cell", children: msg.email }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-sans text-sm text-muted-foreground hidden lg:table-cell max-w-[220px]", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Tooltip, { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "block truncate cursor-default", children: msg.message }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContent, { className: "max-w-xs whitespace-pre-wrap", children: msg.message })
+              ] }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Badge,
+                {
+                  variant: isActive(msg.status) ? "default" : "secondary",
+                  className: isActive(msg.status) ? "bg-gold/20 text-amber-800 border-gold/40 font-sans text-xs" : "font-sans text-xs",
+                  children: isActive(msg.status) ? t.adminContacts.active : t.adminContacts.notactive
+                }
+              ) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "font-sans text-xs text-muted-foreground hidden sm:table-cell whitespace-nowrap", children: formatDate$2(msg.submittedAt) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  Button,
+                  {
+                    variant: "ghost",
+                    size: "icon",
+                    className: "h-8 w-8",
+                    "data-ocid": `contacts.dropdown_menu.${idx + 1}`,
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(Ellipsis, { className: "h-4 w-4" })
+                  }
+                ) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenuContent, { align: "end", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    DropdownMenuItem,
+                    {
+                      onClick: () => setDetailMsg(msg),
+                      "data-ocid": `contacts.open_modal_button.${idx + 1}`,
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Eye, { className: "mr-2 h-4 w-4" }),
+                        t.adminContacts.viewDetails
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    DropdownMenuItem,
+                    {
+                      onClick: () => handleStatusToggle(msg),
+                      disabled: actionLoading === `${msg.id}:status`,
+                      "data-ocid": `contacts.toggle.${idx + 1}`,
+                      children: [
+                        actionLoading === `${msg.id}:status` ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "mr-2 h-4 w-4 animate-spin" }) : isActive(msg.status) ? /* @__PURE__ */ jsxRuntimeExports.jsx(ToggleLeft, { className: "mr-2 h-4 w-4" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(ToggleRight, { className: "mr-2 h-4 w-4" }),
+                        isActive(msg.status) ? t.adminContacts.setNotactive : t.adminContacts.setActive
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(DropdownMenuSeparator, {}),
+                  hasPrincipal(msg) && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    DropdownMenuItem,
+                    {
+                      onClick: () => setConfirmBlock({
+                        msg,
+                        block: !msg.senderBlocked
+                      }),
+                      className: msg.senderBlocked ? "text-green-700" : "text-orange-700",
+                      "data-ocid": `contacts.toggle.${idx + 1}`,
+                      children: [
+                        msg.senderBlocked ? /* @__PURE__ */ jsxRuntimeExports.jsx(ShieldCheck, { className: "mr-2 h-4 w-4" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Ban, { className: "mr-2 h-4 w-4" }),
+                        msg.senderBlocked ? t.adminContacts.unblock : t.adminContacts.block
+                      ]
+                    }
+                  ),
+                  hasPrincipal(msg) && /* @__PURE__ */ jsxRuntimeExports.jsx(DropdownMenuSeparator, {}),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    DropdownMenuItem,
+                    {
+                      onClick: () => setConfirmDelete(msg),
+                      className: "text-destructive focus:text-destructive",
+                      "data-ocid": `contacts.delete_button.${idx + 1}`,
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "mr-2 h-4 w-4" }),
+                        t.adminContacts.delete
+                      ]
+                    }
+                  )
+                ] })
+              ] }) })
+            ]
+          },
+          msg.id
+        )) })
+      ] }) })
+    ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       Dialog,
       {
@@ -52703,44 +54546,146 @@ function MyPagesContacts() {
     )
   ] }) });
 }
-async function downloadFile(filePath, fileName, mimeType) {
-  try {
-    const response = await fetch(filePath);
-    const arrayBuffer = await response.arrayBuffer();
-    const forcedMime = mimeType && mimeType !== "application/octet-stream" ? mimeType : "application/octet-stream";
-    const objectUrl = URL.createObjectURL(
-      new Blob([arrayBuffer], { type: forcedMime })
+function toCleanUint8Array$1(data) {
+  console.log(
+    "[toCleanUint8Array] input type:",
+    typeof data,
+    "| isArray:",
+    Array.isArray(data),
+    "| isUint8Array:",
+    data instanceof Uint8Array,
+    "| length/byteLength:",
+    (data == null ? void 0 : data.length) ?? (data == null ? void 0 : data.byteLength) ?? "n/a"
+  );
+  let result;
+  if (data instanceof Uint8Array) {
+    if (data.byteOffset !== 0) {
+      result = new Uint8Array(
+        data.buffer.slice(
+          data.byteOffset,
+          data.byteOffset + data.byteLength
+        )
+      );
+    } else {
+      result = new Uint8Array(data);
+    }
+  } else {
+    result = new Uint8Array(
+      data
     );
-    const a2 = document.createElement("a");
-    a2.href = objectUrl;
-    a2.download = fileName;
-    document.body.appendChild(a2);
-    a2.click();
-    document.body.removeChild(a2);
-    URL.revokeObjectURL(objectUrl);
-  } catch {
-    window.open(filePath, "_blank", "noopener,noreferrer");
   }
+  console.log(
+    "[toCleanUint8Array] output length:",
+    result.length,
+    "| first 4 bytes:",
+    result.slice(0, 4)
+  );
+  return result;
 }
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+function normalizeAudioMime$1(mimeType, fileName) {
+  var _a3;
+  let result;
+  if (!mimeType || mimeType === "application/octet-stream") {
+    const ext = (_a3 = fileName.split(".").pop()) == null ? void 0 : _a3.toLowerCase();
+    if (ext === "mp3") result = "audio/mpeg";
+    else if (ext === "wav") result = "audio/wav";
+    else if (ext === "ogg") result = "audio/ogg";
+    else if (ext === "flac") result = "audio/flac";
+    else if (ext === "aac") result = "audio/aac";
+    else if (ext === "m4a") result = "audio/x-m4a";
+    else result = "audio/mpeg";
+  } else if (mimeType === "audio/mp3" || mimeType === "audio/x-mp3") {
+    result = "audio/mpeg";
+  } else {
+    result = mimeType;
+  }
+  console.log(
+    "[normalizeAudioMime] input mimeType:",
+    mimeType,
+    "| fileName:",
+    fileName,
+    "| output:",
+    result
+  );
+  return result;
+}
+function mimeForFile(file) {
+  var _a3;
+  const ext = (_a3 = file.name.split(".").pop()) == null ? void 0 : _a3.toLowerCase();
+  if (ext === "pdf") return "application/pdf";
+  if (ext === "docx")
+    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  if (ext === "doc") return "application/msword";
+  if (ext === "jpg" || ext === "jpeg") return "image/jpeg";
+  if (ext === "png") return "image/png";
+  if (ext === "gif") return "image/gif";
+  if (ext === "webp") return "image/webp";
+  if (ext === "svg") return "image/svg+xml";
+  if (ext === "mp3") return "audio/mpeg";
+  if (ext === "wav") return "audio/wav";
+  if (ext === "ogg") return "audio/ogg";
+  if (ext === "flac") return "audio/flac";
+  if (ext === "aac") return "audio/aac";
+  if (ext === "m4a") return "audio/x-m4a";
+  if (ext === "mp4") return "video/mp4";
+  if (ext === "mov") return "video/quicktime";
+  if (ext === "avi") return "video/x-msvideo";
+  if (ext === "webm") return "video/webm";
+  if (ext === "mkv") return "video/x-matroska";
+  if (ext === "mpeg" || ext === "mpg") return "video/mpeg";
+  if (file.type && file.type !== "application/octet-stream") return file.type;
+  return "application/octet-stream";
+}
+const MAX_FILE_SIZE = 100 * 1024 * 1024;
 const MAX_TOTAL_STORAGE = 100 * 1024 * 1024;
-const ALLOWED_EXTENSIONS = [".pdf", ".docx", ".doc"];
+const CHUNK_SIZE = 1 * 1024 * 1024;
+const ICP_MAX_MESSAGE_SIZE = 2 * 1024 * 1024;
+const ALLOWED_EXTENSIONS = [
+  ".pdf",
+  ".docx",
+  ".doc",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".svg",
+  ".mp3",
+  ".wav",
+  ".ogg",
+  ".flac",
+  ".aac",
+  ".m4a",
+  ".mp4",
+  ".mov",
+  ".avi",
+  ".webm",
+  ".mkv",
+  ".mpeg",
+  ".mpg"
+];
 const ALLOWED_TYPES = [
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/msword"
+  "application/msword",
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml",
+  "audio/mpeg",
+  "audio/wav",
+  "audio/ogg",
+  "audio/flac",
+  "audio/aac",
+  "audio/x-m4a",
+  "video/mp4",
+  "video/quicktime",
+  "video/x-msvideo",
+  "video/webm",
+  "video/x-matroska",
+  "video/mpeg"
 ];
-function sanitizeFileName(name) {
-  return name.replace(/[^a-zA-Z0-9._-]/g, "_");
-}
-function formatDate$1(ts) {
-  const ms = Number(ts) / 1e6;
-  return new Date(ms).toLocaleDateString(void 0, {
-    year: "numeric",
-    month: "short",
-    day: "numeric"
-  });
-}
 function formatMB(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1);
 }
@@ -52770,6 +54715,666 @@ function StorageBar({ usedBytes }) {
     ) })
   ] });
 }
+function MoveModal({
+  itemName,
+  itemType,
+  excludeFolderId,
+  initialFolderId,
+  loadFolders,
+  onConfirm,
+  onCancel,
+  isMoving
+}) {
+  const { t } = useLanguage();
+  const [dialogFolderId, setDialogFolderId] = reactExports.useState(null);
+  const [dialogStack, setDialogStack] = reactExports.useState([]);
+  const [currentFolderName, setCurrentFolderName] = reactExports.useState("");
+  const [dialogFolders, setDialogFolders] = reactExports.useState([]);
+  const [dialogLoading, setDialogLoading] = reactExports.useState(true);
+  const [selected, setSelected] = reactExports.useState(
+    initialFolderId === null ? "__root__" : initialFolderId
+  );
+  reactExports.useEffect(() => {
+    let cancelled = false;
+    setDialogLoading(true);
+    loadFolders(dialogFolderId).then((folders) => {
+      if (!cancelled) setDialogFolders(folders);
+    }).catch(() => {
+      if (!cancelled) setDialogFolders([]);
+    }).finally(() => {
+      if (!cancelled) setDialogLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [dialogFolderId, loadFolders]);
+  reactExports.useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") onCancel();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onCancel]);
+  const handleConfirm = () => {
+    onConfirm(selected === "__root__" ? null : selected ?? null);
+  };
+  const navigateInto = (folder) => {
+    setDialogStack((prev) => [
+      ...prev,
+      { id: dialogFolderId, name: currentFolderName || t.documents.moveRoot }
+    ]);
+    setCurrentFolderName(folder.name);
+    setDialogFolderId(folder.id);
+  };
+  const navigateBack = () => {
+    setDialogStack((prev) => {
+      const newStack = [...prev];
+      const parent = newStack.pop();
+      setCurrentFolderName((parent == null ? void 0 : parent.name) ?? "");
+      setDialogFolderId((parent == null ? void 0 : parent.id) ?? null);
+      return newStack;
+    });
+  };
+  const visibleFolders = dialogFolders.filter((f) => f.id !== excludeFolderId);
+  const isInsideSubfolder = dialogStack.length > 0;
+  const title = itemType === "folder" ? t.documents.moveFolderTitle : t.documents.moveTitle;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "dialog",
+    {
+      open: true,
+      className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent",
+      "data-ocid": "documents.move_modal",
+      "aria-label": title,
+      onClick: onCancel,
+      onKeyDown: (e) => e.key === "Escape" && onCancel(),
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col",
+          onClick: (e) => e.stopPropagation(),
+          onKeyDown: (e) => e.stopPropagation(),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-shrink-0 px-4 pt-4 sm:px-6 sm:pt-6 pb-2 space-y-1", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(FolderInput, { className: "w-5 h-5 text-gold shrink-0" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-serif text-base font-semibold text-foreground", children: title })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "p",
+                {
+                  className: "text-xs text-muted-foreground truncate",
+                  title: itemName,
+                  children: itemName
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "div",
+              {
+                className: "flex-1 overflow-y-auto px-4 sm:px-6 space-y-3 py-2",
+                style: { WebkitOverflowScrolling: "touch" },
+                children: [
+                  isInsideSubfolder && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 min-w-0", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      "button",
+                      {
+                        type: "button",
+                        onClick: navigateBack,
+                        className: "inline-flex items-center gap-1.5 shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded px-2 py-1 bg-muted/30 hover:bg-muted/60",
+                        "data-ocid": "documents.move_back",
+                        "aria-label": t.documents.back,
+                        children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-3.5 h-3.5" }),
+                          t.documents.back
+                        ]
+                      }
+                    ),
+                    currentFolderName && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-1 min-w-0 text-xs text-foreground font-medium truncate", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(FolderOpen, { className: "w-3.5 h-3.5 text-gold shrink-0" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate", children: currentFolderName })
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5 max-h-52 overflow-y-auto pr-1", children: [
+                    !isInsideSubfolder && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      "label",
+                      {
+                        className: `flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${selected === "__root__" ? "bg-gold/20 border border-gold/40" : "hover:bg-muted/40 border border-transparent"}`,
+                        children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "input",
+                            {
+                              type: "radio",
+                              name: "move-target",
+                              value: "__root__",
+                              checked: selected === "__root__",
+                              onChange: () => setSelected("__root__"),
+                              className: "accent-gold",
+                              "data-ocid": "documents.move_root_option"
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm text-foreground font-medium", children: t.documents.moveRoot })
+                        ]
+                      }
+                    ),
+                    dialogLoading && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center justify-center py-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 animate-spin text-muted-foreground" }) }),
+                    !dialogLoading && visibleFolders.map((folder) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      "div",
+                      {
+                        className: `flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors ${selected === folder.id ? "bg-gold/20 border border-gold/40" : "hover:bg-muted/40 border border-transparent"}`,
+                        "data-ocid": "documents.move_folder_row",
+                        children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "input",
+                            {
+                              type: "radio",
+                              name: "move-target",
+                              value: folder.id,
+                              checked: selected === folder.id,
+                              onChange: () => setSelected(folder.id),
+                              className: "accent-gold shrink-0",
+                              "data-ocid": "documents.move_folder_option"
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(FolderOpen, { className: "w-4 h-4 text-gold shrink-0" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "button",
+                            {
+                              type: "button",
+                              onClick: () => navigateInto(folder),
+                              className: "flex-1 text-left text-sm text-foreground truncate min-w-0 hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded",
+                              "data-ocid": "documents.move_folder_navigate",
+                              title: folder.name,
+                              children: folder.name
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "w-3.5 h-3.5 text-muted-foreground/50 shrink-0" })
+                        ]
+                      },
+                      folder.id
+                    )),
+                    !dialogLoading && isInsideSubfolder && visibleFolders.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground text-center py-3", children: t.documents.noDocuments })
+                  ] })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-shrink-0 flex gap-2 justify-end px-4 sm:px-6 py-3 border-t border-border/50 bg-card", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Button,
+                {
+                  type: "button",
+                  variant: "outline",
+                  size: "sm",
+                  onClick: onCancel,
+                  disabled: isMoving,
+                  className: "rounded-full",
+                  "data-ocid": "documents.move_cancel",
+                  children: t.documents.cancel
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Button,
+                {
+                  type: "button",
+                  size: "sm",
+                  onClick: handleConfirm,
+                  disabled: isMoving,
+                  className: "bg-gold hover:bg-gold/90 text-black font-sans rounded-full",
+                  "data-ocid": "documents.move_confirm",
+                  children: isMoving ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 mr-1.5 animate-spin" }),
+                    t.documents.moveConfirm
+                  ] }) : t.documents.moveConfirm
+                }
+              )
+            ] })
+          ]
+        }
+      )
+    }
+  );
+}
+function BulkMoveModal({
+  selectedCount,
+  excludeFolderIds,
+  loadFolders,
+  onConfirm,
+  onCancel,
+  isMoving
+}) {
+  const { t } = useLanguage();
+  const [dialogFolderId, setDialogFolderId] = reactExports.useState(null);
+  const [dialogStack, setDialogStack] = reactExports.useState([]);
+  const [currentFolderName, setCurrentFolderName] = reactExports.useState("");
+  const [dialogFolders, setDialogFolders] = reactExports.useState([]);
+  const [dialogLoading, setDialogLoading] = reactExports.useState(true);
+  const [selected, setSelected] = reactExports.useState("__root__");
+  reactExports.useEffect(() => {
+    let cancelled = false;
+    setDialogLoading(true);
+    loadFolders(dialogFolderId).then((folders) => {
+      if (!cancelled) setDialogFolders(folders);
+    }).catch(() => {
+      if (!cancelled) setDialogFolders([]);
+    }).finally(() => {
+      if (!cancelled) setDialogLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [dialogFolderId, loadFolders]);
+  reactExports.useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") onCancel();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onCancel]);
+  const handleConfirm = () => {
+    onConfirm(selected === "__root__" ? null : selected ?? null);
+  };
+  const navigateInto = (folder) => {
+    setDialogStack((prev) => [
+      ...prev,
+      { id: dialogFolderId, name: currentFolderName || t.documents.moveRoot }
+    ]);
+    setCurrentFolderName(folder.name);
+    setDialogFolderId(folder.id);
+  };
+  const navigateBack = () => {
+    setDialogStack((prev) => {
+      const newStack = [...prev];
+      const parent = newStack.pop();
+      setCurrentFolderName((parent == null ? void 0 : parent.name) ?? "");
+      setDialogFolderId((parent == null ? void 0 : parent.id) ?? null);
+      return newStack;
+    });
+  };
+  const visibleFolders = dialogFolders.filter(
+    (f) => !excludeFolderIds.includes(f.id)
+  );
+  const isInsideSubfolder = dialogStack.length > 0;
+  const title = t.documents.bulkMoveTitle.replace("{n}", String(selectedCount));
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "dialog",
+    {
+      open: true,
+      className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent",
+      "data-ocid": "documents.bulk_move_modal",
+      "aria-label": title,
+      onClick: onCancel,
+      onKeyDown: (e) => e.key === "Escape" && onCancel(),
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col",
+          onClick: (e) => e.stopPropagation(),
+          onKeyDown: (e) => e.stopPropagation(),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-shrink-0 flex items-center gap-2 px-4 pt-4 sm:px-6 sm:pt-6 pb-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(SquareCheckBig, { className: "w-5 h-5 text-gold shrink-0" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-serif text-base font-semibold text-foreground", children: title })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "div",
+              {
+                className: "flex-1 overflow-y-auto px-4 sm:px-6 space-y-3 py-2",
+                style: { WebkitOverflowScrolling: "touch" },
+                children: [
+                  isInsideSubfolder && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 min-w-0", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      "button",
+                      {
+                        type: "button",
+                        onClick: navigateBack,
+                        className: "inline-flex items-center gap-1.5 shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded px-2 py-1 bg-muted/30 hover:bg-muted/60",
+                        "data-ocid": "documents.bulk_move_back",
+                        "aria-label": t.documents.back,
+                        children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-3.5 h-3.5" }),
+                          t.documents.back
+                        ]
+                      }
+                    ),
+                    currentFolderName && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-1 min-w-0 text-xs text-foreground font-medium truncate", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(FolderOpen, { className: "w-3.5 h-3.5 text-gold shrink-0" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate", children: currentFolderName })
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5 max-h-52 overflow-y-auto pr-1", children: [
+                    !isInsideSubfolder && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      "label",
+                      {
+                        className: `flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${selected === "__root__" ? "bg-gold/20 border border-gold/40" : "hover:bg-muted/40 border border-transparent"}`,
+                        children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "input",
+                            {
+                              type: "radio",
+                              name: "bulk-move-target",
+                              value: "__root__",
+                              checked: selected === "__root__",
+                              onChange: () => setSelected("__root__"),
+                              className: "accent-gold",
+                              "data-ocid": "documents.bulk_move_root_option"
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm text-foreground font-medium", children: t.documents.moveRoot })
+                        ]
+                      }
+                    ),
+                    dialogLoading && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center justify-center py-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 animate-spin text-muted-foreground" }) }),
+                    !dialogLoading && visibleFolders.map((folder) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      "div",
+                      {
+                        className: `flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors ${selected === folder.id ? "bg-gold/20 border border-gold/40" : "hover:bg-muted/40 border border-transparent"}`,
+                        "data-ocid": "documents.bulk_move_folder_row",
+                        children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "input",
+                            {
+                              type: "radio",
+                              name: "bulk-move-target",
+                              value: folder.id,
+                              checked: selected === folder.id,
+                              onChange: () => setSelected(folder.id),
+                              className: "accent-gold shrink-0",
+                              "data-ocid": "documents.bulk_move_folder_option"
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(FolderOpen, { className: "w-4 h-4 text-gold shrink-0" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "button",
+                            {
+                              type: "button",
+                              onClick: () => navigateInto(folder),
+                              className: "flex-1 text-left text-sm text-foreground truncate min-w-0 hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded",
+                              "data-ocid": "documents.bulk_move_folder_navigate",
+                              title: folder.name,
+                              children: folder.name
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "w-3.5 h-3.5 text-muted-foreground/50 shrink-0" })
+                        ]
+                      },
+                      folder.id
+                    )),
+                    !dialogLoading && isInsideSubfolder && visibleFolders.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground text-center py-3", children: t.documents.noDocuments })
+                  ] })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-shrink-0 flex gap-2 justify-end px-4 sm:px-6 py-3 border-t border-border/50 bg-card", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Button,
+                {
+                  type: "button",
+                  variant: "outline",
+                  size: "sm",
+                  onClick: onCancel,
+                  disabled: isMoving,
+                  className: "rounded-full",
+                  "data-ocid": "documents.bulk_move_cancel",
+                  children: t.documents.cancel
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Button,
+                {
+                  type: "button",
+                  size: "sm",
+                  onClick: handleConfirm,
+                  disabled: isMoving,
+                  className: "bg-gold hover:bg-gold/90 text-black font-sans rounded-full",
+                  "data-ocid": "documents.bulk_move_confirm",
+                  children: isMoving ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 mr-1.5 animate-spin" }),
+                    t.documents.moveConfirm
+                  ] }) : t.documents.moveConfirm
+                }
+              )
+            ] })
+          ]
+        }
+      )
+    }
+  );
+}
+function ImageModal({ url, fileName, onClose }) {
+  const { t } = useLanguage();
+  reactExports.useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "dialog",
+    {
+      open: true,
+      className: "fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent",
+      "aria-label": fileName,
+      "data-ocid": "documents.image_modal",
+      onClick: onClose,
+      onKeyDown: (e) => e.key === "Escape" && onClose(),
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "relative w-full max-w-4xl max-h-[90vh] flex flex-col items-center gap-3 px-2 sm:px-0",
+          onClick: (e) => e.stopPropagation(),
+          onKeyDown: (e) => e.stopPropagation(),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                type: "button",
+                onClick: onClose,
+                className: "absolute -top-2 -right-2 z-10 w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
+                "aria-label": t.documents.close,
+                "data-ocid": "documents.image_modal_close",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "rounded-xl overflow-hidden border border-border shadow-xl bg-card max-h-[80vh]", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "img",
+              {
+                src: url,
+                alt: fileName,
+                className: "max-w-full max-h-[80vh] object-contain block"
+              }
+            ) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-white/70 truncate max-w-full px-4 font-sans", children: fileName })
+          ]
+        }
+      )
+    }
+  );
+}
+function AudioPlayerRow({
+  url,
+  fileName,
+  hasError,
+  onClose,
+  onError
+}) {
+  const { t } = useLanguage();
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("tr", { "data-ocid": "documents.audio_player_row", children: /* @__PURE__ */ jsxRuntimeExports.jsx("td", { colSpan: 4, className: "px-3 pb-3 pt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3 bg-muted/30 border border-gold/20 rounded-xl px-4 py-3", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Music, { className: "w-4 h-4 text-gold shrink-0" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs text-muted-foreground truncate min-w-0 flex-1 font-sans", children: fileName }),
+    hasError ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "span",
+      {
+        className: "text-xs text-red-500 font-medium flex-1 min-w-0 font-sans",
+        role: "alert",
+        "data-ocid": "documents.audio_error_state",
+        children: t.documents.audioLoadError
+      }
+    ) : (
+      /* eslint-disable-next-line jsx-a11y/media-has-caption */
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "audio",
+        {
+          src: url,
+          controls: true,
+          autoPlay: false,
+          className: "h-8 flex-1 min-w-0 max-w-xs",
+          style: { accentColor: "var(--color-gold, #c9a84c)" },
+          onError,
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx("track", { kind: "captions" })
+        }
+      )
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "button",
+      {
+        type: "button",
+        onClick: onClose,
+        className: "shrink-0 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+        "aria-label": t.documents.close,
+        "data-ocid": "documents.audio_player_close",
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-3.5 h-3.5" })
+      }
+    )
+  ] }) }) });
+}
+function CreateFolderModal({
+  onConfirm,
+  onCancel,
+  isCreating
+}) {
+  const { t } = useLanguage();
+  const [name, setName] = reactExports.useState("");
+  const inputRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    var _a3;
+    (_a3 = inputRef.current) == null ? void 0 : _a3.focus();
+    const handler = (e) => {
+      if (e.key === "Escape") onCancel();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onCancel]);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const trimmed = name.trim();
+    if (trimmed) onConfirm(trimmed);
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "dialog",
+    {
+      open: true,
+      className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent",
+      "data-ocid": "documents.create_folder_modal",
+      "aria-label": t.documents.newFolder,
+      onClick: onCancel,
+      onKeyDown: (e) => e.key === "Escape" && onCancel(),
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col",
+          onClick: (e) => e.stopPropagation(),
+          onKeyDown: (e) => e.stopPropagation(),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-shrink-0 flex items-center gap-2 px-4 pt-4 sm:px-6 sm:pt-6 pb-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(FolderPlus, { className: "w-5 h-5 text-gold" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-serif text-base font-semibold text-foreground", children: t.documents.newFolder })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "form",
+              {
+                onSubmit: handleSubmit,
+                className: "flex-1 overflow-y-auto px-4 sm:px-6 pt-1 pb-2 space-y-4",
+                style: { WebkitOverflowScrolling: "touch" },
+                children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "label",
+                    {
+                      htmlFor: "folder-name-input",
+                      className: "block text-xs font-medium text-muted-foreground mb-1.5",
+                      children: t.documents.folderName
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "input",
+                    {
+                      id: "folder-name-input",
+                      ref: inputRef,
+                      type: "text",
+                      value: name,
+                      onChange: (e) => setName(e.target.value),
+                      placeholder: t.documents.folderName,
+                      className: "w-full rounded-lg border border-input bg-background px-3 py-3 text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/60 transition min-h-[48px]",
+                      maxLength: 100,
+                      "data-ocid": "documents.folder_name_input",
+                      disabled: isCreating
+                    }
+                  )
+                ] })
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-shrink-0 flex gap-2 justify-end px-4 sm:px-6 py-3 border-t border-border/50 bg-card", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Button,
+                {
+                  type: "button",
+                  variant: "outline",
+                  size: "sm",
+                  onClick: onCancel,
+                  disabled: isCreating,
+                  className: "rounded-full min-h-[44px] px-5",
+                  "data-ocid": "documents.create_folder_cancel",
+                  children: t.documents.cancel
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Button,
+                {
+                  type: "button",
+                  size: "sm",
+                  disabled: !name.trim() || isCreating,
+                  onClick: handleSubmit,
+                  className: "bg-gold hover:bg-gold/90 text-black font-sans rounded-full min-h-[44px] px-5",
+                  "data-ocid": "documents.create_folder_confirm",
+                  children: isCreating ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 mr-1.5 animate-spin" }),
+                    t.documents.creating
+                  ] }) : t.documents.createFolder
+                }
+              )
+            ] })
+          ]
+        }
+      )
+    }
+  );
+}
+const DOWNLOAD_CHUNK_SIZE = 1 * 1024 * 1024;
+async function fetchDocumentBytes$1(extActor, docId) {
+  const chunks = [];
+  let offset2 = BigInt(0);
+  let hasMore = true;
+  while (hasMore) {
+    const result = await extActor.getDocumentChunk(
+      docId,
+      offset2,
+      BigInt(DOWNLOAD_CHUNK_SIZE)
+    );
+    if ("err" in result) throw new Error(result.err);
+    const { chunk, hasMore: more } = result.ok;
+    const bytes = toCleanUint8Array$1(chunk);
+    chunks.push(bytes);
+    offset2 += BigInt(bytes.length);
+    hasMore = more;
+  }
+  const totalLen = chunks.reduce((sum, c2) => sum + c2.length, 0);
+  const assembled = new Uint8Array(new ArrayBuffer(totalLen));
+  let pos = 0;
+  for (const c2 of chunks) {
+    assembled.set(c2, pos);
+    pos += c2.length;
+  }
+  return assembled;
+}
 function MyPagesDocuments({
   principalText,
   userName,
@@ -52782,29 +55387,66 @@ function MyPagesDocuments({
   const isAdmin = userRole === "admin";
   const isGuest = userRole === "guest";
   const [documents, setDocuments] = reactExports.useState([]);
+  const [folders, setFolders] = reactExports.useState([]);
+  const [currentFolderId, setCurrentFolderId] = reactExports.useState(null);
+  const [breadcrumbs, setBreadcrumbs] = reactExports.useState([
+    { id: null, name: t.documents.tab }
+  ]);
   const [loading, setLoading] = reactExports.useState(true);
   const [uploading, setUploading] = reactExports.useState(false);
-  const [deletingId, setDeletingId] = reactExports.useState(null);
-  const [togglingId, setTogglingId] = reactExports.useState(null);
-  const [copiedId, setCopiedId] = reactExports.useState(null);
+  const [uploadProgressMsg, setUploadProgressMsg] = reactExports.useState(
+    null
+  );
   const [fileError, setFileError] = reactExports.useState(null);
   const [selectedFile, setSelectedFile] = reactExports.useState(null);
   const [storageUsed, setStorageUsed] = reactExports.useState(0);
   const [guestUploadAllowed, setGuestUploadAllowed] = reactExports.useState(false);
   const [togglingGuestPerm, setTogglingGuestPerm] = reactExports.useState(false);
+  const [downloadingId, setDownloadingId] = reactExports.useState(null);
+  const [copiedId, setCopiedId] = reactExports.useState(null);
+  const [togglingPublicId, setTogglingPublicId] = reactExports.useState(null);
+  const [deletingFolderId, setDeletingFolderId] = reactExports.useState(null);
+  const [showCreateFolderModal, setShowCreateFolderModal] = reactExports.useState(false);
+  const [isCreatingFolder, setIsCreatingFolder] = reactExports.useState(false);
+  const [imagePreview, setImagePreview] = reactExports.useState(
+    null
+  );
+  const [previewingId, setPreviewingId] = reactExports.useState(null);
+  const [audioPlayer, setAudioPlayer] = reactExports.useState(null);
+  const [playingId, setPlayingId] = reactExports.useState(null);
+  const [moveDoc, setMoveDoc] = reactExports.useState(null);
+  const [isMoving, setIsMoving] = reactExports.useState(false);
+  const [movingFolder, setMovingFolder] = reactExports.useState(null);
+  const [isMovingFolder, setIsMovingFolder] = reactExports.useState(false);
+  const [selectedDocIds, setSelectedDocIds] = reactExports.useState(/* @__PURE__ */ new Set());
+  const [selectedFolderIds, setSelectedFolderIds] = reactExports.useState(
+    /* @__PURE__ */ new Set()
+  );
+  const [showBulkMoveModal, setShowBulkMoveModal] = reactExports.useState(false);
+  const [isBulkMoving, setIsBulkMoving] = reactExports.useState(false);
+  const imageUrlRef = reactExports.useRef(null);
+  const audioUrlRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    return () => {
+      if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+    };
+  }, []);
   reactExports.useEffect(() => {
     if (!extActor || isFetching) return;
     let cancelled = false;
     const loadAll = async () => {
       setLoading(true);
       try {
-        const [docs, storageBytes, guestPerm] = await Promise.all([
-          extActor.listMyDocuments(),
+        const [docs, folderList, storageBytes, guestPerm] = await Promise.all([
+          extActor.listMyDocuments(currentFolderId),
+          extActor.listMyFolders(currentFolderId),
           extActor.getMyStorageUsed().catch(() => BigInt(0)),
           extActor.getGuestDocumentUploadPermission().catch(() => false)
         ]);
         if (!cancelled) {
           setDocuments(docs);
+          setFolders(folderList);
           setStorageUsed(Number(storageBytes));
           setGuestUploadAllowed(guestPerm);
         }
@@ -52817,7 +55459,7 @@ function MyPagesDocuments({
     return () => {
       cancelled = true;
     };
-  }, [extActor, isFetching]);
+  }, [extActor, isFetching, currentFolderId]);
   const refreshStorage = async () => {
     if (!extActor) return;
     try {
@@ -52826,12 +55468,68 @@ function MyPagesDocuments({
     } catch {
     }
   };
-  const fetchDocuments = async () => {
+  const refreshContents = reactExports.useCallback(async () => {
     if (!extActor) return;
     try {
-      const docs = await extActor.listMyDocuments();
+      const [docs, folderList] = await Promise.all([
+        extActor.listMyDocuments(currentFolderId),
+        extActor.listMyFolders(currentFolderId)
+      ]);
       setDocuments(docs);
+      setFolders(folderList);
     } catch {
+    }
+  }, [extActor, currentFolderId]);
+  const navigateIntoFolder = reactExports.useCallback((folder) => {
+    setCurrentFolderId(folder.id);
+    setBreadcrumbs((prev) => [...prev, { id: folder.id, name: folder.name }]);
+    setAudioPlayer(null);
+    setImagePreview(null);
+  }, []);
+  const navigateToBreadcrumb = reactExports.useCallback((crumb) => {
+    setCurrentFolderId(crumb.id);
+    setBreadcrumbs((prev) => {
+      const idx = prev.findIndex((b2) => b2.id === crumb.id);
+      return idx >= 0 ? prev.slice(0, idx + 1) : prev;
+    });
+    setAudioPlayer(null);
+    setImagePreview(null);
+  }, []);
+  const handleCreateFolder = async (name) => {
+    if (!extActor) return;
+    setIsCreatingFolder(true);
+    try {
+      const result = await extActor.createFolder(name, currentFolderId);
+      if ("ok" in result) {
+        ue.success(t.documents.folderCreated);
+        setShowCreateFolderModal(false);
+        await refreshContents();
+      } else {
+        ue.error(`${t.common.error}: ${result.err}`);
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      ue.error(`${t.common.error}: ${msg}`);
+    } finally {
+      setIsCreatingFolder(false);
+    }
+  };
+  const handleDeleteFolder = async (folder) => {
+    if (!extActor) return;
+    if (!window.confirm(t.documents.deleteFolderConfirm)) return;
+    setDeletingFolderId(folder.id);
+    try {
+      const result = await extActor.deleteFolder(folder.id);
+      if ("ok" in result) {
+        ue.success(t.documents.folderDeleted);
+        await refreshContents();
+      } else {
+        ue.error(`${t.common.error}: ${result.err}`);
+      }
+    } catch {
+      ue.error(t.common.error);
+    } finally {
+      setDeletingFolderId(null);
     }
   };
   const validateFile = (file) => {
@@ -52868,6 +55566,7 @@ function MyPagesDocuments({
     if (!extActor || !selectedFile) return;
     setUploading(true);
     setFileError(null);
+    setUploadProgressMsg(null);
     const err = validateFile(selectedFile);
     if (err) {
       setFileError(err);
@@ -52875,81 +55574,446 @@ function MyPagesDocuments({
       return;
     }
     try {
-      const ownerName = userName || principalText || "unknown";
-      const sanitized = sanitizeFileName(selectedFile.name);
-      const filePath = `documents/public/${ownerName}/${sanitized}`;
-      const mimeType = selectedFile.type || "application/octet-stream";
-      const result = await extActor.uploadDocument(
-        selectedFile.name,
-        filePath,
-        mimeType,
-        false,
-        // default to private
-        BigInt(selectedFile.size)
-      );
-      if ("ok" in result) {
-        ue.success(t.documents.uploadSuccess);
-        setSelectedFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        await Promise.all([fetchDocuments(), refreshStorage()]);
+      const arrayBuffer = await selectedFile.arrayBuffer();
+      const byteArray = new Uint8Array(arrayBuffer);
+      const mime = mimeForFile(selectedFile);
+      if (byteArray.length <= ICP_MAX_MESSAGE_SIZE) {
+        const result = await extActor.uploadDocumentWithData(
+          selectedFile.name,
+          byteArray,
+          mime,
+          false,
+          currentFolderId
+        );
+        if ("ok" in result) {
+          ue.success(t.documents.uploadSuccess);
+          setSelectedFile(null);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          await Promise.all([refreshContents(), refreshStorage()]);
+        } else {
+          ue.error(`${t.documents.uploadError}: ${result.err}`);
+        }
       } else {
-        ue.error(`${t.documents.uploadError}: ${result.err}`);
+        const totalChunks = Math.ceil(byteArray.length / CHUNK_SIZE);
+        const sessionId = `chunk-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        setUploadProgressMsg(
+          `${t.documents.uploadingPart ?? "Preparing upload..."}`
+        );
+        const startResult = await extActor.startChunkedUpload(
+          sessionId,
+          selectedFile.name,
+          mime,
+          false,
+          currentFolderId,
+          BigInt(totalChunks),
+          BigInt(byteArray.length)
+        );
+        if ("err" in startResult) {
+          ue.error(`${t.documents.uploadError}: ${startResult.err}`);
+          return;
+        }
+        for (let i = 0; i < totalChunks; i++) {
+          const start = i * CHUNK_SIZE;
+          const end = Math.min(start + CHUNK_SIZE, byteArray.length);
+          const chunk = byteArray.slice(start, end);
+          const partLabel = t.documents.uploadingPart ? t.documents.uploadingPart.replace("{current}", String(i + 1)).replace("{total}", String(totalChunks)) : `Uploading part ${i + 1} of ${totalChunks}…`;
+          setUploadProgressMsg(partLabel);
+          const chunkResult = await extActor.uploadDocumentChunk(
+            sessionId,
+            BigInt(i),
+            chunk
+          );
+          if ("err" in chunkResult) {
+            ue.error(`${t.documents.uploadError}: ${chunkResult.err}`);
+            setUploadProgressMsg(null);
+            return;
+          }
+        }
+        setUploadProgressMsg(t.documents.finalizingUpload ?? "Finalizing…");
+        const finalResult = await extActor.finalizeChunkedUpload(sessionId);
+        if ("ok" in finalResult) {
+          ue.success(t.documents.uploadSuccess);
+          setSelectedFile(null);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          await Promise.all([refreshContents(), refreshStorage()]);
+        } else {
+          ue.error(`${t.documents.uploadError}: ${finalResult.err}`);
+        }
       }
-    } catch (err2) {
-      const msg = err2 instanceof Error ? err2.message : String(err2);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
       ue.error(`${t.documents.uploadError}: ${msg}`);
     } finally {
       setUploading(false);
+      setUploadProgressMsg(null);
     }
   };
-  const handleTogglePublic = async (doc) => {
-    if (!extActor) return;
-    setTogglingId(doc.id);
-    try {
-      const result = await extActor.setDocumentPublic(doc.id, !doc.isPublic);
-      if ("ok" in result) {
-        setDocuments(
-          (prev) => prev.map(
-            (d2) => d2.id === doc.id ? { ...d2, isPublic: !doc.isPublic } : d2
-          )
+  const handleDownload = reactExports.useCallback(
+    async (doc) => {
+      if (!extActor) return;
+      setDownloadingId(doc.id);
+      try {
+        console.log("[Download] fetching bytes for:", doc.id);
+        const bytes = await fetchDocumentBytes$1(extActor, doc.id);
+        console.log(
+          "[Download] assembled bytes length:",
+          bytes.length,
+          "| first 4 bytes:",
+          bytes.slice(0, 4)
         );
-      } else {
-        ue.error(result.err);
+        const mimeType = doc.mimeType || "application/octet-stream";
+        const fileName = doc.fileName;
+        console.log("[Download] mimeType:", mimeType, "| fileName:", fileName);
+        const resolvedMime = mimeType.startsWith("audio/") ? normalizeAudioMime$1(mimeType, fileName) : mimeType;
+        const blob = new Blob([bytes], { type: resolvedMime });
+        console.log(
+          "[Download] blob size:",
+          blob.size,
+          "| blob type:",
+          blob.type
+        );
+        const url = URL.createObjectURL(blob);
+        const a2 = document.createElement("a");
+        a2.href = url;
+        a2.download = fileName;
+        document.body.appendChild(a2);
+        a2.click();
+        document.body.removeChild(a2);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error(
+          "[Download] FULL ERROR:",
+          err,
+          "| stack:",
+          err == null ? void 0 : err.stack
+        );
+        ue.error(t.common.error);
+      } finally {
+        setDownloadingId(null);
       }
-    } catch {
-      ue.error(t.common.error);
-    } finally {
-      setTogglingId(null);
-    }
-  };
-  const handleDelete = async (docId) => {
-    if (!extActor) return;
-    setDeletingId(docId);
-    try {
-      const result = await extActor.deleteDocument(docId);
-      if ("ok" in result) {
-        ue.success(t.documents.deleteSuccess);
-        setDocuments((prev) => prev.filter((d2) => d2.id !== docId));
-        await refreshStorage();
-      } else {
-        ue.error(`${t.documents.deleteError}: ${result.err}`);
-      }
-    } catch {
-      ue.error(t.documents.deleteError);
-    } finally {
-      setDeletingId(null);
-    }
-  };
-  const handleShare = async (doc) => {
-    try {
-      const shareUrl = doc.filePath.startsWith("http") ? doc.filePath : `${window.location.origin}/${doc.filePath.replace(/^\//, "")}`;
-      await navigator.clipboard.writeText(shareUrl);
+    },
+    [extActor, t]
+  );
+  const handleShare = reactExports.useCallback((doc) => {
+    const link = `${window.location.origin}/#/documents/${doc.id}`;
+    navigator.clipboard.writeText(link).then(() => {
       setCopiedId(doc.id);
       setTimeout(() => setCopiedId(null), 2e3);
-    } catch {
-      ue.error(t.common.error);
+    });
+  }, []);
+  const handleTogglePublic = reactExports.useCallback(
+    async (doc) => {
+      if (!extActor) return;
+      setTogglingPublicId(doc.id);
+      try {
+        const newIsPublic = !doc.isPublic;
+        const result = await extActor.setDocumentPublic(doc.id, newIsPublic);
+        if ("ok" in result) {
+          setDocuments(
+            (prev) => prev.map(
+              (d2) => d2.id === doc.id ? { ...d2, isPublic: newIsPublic } : d2
+            )
+          );
+        } else {
+          ue.error(`${t.common.error}: ${result.err}`);
+        }
+      } catch {
+        ue.error(t.common.error);
+      } finally {
+        setTogglingPublicId(null);
+      }
+    },
+    [extActor, t]
+  );
+  const handleImagePreview = reactExports.useCallback(
+    async (doc) => {
+      if (!extActor) return;
+      setPreviewingId(doc.id);
+      try {
+        const bytes = await fetchDocumentBytes$1(extActor, doc.id);
+        const blob = new Blob([bytes], {
+          type: doc.mimeType || "application/octet-stream"
+        });
+        if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
+        const url = URL.createObjectURL(blob);
+        imageUrlRef.current = url;
+        setImagePreview({ url, fileName: doc.fileName });
+      } catch (err) {
+        console.error("[Documents] handleImagePreview error:", err);
+        ue.error(t.common.error);
+      } finally {
+        setPreviewingId(null);
+      }
+    },
+    [extActor, t]
+  );
+  const handleCloseImagePreview = reactExports.useCallback(() => {
+    if (imageUrlRef.current) {
+      URL.revokeObjectURL(imageUrlRef.current);
+      imageUrlRef.current = null;
     }
-  };
+    setImagePreview(null);
+  }, []);
+  const handleAudioPlay = reactExports.useCallback(
+    async (doc) => {
+      if (!extActor) return;
+      if ((audioPlayer == null ? void 0 : audioPlayer.docId) === doc.id) {
+        if (audioUrlRef.current) {
+          URL.revokeObjectURL(audioUrlRef.current);
+          audioUrlRef.current = null;
+        }
+        setAudioPlayer(null);
+        return;
+      }
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current);
+        audioUrlRef.current = null;
+      }
+      setAudioPlayer(null);
+      setPlayingId(doc.id);
+      try {
+        console.log("[AudioPlay] fetching bytes for:", doc.id);
+        const cleanBytes = await fetchDocumentBytes$1(extActor, doc.id);
+        console.log(
+          "[AudioPlay] assembled bytes length:",
+          cleanBytes.length,
+          "| first 4 bytes:",
+          cleanBytes.slice(0, 4)
+        );
+        const resolvedMime = normalizeAudioMime$1(doc.mimeType, doc.fileName);
+        console.log("[AudioPlay] normalized mime:", resolvedMime);
+        const blob = new Blob([cleanBytes], { type: resolvedMime });
+        console.log(
+          "[AudioPlay] blob size:",
+          blob.size,
+          "| blob type:",
+          blob.type
+        );
+        const url = URL.createObjectURL(blob);
+        audioUrlRef.current = url;
+        setAudioPlayer({
+          docId: doc.id,
+          url,
+          fileName: doc.fileName,
+          hasError: false
+        });
+      } catch (err) {
+        console.error(
+          "[AudioPlay] FULL ERROR:",
+          err,
+          "| stack:",
+          err == null ? void 0 : err.stack
+        );
+        ue.error(t.common.error);
+      } finally {
+        setPlayingId(null);
+      }
+    },
+    [extActor, t, audioPlayer]
+  );
+  const handleAudioError = reactExports.useCallback(
+    (e) => {
+      var _a3;
+      const audioEl = e.currentTarget;
+      const err = audioEl.error;
+      console.error(
+        "[AudioPlayer] onError event fired",
+        "| error object:",
+        err,
+        "| code:",
+        err == null ? void 0 : err.code,
+        "| message:",
+        err == null ? void 0 : err.message,
+        "| src (first 120 chars):",
+        (_a3 = audioEl.src) == null ? void 0 : _a3.slice(0, 120),
+        "| networkState:",
+        audioEl.networkState,
+        "| readyState:",
+        audioEl.readyState
+      );
+      setAudioPlayer((prev) => prev ? { ...prev, hasError: true } : null);
+    },
+    []
+  );
+  const handleCloseAudioPlayer = reactExports.useCallback(() => {
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
+    setAudioPlayer(null);
+  }, []);
+  const handleOpenFile = reactExports.useCallback(
+    async (doc) => {
+      if (!extActor) return;
+      setDownloadingId(doc.id);
+      try {
+        const bytes = await fetchDocumentBytes$1(extActor, doc.id);
+        const blob = new Blob([bytes], {
+          type: doc.mimeType || "application/octet-stream"
+        });
+        const url = URL.createObjectURL(blob);
+        const tab = window.open(url, "_blank");
+        setTimeout(() => URL.revokeObjectURL(url), 1e4);
+        if (!tab) {
+          await handleDownload(doc);
+        }
+      } catch (err) {
+        console.error("[Documents] handleOpenFile error:", err);
+        ue.error(t.common.error);
+      } finally {
+        setDownloadingId(null);
+      }
+    },
+    [extActor, t, handleDownload]
+  );
+  const loadFoldersForDialog = reactExports.useCallback(
+    async (parentId) => {
+      if (!extActor) return [];
+      try {
+        return await extActor.listMyFolders(parentId);
+      } catch {
+        return [];
+      }
+    },
+    [extActor]
+  );
+  const handleOpenMove = reactExports.useCallback((doc) => {
+    setMoveDoc(doc);
+  }, []);
+  const handleMoveConfirm = reactExports.useCallback(
+    async (targetFolderId) => {
+      if (!extActor || !moveDoc) return;
+      setIsMoving(true);
+      try {
+        const result = await extActor.moveDocument(moveDoc.id, targetFolderId);
+        if ("ok" in result) {
+          ue.success(t.documents.moveSuccess);
+          setMoveDoc(null);
+          await refreshContents();
+        } else {
+          ue.error(`${t.documents.moveError}: ${result.err}`);
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        ue.error(`${t.documents.moveError}: ${msg}`);
+      } finally {
+        setIsMoving(false);
+      }
+    },
+    [extActor, moveDoc, t, refreshContents]
+  );
+  const handleOpenMoveFolder = reactExports.useCallback((folder) => {
+    setMovingFolder(folder);
+  }, []);
+  const handleMoveFolderConfirm = reactExports.useCallback(
+    async (targetFolderId) => {
+      if (!extActor || !movingFolder) return;
+      setIsMovingFolder(true);
+      try {
+        const result = await extActor.moveFolder(
+          movingFolder.id,
+          targetFolderId
+        );
+        if ("ok" in result) {
+          ue.success(t.documents.moveFolderSuccess);
+          setMovingFolder(null);
+          await refreshContents();
+        } else {
+          ue.error(`${t.documents.moveFolderError}: ${result.err}`);
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        ue.error(`${t.documents.moveFolderError}: ${msg}`);
+      } finally {
+        setIsMovingFolder(false);
+      }
+    },
+    [extActor, movingFolder, t, refreshContents]
+  );
+  const totalSelected = selectedDocIds.size + selectedFolderIds.size;
+  const handleToggleDocSelect = reactExports.useCallback((docId) => {
+    setSelectedDocIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(docId)) next.delete(docId);
+      else next.add(docId);
+      return next;
+    });
+  }, []);
+  const handleToggleFolderSelect = reactExports.useCallback((folderId) => {
+    setSelectedFolderIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(folderId)) next.delete(folderId);
+      else next.add(folderId);
+      return next;
+    });
+  }, []);
+  const handleSelectAll = reactExports.useCallback(
+    (checked) => {
+      if (checked) {
+        setSelectedDocIds(new Set(documents.map((d2) => d2.id)));
+        setSelectedFolderIds(new Set(folders.map((f) => f.id)));
+      } else {
+        setSelectedDocIds(/* @__PURE__ */ new Set());
+        setSelectedFolderIds(/* @__PURE__ */ new Set());
+      }
+    },
+    [documents, folders]
+  );
+  const clearSelection = reactExports.useCallback(() => {
+    setSelectedDocIds(/* @__PURE__ */ new Set());
+    setSelectedFolderIds(/* @__PURE__ */ new Set());
+  }, []);
+  const navigateIntoFolderWithClear = reactExports.useCallback(
+    (folder) => {
+      clearSelection();
+      navigateIntoFolder(folder);
+    },
+    [clearSelection, navigateIntoFolder]
+  );
+  const navigateToBreadcrumbWithClear = reactExports.useCallback(
+    (crumb) => {
+      clearSelection();
+      navigateToBreadcrumb(crumb);
+    },
+    [clearSelection, navigateToBreadcrumb]
+  );
+  const handleBulkMoveConfirm = reactExports.useCallback(
+    async (targetFolderId) => {
+      if (!extActor) return;
+      setIsBulkMoving(true);
+      try {
+        const docIds = Array.from(selectedDocIds);
+        const folderIds = Array.from(selectedFolderIds);
+        const result = await extActor.bulkMove(
+          docIds,
+          folderIds,
+          targetFolderId
+        );
+        if ("ok" in result) {
+          const n = docIds.length + folderIds.length;
+          ue.success(t.documents.bulkMoveSuccess.replace("{n}", String(n)));
+          setShowBulkMoveModal(false);
+          clearSelection();
+          await refreshContents();
+        } else {
+          ue.error(`${t.documents.bulkMoveError}: ${result.err}`);
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        ue.error(`${t.documents.bulkMoveError}: ${msg}`);
+      } finally {
+        setIsBulkMoving(false);
+      }
+    },
+    [
+      extActor,
+      selectedDocIds,
+      selectedFolderIds,
+      t,
+      clearSelection,
+      refreshContents
+    ]
+  );
   const handleToggleGuestPermission = async () => {
     if (!extActor) return;
     setTogglingGuestPerm(true);
@@ -52970,7 +56034,61 @@ function MyPagesDocuments({
       setTogglingGuestPerm(false);
     }
   };
+  const isEmpty = documents.length === 0 && folders.length === 0;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-6", "data-ocid": "documents.section", children: [
+    imagePreview && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      ImageModal,
+      {
+        url: imagePreview.url,
+        fileName: imagePreview.fileName,
+        onClose: handleCloseImagePreview
+      }
+    ),
+    showCreateFolderModal && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      CreateFolderModal,
+      {
+        onConfirm: handleCreateFolder,
+        onCancel: () => setShowCreateFolderModal(false),
+        isCreating: isCreatingFolder
+      }
+    ),
+    moveDoc && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      MoveModal,
+      {
+        itemName: moveDoc.fileName,
+        itemType: "file",
+        excludeFolderId: null,
+        initialFolderId: moveDoc.parentFolderId ?? null,
+        loadFolders: loadFoldersForDialog,
+        onConfirm: handleMoveConfirm,
+        onCancel: () => setMoveDoc(null),
+        isMoving
+      }
+    ),
+    movingFolder && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      MoveModal,
+      {
+        itemName: movingFolder.name,
+        itemType: "folder",
+        excludeFolderId: movingFolder.id,
+        initialFolderId: movingFolder.parentFolderId ?? null,
+        loadFolders: loadFoldersForDialog,
+        onConfirm: handleMoveFolderConfirm,
+        onCancel: () => setMovingFolder(null),
+        isMoving: isMovingFolder
+      }
+    ),
+    showBulkMoveModal && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      BulkMoveModal,
+      {
+        selectedCount: totalSelected,
+        excludeFolderIds: Array.from(selectedFolderIds),
+        loadFolders: loadFoldersForDialog,
+        onConfirm: handleBulkMoveConfirm,
+        onCancel: () => setShowBulkMoveModal(false),
+        isMoving: isBulkMoving
+      }
+    ),
     isAdmin && /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border border-divider shadow-card", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "pb-3", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(CardTitle, { className: "font-serif text-base text-foreground flex items-center gap-2", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(Settings2, { className: "w-4 h-4 text-gold" }),
@@ -52998,9 +56116,25 @@ function MyPagesDocuments({
       ] }) })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border border-divider shadow-card", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(CardTitle, { className: "font-serif text-lg text-foreground flex items-center gap-2", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Upload, { className: "w-5 h-5 text-gold" }),
-        t.documents.uploadTitle
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(CardTitle, { className: "font-serif text-lg text-foreground flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Upload, { className: "w-5 h-5 text-gold" }),
+          t.documents.uploadTitle
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Button,
+          {
+            variant: "outline",
+            size: "sm",
+            onClick: () => setShowCreateFolderModal(true),
+            className: "rounded-full border-gold/40 text-foreground hover:bg-gold/10 gap-1.5 self-start sm:self-auto",
+            "data-ocid": "documents.new_folder_button",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(FolderPlus, { className: "w-4 h-4 text-gold" }),
+              t.documents.newFolder
+            ]
+          }
+        )
       ] }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-4", children: [
         !loading && /* @__PURE__ */ jsxRuntimeExports.jsx(StorageBar, { usedBytes: storageUsed }),
@@ -53019,7 +56153,7 @@ function MyPagesDocuments({
               {
                 ref: fileInputRef,
                 type: "file",
-                accept: ".pdf,.docx,.doc",
+                accept: ".pdf,.docx,.doc,.jpg,.jpeg,.png,.gif,.webp,.svg,.mp3,.wav,.ogg,.flac,.aac,.m4a,.mp4,.mov,.avi,.webm,.mkv,.mpeg,.mpg",
                 onChange: handleFileChange,
                 className: "block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gold/15 file:text-foreground hover:file:bg-gold/25 cursor-pointer",
                 "data-ocid": "documents.file_input",
@@ -53051,7 +56185,7 @@ function MyPagesDocuments({
               "data-ocid": "documents.upload_button",
               children: uploading ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 mr-2 animate-spin" }),
-                t.common.loading
+                uploadProgressMsg ?? t.common.loading
               ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx(Upload, { className: "w-4 h-4 mr-2" }),
                 t.documents.uploadButton
@@ -53062,127 +56196,1378 @@ function MyPagesDocuments({
       ] })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "border border-divider shadow-card", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(CardTitle, { className: "font-serif text-lg text-foreground flex items-center gap-2", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-5 h-5 text-gold" }),
-        t.documents.tab
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between flex-wrap gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(CardTitle, { className: "font-serif text-lg text-foreground flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-5 h-5 text-gold" }),
+          t.documents.tab
+        ] }),
+        totalSelected > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Button,
+          {
+            size: "sm",
+            onClick: () => setShowBulkMoveModal(true),
+            className: "bg-gold hover:bg-gold/90 text-black font-sans rounded-full gap-1.5",
+            "data-ocid": "documents.bulk_move_button",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(FolderInput, { className: "w-4 h-4" }),
+              t.documents.bulkMoveButton.replace(
+                "{n}",
+                String(totalSelected)
+              )
+            ]
+          }
+        )
       ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: loading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", "data-ocid": "documents.loading_state", children: [1, 2, 3].map((i) => /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-12 w-full" }, i)) }) : documents.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        "div",
-        {
-          className: "flex flex-col items-center justify-center py-12 gap-3 text-center",
-          "data-ocid": "documents.empty_state",
-          children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-10 h-10 text-muted-foreground/40" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-sans text-sm text-muted-foreground", children: t.documents.noDocuments })
-          ]
-        }
-      ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full text-sm font-sans", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-divider", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide", children: t.documents.fileName }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide hidden sm:table-cell", children: t.documents.uploadDate }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide hidden sm:table-cell", children: t.documents.fileSize }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide", children: t.documents.public }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-right py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide", children: t.documents.actions })
-        ] }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: documents.map((doc) => {
-          const docWithSize = doc;
-          return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "tr",
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { children: [
+        breadcrumbs.length > 1 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "nav",
+          {
+            className: "flex items-center gap-1 mb-4 flex-wrap",
+            "aria-label": "breadcrumb",
+            "data-ocid": "documents.breadcrumbs",
+            children: breadcrumbs.map((crumb, idx) => {
+              const isLast = idx === breadcrumbs.length - 1;
+              return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "span",
+                {
+                  className: "flex items-center gap-1",
+                  children: [
+                    idx > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "w-3.5 h-3.5 text-muted-foreground/50 shrink-0" }),
+                    isLast ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs font-semibold text-foreground truncate max-w-[160px]", children: crumb.name }) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "button",
+                      {
+                        type: "button",
+                        onClick: () => navigateToBreadcrumbWithClear(crumb),
+                        className: "text-xs text-muted-foreground hover:text-foreground transition-colors truncate max-w-[120px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded",
+                        "data-ocid": "documents.breadcrumb_link",
+                        children: crumb.name
+                      }
+                    )
+                  ]
+                },
+                crumb.id ?? "root"
+              );
+            })
+          }
+        ),
+        loading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", "data-ocid": "documents.loading_state", children: [1, 2, 3].map((i) => /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-12 w-full" }, i)) }) : isEmpty ? /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            className: "flex flex-col items-center justify-center py-12 gap-3 text-center",
+            "data-ocid": "documents.empty_state",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-10 h-10 text-muted-foreground/40" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-sans text-sm text-muted-foreground", children: t.documents.noDocuments })
+            ]
+          }
+        ) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "div",
             {
-              className: "border-b border-divider/50 hover:bg-muted/20 transition-colors",
-              "data-ocid": "documents.row",
+              className: "md:hidden space-y-3",
+              "data-ocid": "documents.card_list",
               children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-3 pr-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 min-w-0", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-4 h-4 text-gold shrink-0" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "span",
-                    {
-                      className: "truncate max-w-[160px]",
-                      title: doc.fileName,
-                      children: doc.fileName
-                    }
-                  )
-                ] }) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-3 pr-4 text-muted-foreground whitespace-nowrap hidden sm:table-cell", children: formatDate$1(doc.uploadedAt) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-3 pr-4 text-muted-foreground whitespace-nowrap hidden sm:table-cell", children: docWithSize.fileSize != null ? `${(Number(docWithSize.fileSize) / 1024).toFixed(0)} KB` : "—" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-3 pr-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    Switch,
-                    {
-                      checked: doc.isPublic,
-                      onCheckedChange: () => handleTogglePublic(doc),
-                      disabled: togglingId === doc.id,
-                      "aria-label": doc.isPublic ? t.documents.public : t.documents.private,
-                      "data-ocid": "documents.public_toggle"
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    Badge,
-                    {
-                      variant: "outline",
-                      className: doc.isPublic ? "border-gold text-gold text-xs" : "border-muted-foreground/40 text-muted-foreground text-xs",
-                      children: doc.isPublic ? t.documents.public : t.documents.private
-                    }
-                  )
-                ] }) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-3 text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-end gap-2", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => handleShare(doc),
-                      className: "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
-                      "data-ocid": "documents.share_button",
-                      "aria-label": `${t.documents.share} ${doc.fileName}`,
-                      title: copiedId === doc.id ? t.documents.copied : t.documents.share,
-                      children: copiedId === doc.id ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "w-3.5 h-3.5 text-emerald-500" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-emerald-600", children: t.documents.copied })
-                      ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Clipboard, { className: "w-3.5 h-3.5" }),
-                        t.documents.share
+                folders.map((folder) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "div",
+                  {
+                    className: `rounded-xl border border-divider p-3 transition-colors ${selectedFolderIds.has(folder.id) ? "bg-gold/10 border-gold/40" : "bg-muted/10"}`,
+                    "data-ocid": "documents.folder_card",
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-2.5", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "input",
+                        {
+                          type: "checkbox",
+                          checked: selectedFolderIds.has(folder.id),
+                          onChange: () => handleToggleFolderSelect(folder.id),
+                          className: "w-4 h-4 accent-gold cursor-pointer rounded",
+                          "aria-label": `Select folder ${folder.name}`
+                        }
+                      ) }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 min-w-0", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                          "button",
+                          {
+                            type: "button",
+                            className: "flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-gold transition-colors truncate max-w-full text-left",
+                            onClick: () => navigateIntoFolderWithClear(folder),
+                            "data-ocid": "documents.folder_name_link",
+                            children: [
+                              /* @__PURE__ */ jsxRuntimeExports.jsx(FolderOpen, { className: "w-4 h-4 text-gold shrink-0" }),
+                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate", children: folder.name })
+                            ]
+                          }
+                        ),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-2.5 flex flex-wrap gap-2", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                            "button",
+                            {
+                              type: "button",
+                              onClick: () => navigateIntoFolderWithClear(folder),
+                              className: "inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium bg-gold/15 hover:bg-gold/25 text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+                              "data-ocid": "documents.folder_open",
+                              "aria-label": `${t.documents.openFolder} ${folder.name}`,
+                              children: [
+                                /* @__PURE__ */ jsxRuntimeExports.jsx(FolderOpen, { className: "w-3.5 h-3.5" }),
+                                t.documents.openFolder
+                              ]
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                            "button",
+                            {
+                              type: "button",
+                              onClick: () => handleOpenMoveFolder(folder),
+                              className: "inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+                              "data-ocid": "documents.folder_move",
+                              "aria-label": `${t.documents.moveFolder} ${folder.name}`,
+                              children: [
+                                /* @__PURE__ */ jsxRuntimeExports.jsx(FolderInput, { className: "w-3.5 h-3.5" }),
+                                t.documents.moveFolder
+                              ]
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                            "button",
+                            {
+                              type: "button",
+                              onClick: () => handleDeleteFolder(folder),
+                              disabled: deletingFolderId === folder.id,
+                              className: "inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 disabled:opacity-50",
+                              "data-ocid": "documents.folder_delete",
+                              "aria-label": `${t.documents.deleteFolder} ${folder.name}`,
+                              children: [
+                                deletingFolderId === folder.id ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3.5 h-3.5" }),
+                                t.documents.deleteFolder
+                              ]
+                            }
+                          )
+                        ] })
                       ] })
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => downloadFile(
-                        doc.filePath,
-                        doc.fileName,
-                        doc.mimeType
+                    ] })
+                  },
+                  `folder-card-${folder.id}`
+                )),
+                documents.map((doc) => {
+                  var _a3, _b3;
+                  const docWithSize = doc;
+                  const isImage2 = (_a3 = doc.mimeType) == null ? void 0 : _a3.startsWith("image/");
+                  const isAudio = (_b3 = doc.mimeType) == null ? void 0 : _b3.startsWith("audio/");
+                  const isAudioActive = (audioPlayer == null ? void 0 : audioPlayer.docId) === doc.id;
+                  return /* @__PURE__ */ jsxRuntimeExports.jsxs(React$2.Fragment, { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "div",
+                      {
+                        className: `rounded-xl border border-divider p-3 transition-colors ${selectedDocIds.has(doc.id) ? "bg-gold/10 border-gold/40" : "bg-muted/10"}`,
+                        "data-ocid": "documents.file_card",
+                        children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-2.5", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "input",
+                            {
+                              type: "checkbox",
+                              checked: selectedDocIds.has(doc.id),
+                              onChange: () => handleToggleDocSelect(doc.id),
+                              className: "w-4 h-4 accent-gold cursor-pointer rounded",
+                              "aria-label": `Select file ${doc.fileName}`
+                            }
+                          ) }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 min-w-0", children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                              "button",
+                              {
+                                type: "button",
+                                className: "flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-gold transition-colors text-left w-full",
+                                onClick: () => {
+                                  if (isImage2) handleImagePreview(doc);
+                                  else if (isAudio) handleAudioPlay(doc);
+                                  else handleOpenFile(doc);
+                                },
+                                "data-ocid": "documents.filename_link",
+                                children: [
+                                  /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-4 h-4 text-gold shrink-0" }),
+                                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate", children: doc.fileName })
+                                ]
+                              }
+                            ),
+                            docWithSize.fileSize != null && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "mt-0.5 text-xs text-muted-foreground ml-6", children: [
+                              (Number(docWithSize.fileSize) / 1024).toFixed(
+                                0
+                              ),
+                              " ",
+                              "KB"
+                            ] }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-2.5 flex flex-wrap gap-2", children: [
+                              isImage2 && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                                "button",
+                                {
+                                  type: "button",
+                                  onClick: () => handleImagePreview(doc),
+                                  disabled: previewingId === doc.id,
+                                  className: "inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium bg-gold/15 hover:bg-gold/25 text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50",
+                                  "data-ocid": "documents.preview_button",
+                                  children: [
+                                    previewingId === doc.id ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Eye, { className: "w-3.5 h-3.5" }),
+                                    t.documents.preview
+                                  ]
+                                }
+                              ),
+                              isAudio && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                                "button",
+                                {
+                                  type: "button",
+                                  onClick: () => handleAudioPlay(doc),
+                                  disabled: playingId === doc.id,
+                                  className: `inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50 ${isAudioActive ? "bg-gold/30 text-foreground" : "bg-gold/15 hover:bg-gold/25 text-foreground"}`,
+                                  "data-ocid": "documents.play_button",
+                                  "aria-pressed": isAudioActive,
+                                  children: [
+                                    playingId === doc.id ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Music, { className: "w-3.5 h-3.5" }),
+                                    isAudioActive ? t.documents.close : t.documents.play
+                                  ]
+                                }
+                              ),
+                              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                                "button",
+                                {
+                                  type: "button",
+                                  onClick: () => handleDownload(doc),
+                                  disabled: downloadingId === doc.id,
+                                  className: "inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50",
+                                  "data-ocid": "documents.download_link",
+                                  children: [
+                                    downloadingId === doc.id ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "w-3.5 h-3.5" }),
+                                    t.documents.download
+                                  ]
+                                }
+                              ),
+                              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                                "button",
+                                {
+                                  type: "button",
+                                  onClick: () => handleShare(doc),
+                                  className: "inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+                                  "data-ocid": "documents.share_button",
+                                  children: [
+                                    /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { className: "w-3.5 h-3.5" }),
+                                    copiedId === doc.id ? t.documents.copied : t.documents.share
+                                  ]
+                                }
+                              ),
+                              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                                "button",
+                                {
+                                  type: "button",
+                                  onClick: () => handleTogglePublic(doc),
+                                  disabled: togglingPublicId === doc.id,
+                                  className: `inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50 ${doc.isPublic ? "bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300" : "bg-muted/50 hover:bg-muted text-foreground"}`,
+                                  "data-ocid": "documents.public_toggle",
+                                  "aria-pressed": doc.isPublic,
+                                  children: [
+                                    togglingPublicId === doc.id ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }) : doc.isPublic ? /* @__PURE__ */ jsxRuntimeExports.jsx(Globe, { className: "w-3.5 h-3.5" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Lock, { className: "w-3.5 h-3.5" }),
+                                    doc.isPublic ? t.documents.public : t.documents.private
+                                  ]
+                                }
+                              ),
+                              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                                "button",
+                                {
+                                  type: "button",
+                                  onClick: () => handleOpenMove(doc),
+                                  className: "inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+                                  "data-ocid": "documents.move_button",
+                                  children: [
+                                    /* @__PURE__ */ jsxRuntimeExports.jsx(FolderInput, { className: "w-3.5 h-3.5" }),
+                                    t.documents.moveFile
+                                  ]
+                                }
+                              )
+                            ] })
+                          ] })
+                        ] })
+                      }
+                    ),
+                    isAudioActive && audioPlayer && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "rounded-xl border border-gold/20 bg-muted/30 px-4 py-3 flex items-center gap-3", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(Music, { className: "w-4 h-4 text-gold shrink-0" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs text-muted-foreground truncate min-w-0 flex-1 font-sans", children: audioPlayer.fileName }),
+                      audioPlayer.hasError ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "span",
+                        {
+                          className: "text-xs text-red-500 font-medium flex-1 min-w-0 font-sans",
+                          role: "alert",
+                          children: t.documents.audioLoadError
+                        }
+                      ) : (
+                        /* eslint-disable-next-line jsx-a11y/media-has-caption */
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          "audio",
+                          {
+                            src: audioPlayer.url,
+                            controls: true,
+                            autoPlay: false,
+                            className: "h-8 flex-1 min-w-0 max-w-full",
+                            style: {
+                              accentColor: "var(--color-gold, #c9a84c)"
+                            },
+                            onError: handleAudioError,
+                            children: /* @__PURE__ */ jsxRuntimeExports.jsx("track", { kind: "captions" })
+                          }
+                        )
                       ),
-                      className: "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
-                      "data-ocid": "documents.download_link",
-                      "aria-label": `${t.documents.download} ${doc.fileName}`,
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: handleCloseAudioPlayer,
+                          className: "shrink-0 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+                          "aria-label": t.documents.close,
+                          children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-3.5 h-3.5" })
+                        }
+                      )
+                    ] })
+                  ] }, `card-${doc.id}`);
+                })
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden md:block overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full text-sm font-sans", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-divider", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "th",
+                {
+                  className: "py-3 pr-2 w-8 text-left",
+                  "aria-label": "Select all",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "input",
+                    {
+                      type: "checkbox",
+                      checked: totalSelected > 0 && totalSelected === documents.length + folders.length,
+                      ref: (el) => {
+                        if (el) {
+                          el.indeterminate = totalSelected > 0 && totalSelected < documents.length + folders.length;
+                        }
+                      },
+                      onChange: (e) => handleSelectAll(e.target.checked),
+                      className: "w-4 h-4 accent-gold cursor-pointer rounded",
+                      "data-ocid": "documents.select_all",
+                      "aria-label": "Select all items"
+                    }
+                  )
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide", children: t.documents.fileName }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide hidden sm:table-cell", children: t.documents.fileSize }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-right py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide", children: t.documents.actions })
+            ] }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("tbody", { children: [
+              folders.map((folder) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "tr",
+                {
+                  className: `border-b border-divider/50 hover:bg-gold/5 transition-colors ${selectedFolderIds.has(folder.id) ? "bg-gold/10" : "bg-muted/10"}`,
+                  "data-ocid": "documents.folder_row",
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 pr-2 w-10", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-w-[44px] min-h-[44px] flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "input",
+                      {
+                        type: "checkbox",
+                        checked: selectedFolderIds.has(folder.id),
+                        onChange: () => handleToggleFolderSelect(folder.id),
+                        className: "w-4 h-4 accent-gold cursor-pointer rounded",
+                        "data-ocid": "documents.folder_checkbox",
+                        "aria-label": `Select folder ${folder.name}`
+                      }
+                    ) }) }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-3 pr-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 min-w-0", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(FolderOpen, { className: "w-4 h-4 text-gold shrink-0" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "button",
+                        {
+                          type: "button",
+                          className: "truncate max-w-[200px] font-medium text-foreground cursor-pointer hover:underline hover:text-gold transition-colors text-left bg-transparent border-0 p-0",
+                          title: folder.name,
+                          onClick: () => navigateIntoFolderWithClear(folder),
+                          "data-ocid": "documents.folder_name_link",
+                          "aria-label": `${t.documents.openFolder} ${folder.name}`,
+                          children: folder.name
+                        }
+                      )
+                    ] }) }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-3 pr-4 text-muted-foreground hidden sm:table-cell", children: "—" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-3 text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "inline-flex items-center gap-1.5 justify-end", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => navigateIntoFolderWithClear(folder),
+                          className: "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-gold/15 hover:bg-gold/25 text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+                          "data-ocid": "documents.folder_open",
+                          "aria-label": `${t.documents.openFolder} ${folder.name}`,
+                          children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(FolderOpen, { className: "w-3.5 h-3.5" }),
+                            t.documents.openFolder
+                          ]
+                        }
+                      ),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => handleDeleteFolder(folder),
+                          disabled: deletingFolderId === folder.id,
+                          className: "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 disabled:opacity-50",
+                          "data-ocid": "documents.folder_delete",
+                          "aria-label": `${t.documents.deleteFolder} ${folder.name}`,
+                          children: [
+                            deletingFolderId === folder.id ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3.5 h-3.5" }),
+                            t.documents.deleteFolder
+                          ]
+                        }
+                      ),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => handleOpenMoveFolder(folder),
+                          className: "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+                          "data-ocid": "documents.folder_move",
+                          "aria-label": `${t.documents.moveFolder} ${folder.name}`,
+                          children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(FolderInput, { className: "w-3.5 h-3.5" }),
+                            t.documents.moveFolder
+                          ]
+                        }
+                      )
+                    ] }) })
+                  ]
+                },
+                `folder-${folder.id}`
+              )),
+              documents.map((doc) => {
+                var _a3, _b3;
+                const docWithSize = doc;
+                const isImage2 = (_a3 = doc.mimeType) == null ? void 0 : _a3.startsWith("image/");
+                const isAudio = (_b3 = doc.mimeType) == null ? void 0 : _b3.startsWith("audio/");
+                const isAudioActive = (audioPlayer == null ? void 0 : audioPlayer.docId) === doc.id;
+                return /* @__PURE__ */ jsxRuntimeExports.jsxs(React$2.Fragment, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "tr",
+                    {
+                      className: `border-b border-divider/50 hover:bg-muted/20 transition-colors ${selectedDocIds.has(doc.id) ? "bg-gold/5" : ""}`,
+                      "data-ocid": "documents.row",
                       children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "w-3.5 h-3.5" }),
-                        t.documents.download
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-2 pr-2 w-10", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-w-[44px] min-h-[44px] flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          "input",
+                          {
+                            type: "checkbox",
+                            checked: selectedDocIds.has(doc.id),
+                            onChange: () => handleToggleDocSelect(doc.id),
+                            className: "w-4 h-4 accent-gold cursor-pointer rounded",
+                            "data-ocid": "documents.file_checkbox",
+                            "aria-label": `Select file ${doc.fileName}`
+                          }
+                        ) }) }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-3 pr-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 min-w-0", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-4 h-4 text-gold shrink-0" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "button",
+                            {
+                              type: "button",
+                              className: "truncate max-w-[200px] text-left cursor-pointer hover:underline hover:text-gold transition-colors bg-transparent border-0 p-0",
+                              title: doc.fileName,
+                              onClick: () => {
+                                if (isImage2) {
+                                  handleImagePreview(doc);
+                                } else if (isAudio) {
+                                  handleAudioPlay(doc);
+                                } else {
+                                  handleOpenFile(doc);
+                                }
+                              },
+                              "data-ocid": "documents.filename_link",
+                              "aria-label": `${doc.fileName}`,
+                              children: doc.fileName
+                            }
+                          )
+                        ] }) }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-3 pr-4 text-muted-foreground whitespace-nowrap hidden sm:table-cell", children: docWithSize.fileSize != null ? `${(Number(docWithSize.fileSize) / 1024).toFixed(0)} KB` : "—" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "py-3 text-right", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "inline-flex items-center gap-1.5 justify-end flex-wrap", children: [
+                          isImage2 && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                            "button",
+                            {
+                              type: "button",
+                              onClick: () => handleImagePreview(doc),
+                              disabled: previewingId === doc.id,
+                              className: "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-gold/15 hover:bg-gold/25 text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50",
+                              "data-ocid": "documents.preview_button",
+                              "aria-label": `${t.documents.preview} ${doc.fileName}`,
+                              children: [
+                                previewingId === doc.id ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Eye, { className: "w-3.5 h-3.5" }),
+                                t.documents.preview
+                              ]
+                            }
+                          ),
+                          isAudio && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                            "button",
+                            {
+                              type: "button",
+                              onClick: () => handleAudioPlay(doc),
+                              disabled: playingId === doc.id,
+                              className: `inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50 ${isAudioActive ? "bg-gold/30 text-foreground" : "bg-gold/15 hover:bg-gold/25 text-foreground"}`,
+                              "data-ocid": "documents.play_button",
+                              "aria-label": `${t.documents.play} ${doc.fileName}`,
+                              "aria-pressed": isAudioActive,
+                              children: [
+                                playingId === doc.id ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Music, { className: "w-3.5 h-3.5" }),
+                                isAudioActive ? t.documents.close : t.documents.play
+                              ]
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                            "button",
+                            {
+                              type: "button",
+                              onClick: () => handleDownload(doc),
+                              disabled: downloadingId === doc.id,
+                              className: "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50",
+                              "data-ocid": "documents.download_link",
+                              "aria-label": `${t.documents.download} ${doc.fileName}`,
+                              children: [
+                                downloadingId === doc.id ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "w-3.5 h-3.5" }),
+                                t.documents.download
+                              ]
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                            "button",
+                            {
+                              type: "button",
+                              onClick: () => handleShare(doc),
+                              className: "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+                              "data-ocid": "documents.share_button",
+                              "aria-label": `${t.documents.share} ${doc.fileName}`,
+                              children: [
+                                /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { className: "w-3.5 h-3.5" }),
+                                copiedId === doc.id ? t.documents.copied : t.documents.share
+                              ]
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                            "button",
+                            {
+                              type: "button",
+                              onClick: () => handleTogglePublic(doc),
+                              disabled: togglingPublicId === doc.id,
+                              className: `inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50 ${doc.isPublic ? "bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300" : "bg-muted/50 hover:bg-muted text-foreground"}`,
+                              "data-ocid": "documents.public_toggle",
+                              "aria-label": `${doc.isPublic ? t.documents.public : t.documents.private} — ${doc.fileName}`,
+                              "aria-pressed": doc.isPublic,
+                              children: [
+                                togglingPublicId === doc.id ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }) : doc.isPublic ? /* @__PURE__ */ jsxRuntimeExports.jsx(Globe, { className: "w-3.5 h-3.5" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Lock, { className: "w-3.5 h-3.5" }),
+                                doc.isPublic ? t.documents.public : t.documents.private
+                              ]
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                            "button",
+                            {
+                              type: "button",
+                              onClick: () => handleOpenMove(doc),
+                              className: "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+                              "data-ocid": "documents.move_button",
+                              "aria-label": `${t.documents.moveFile} ${doc.fileName}`,
+                              children: [
+                                /* @__PURE__ */ jsxRuntimeExports.jsx(FolderInput, { className: "w-3.5 h-3.5" }),
+                                t.documents.moveFile
+                              ]
+                            }
+                          )
+                        ] }) })
                       ]
                     }
                   ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    Button,
+                  isAudioActive && audioPlayer && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    AudioPlayerRow,
                     {
-                      variant: "ghost",
-                      size: "icon",
-                      onClick: () => handleDelete(doc.id),
-                      disabled: deletingId === doc.id,
-                      className: "h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-50",
-                      "aria-label": `${t.documents.delete} ${doc.fileName}`,
-                      "data-ocid": "documents.delete_button",
-                      children: deletingId === doc.id ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3.5 h-3.5" })
-                    }
+                      url: audioPlayer.url,
+                      fileName: audioPlayer.fileName,
+                      hasError: audioPlayer.hasError,
+                      onClose: handleCloseAudioPlayer,
+                      onError: handleAudioError
+                    },
+                    `audio-${doc.id}`
                   )
-                ] }) })
-              ]
-            },
-            doc.id
-          );
-        }) })
-      ] }) }) })
+                ] }, doc.id);
+              })
+            ] })
+          ] }) })
+        ] })
+      ] })
     ] })
+  ] });
+}
+const PAGE_SIZE = 10;
+function formatDate$1(ts) {
+  const ms = Number(ts / BigInt(1e6));
+  return new Date(ms).toLocaleDateString(void 0, {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+}
+function principalToText(p2) {
+  return typeof p2 === "object" && p2 !== null && "toText" in p2 ? p2.toText() : String(p2);
+}
+function NoteDialog({ note, onSave, onClose, isSaving }) {
+  const { t } = useLanguage();
+  const [rubrik, setRubrik] = reactExports.useState((note == null ? void 0 : note.rubrik) ?? "");
+  const [content, setContent] = reactExports.useState((note == null ? void 0 : note.content) ?? "");
+  const rubrikRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    var _a3;
+    (_a3 = rubrikRef.current) == null ? void 0 : _a3.focus();
+    const handler = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const r2 = rubrik.trim();
+    const c2 = content.trim();
+    if (r2) onSave(r2, c2);
+  };
+  const isEdit = note !== null;
+  const title = isEdit ? t.notes.editNote : t.notes.newNote;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "dialog",
+    {
+      open: true,
+      className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent",
+      "data-ocid": "notes.dialog",
+      "aria-label": title,
+      onClick: onClose,
+      onKeyDown: (e) => e.key === "Escape" && onClose(),
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col",
+          onClick: (e) => e.stopPropagation(),
+          onKeyDown: (e) => e.stopPropagation(),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 flex-shrink-0 px-4 pt-4 sm:px-6 sm:pt-6 pb-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(NotebookPen, { className: "w-5 h-5 text-gold shrink-0" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-serif text-base font-semibold text-foreground flex-1", children: title }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: onClose,
+                  className: "w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+                  "aria-label": t.notes.abort,
+                  "data-ocid": "notes.dialog_close",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "form",
+              {
+                onSubmit: handleSubmit,
+                className: "flex-1 overflow-y-auto px-4 sm:px-6 space-y-4",
+                style: { WebkitOverflowScrolling: "touch" },
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "label",
+                      {
+                        htmlFor: "note-rubrik",
+                        className: "block text-xs font-medium text-muted-foreground mb-1.5",
+                        children: t.notes.rubrik
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "input",
+                      {
+                        id: "note-rubrik",
+                        ref: rubrikRef,
+                        type: "text",
+                        value: rubrik,
+                        onChange: (e) => setRubrik(e.target.value),
+                        placeholder: t.notes.rubrik,
+                        className: "w-full rounded-lg border border-input bg-background px-3 py-3 text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/60 transition min-h-[48px]",
+                        maxLength: 200,
+                        disabled: isSaving,
+                        "data-ocid": "notes.rubrik_input"
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "label",
+                      {
+                        htmlFor: "note-content",
+                        className: "block text-xs font-medium text-muted-foreground mb-1.5",
+                        children: t.notes.content
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "textarea",
+                      {
+                        id: "note-content",
+                        value: content,
+                        onChange: (e) => setContent(e.target.value),
+                        placeholder: t.notes.content,
+                        rows: 6,
+                        className: "w-full rounded-lg border border-input bg-background px-3 py-3 text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/60 transition resize-y min-h-[120px]",
+                        disabled: isSaving,
+                        "data-ocid": "notes.content_textarea"
+                      }
+                    )
+                  ] })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-shrink-0 flex gap-2 justify-end px-4 sm:px-6 py-3 sm:py-4 border-t border-border/50 bg-card", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Button,
+                {
+                  type: "button",
+                  variant: "outline",
+                  size: "sm",
+                  onClick: onClose,
+                  disabled: isSaving,
+                  className: "rounded-full min-h-[44px] px-5",
+                  "data-ocid": "notes.abort_button",
+                  children: t.notes.abort
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Button,
+                {
+                  type: "button",
+                  size: "sm",
+                  disabled: !rubrik.trim() || isSaving,
+                  onClick: () => {
+                    const r2 = rubrik.trim();
+                    const c2 = content.trim();
+                    if (r2) onSave(r2, c2);
+                  },
+                  className: "bg-gold hover:bg-gold/90 text-black font-sans rounded-full min-h-[44px] px-5",
+                  "data-ocid": "notes.save_button",
+                  children: isSaving ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 mr-1.5 animate-spin" }),
+                    t.notes.save
+                  ] }) : t.notes.save
+                }
+              )
+            ] })
+          ]
+        }
+      )
+    }
+  );
+}
+function ShareDialog({ note, onClose, actor }) {
+  const { t } = useLanguage();
+  const [shares, setShares] = reactExports.useState([]);
+  const [loading, setLoading] = reactExports.useState(true);
+  const [newPrincipal, setNewPrincipal] = reactExports.useState("");
+  const [sharing, setSharing] = reactExports.useState(false);
+  const [removingIdx, setRemovingIdx] = reactExports.useState(null);
+  const inputRef = reactExports.useRef(null);
+  const loadShares = reactExports.useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await actor.getNoteShares(note.id);
+      if ("ok" in result) setShares(result.ok);
+    } catch {
+    } finally {
+      setLoading(false);
+    }
+  }, [actor, note.id]);
+  reactExports.useEffect(() => {
+    var _a3;
+    loadShares();
+    (_a3 = inputRef.current) == null ? void 0 : _a3.focus();
+    const handler = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [loadShares, onClose]);
+  const handleShare = async () => {
+    const txt = newPrincipal.trim();
+    if (!txt) return;
+    setSharing(true);
+    try {
+      let principal;
+      try {
+        principal = Principal$1.fromText(txt);
+      } catch {
+        ue.error(t.notes.invalidPrincipal ?? "Invalid principal ID");
+        setSharing(false);
+        return;
+      }
+      const result = await actor.shareNote(note.id, principal);
+      if ("ok" in result) {
+        ue.success(t.notes.shareAdded);
+        setNewPrincipal("");
+        await loadShares();
+      } else {
+        ue.error(`${t.common.error}: ${result.err}`);
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      ue.error(`${t.common.error}: ${msg}`);
+    } finally {
+      setSharing(false);
+    }
+  };
+  const handleRemove = async (p2, idx) => {
+    setRemovingIdx(idx);
+    try {
+      const result = await actor.unshareNote(note.id, p2);
+      if ("ok" in result) {
+        ue.success(t.notes.shareRemoved);
+        await loadShares();
+      } else {
+        ue.error(`${t.common.error}: ${result.err}`);
+      }
+    } catch {
+      ue.error(t.common.error);
+    } finally {
+      setRemovingIdx(null);
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "dialog",
+    {
+      open: true,
+      className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent",
+      "data-ocid": "notes.share_dialog",
+      "aria-label": t.notes.shareDialogTitle,
+      onClick: onClose,
+      onKeyDown: (e) => e.key === "Escape" && onClose(),
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col",
+          onClick: (e) => e.stopPropagation(),
+          onKeyDown: (e) => e.stopPropagation(),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 flex-shrink-0 px-4 pt-4 sm:px-6 sm:pt-6 pb-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Share2, { className: "w-5 h-5 text-gold shrink-0" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 min-w-0", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-serif text-base font-semibold text-foreground", children: t.notes.shareDialogTitle }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground truncate mt-0.5", children: note.rubrik })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: onClose,
+                  className: "shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+                  "aria-label": t.notes.close,
+                  "data-ocid": "notes.share_dialog_close",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "div",
+              {
+                className: "flex-1 overflow-y-auto px-4 sm:px-6 space-y-5 pb-2",
+                style: { WebkitOverflowScrolling: "touch" },
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs font-medium text-muted-foreground", children: t.notes.shareWith }),
+                    loading ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-full rounded-lg" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-3/4 rounded-lg" })
+                    ] }) : shares.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "p",
+                      {
+                        className: "text-xs text-muted-foreground bg-muted/30 rounded-lg px-3 py-3 text-center",
+                        "data-ocid": "notes.shares_empty",
+                        children: t.notes.noShares
+                      }
+                    ) : /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "space-y-1.5 max-h-40 overflow-y-auto pr-1", children: shares.map((p2, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      "li",
+                      {
+                        className: "flex items-center gap-2 px-3 py-2 bg-muted/30 border border-border/50 rounded-lg",
+                        "data-ocid": `notes.share_entry.${idx + 1}`,
+                        children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(UserCheck, { className: "w-3.5 h-3.5 text-gold shrink-0" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "flex-1 text-xs text-foreground font-mono truncate min-w-0", children: principalToText(p2) }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                            "button",
+                            {
+                              type: "button",
+                              onClick: () => handleRemove(p2, idx),
+                              disabled: removingIdx === idx,
+                              className: "shrink-0 inline-flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 transition-colors focus-visible:outline-none disabled:opacity-50",
+                              "aria-label": t.notes.removeShare,
+                              "data-ocid": `notes.remove_share_button.${idx + 1}`,
+                              children: [
+                                removingIdx === idx ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3 h-3 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-3 h-3" }),
+                                t.notes.removeShare
+                              ]
+                            }
+                          )
+                        ]
+                      },
+                      principalToText(p2)
+                    )) })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "label",
+                      {
+                        htmlFor: "share-principal-input",
+                        className: "block text-xs font-medium text-muted-foreground",
+                        children: t.notes.addShare
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col sm:flex-row gap-2", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "input",
+                        {
+                          id: "share-principal-input",
+                          ref: inputRef,
+                          type: "text",
+                          value: newPrincipal,
+                          onChange: (e) => setNewPrincipal(e.target.value),
+                          placeholder: t.notes.principalPlaceholder,
+                          className: "flex-1 min-w-0 rounded-lg border border-input bg-background px-3 py-3 text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/60 transition font-mono min-h-[48px]",
+                          disabled: sharing,
+                          onKeyDown: (e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleShare();
+                            }
+                          },
+                          "data-ocid": "notes.share_principal_input"
+                        }
+                      ),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        Button,
+                        {
+                          type: "button",
+                          size: "sm",
+                          onClick: handleShare,
+                          disabled: !newPrincipal.trim() || sharing,
+                          className: "bg-gold hover:bg-gold/90 text-black font-sans rounded-full w-full sm:w-auto min-h-[48px] shrink-0",
+                          "data-ocid": "notes.share_add_button",
+                          children: sharing ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }) : t.notes.shareButton
+                        }
+                      )
+                    ] })
+                  ] })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-shrink-0 flex justify-end px-4 sm:px-6 py-3 border-t border-border/50 bg-card", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                type: "button",
+                variant: "outline",
+                size: "sm",
+                onClick: onClose,
+                className: "rounded-full",
+                "data-ocid": "notes.share_dialog_close_button",
+                children: t.notes.close
+              }
+            ) })
+          ]
+        }
+      )
+    }
+  );
+}
+function MyPagesNotes() {
+  const { t } = useLanguage();
+  const { actor, isFetching } = useTypedActor();
+  const notesActor = actor;
+  const [notes, setNotes] = reactExports.useState([]);
+  const [totalCount, setTotalCount] = reactExports.useState(0);
+  const [loading, setLoading] = reactExports.useState(true);
+  const [page, setPage] = reactExports.useState(1);
+  const [searchQuery, setSearchQuery] = reactExports.useState("");
+  const [searchInput, setSearchInput] = reactExports.useState("");
+  const [noteDialogOpen, setNoteDialogOpen] = reactExports.useState(false);
+  const [editingNote, setEditingNote] = reactExports.useState(null);
+  const [isSaving, setIsSaving] = reactExports.useState(false);
+  const [deletingId, setDeletingId] = reactExports.useState(null);
+  const [shareNote, setShareNote] = reactExports.useState(null);
+  const loadNotes = reactExports.useCallback(async () => {
+    if (!notesActor || isFetching) return;
+    setLoading(true);
+    try {
+      const offset2 = BigInt((page - 1) * PAGE_SIZE);
+      const search = searchQuery.trim() || null;
+      const [notesResult, countResult] = await Promise.all([
+        notesActor.listNotes(BigInt(PAGE_SIZE), offset2, search),
+        notesActor.getNotesCount(search)
+      ]);
+      if ("ok" in notesResult) setNotes(notesResult.ok);
+      if ("ok" in countResult) setTotalCount(Number(countResult.ok));
+    } catch {
+    } finally {
+      setLoading(false);
+    }
+  }, [notesActor, isFetching, page, searchQuery]);
+  reactExports.useEffect(() => {
+    loadNotes();
+  }, [loadNotes]);
+  const handleSearch = () => {
+    setPage(1);
+    setSearchQuery(searchInput);
+  };
+  const handleSearchKeyDown = (e) => {
+    if (e.key === "Enter") handleSearch();
+  };
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setSearchQuery("");
+    setPage(1);
+  };
+  const handleOpenCreate = () => {
+    setEditingNote(null);
+    setNoteDialogOpen(true);
+  };
+  const handleOpenEdit = (note) => {
+    setEditingNote(note);
+    setNoteDialogOpen(true);
+  };
+  const handleSaveNote = async (rubrik, content) => {
+    if (!notesActor) return;
+    setIsSaving(true);
+    try {
+      if (editingNote) {
+        const result = await notesActor.updateNote(
+          editingNote.id,
+          rubrik,
+          content
+        );
+        if ("ok" in result) {
+          ue.success(t.notes.noteSaved);
+          setNoteDialogOpen(false);
+          await loadNotes();
+        } else {
+          ue.error(`${t.common.error}: ${result.err}`);
+        }
+      } else {
+        const result = await notesActor.createNote(rubrik, content);
+        if ("ok" in result) {
+          ue.success(t.notes.noteCreated);
+          setNoteDialogOpen(false);
+          await loadNotes();
+        } else {
+          ue.error(`${t.common.error}: ${result.err}`);
+        }
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      ue.error(`${t.common.error}: ${msg}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  const handleDelete = async (note) => {
+    if (!notesActor) return;
+    if (!window.confirm(t.notes.confirmDelete)) return;
+    setDeletingId(note.id);
+    try {
+      const result = await notesActor.deleteNote(note.id);
+      if ("ok" in result) {
+        ue.success(t.notes.noteDeleted);
+        if (notes.length === 1 && page > 1) setPage((p2) => p2 - 1);
+        else await loadNotes();
+      } else {
+        ue.error(`${t.common.error}: ${result.err}`);
+      }
+    } catch {
+      ue.error(t.common.error);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-6", "data-ocid": "notes.section", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-center gap-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 flex-1 min-w-0", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(NotebookPen, { className: "w-5 h-5 text-gold shrink-0" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-serif text-xl font-semibold text-foreground", children: t.myPages.notesTab })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button,
+        {
+          size: "sm",
+          onClick: handleOpenCreate,
+          className: "bg-gold hover:bg-gold/90 text-black font-sans rounded-full shrink-0",
+          "data-ocid": "notes.new_note_button",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "w-4 h-4 mr-1.5" }),
+            t.notes.newNote
+          ]
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative w-full", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Search, { className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            type: "text",
+            value: searchInput,
+            onChange: (e) => setSearchInput(e.target.value),
+            onKeyDown: handleSearchKeyDown,
+            placeholder: t.notes.searchPlaceholder,
+            className: "w-full rounded-lg border border-input bg-background pl-9 pr-9 py-3 text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/60 transition min-h-[48px]",
+            "data-ocid": "notes.search_input"
+          }
+        ),
+        searchInput && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            type: "button",
+            onClick: handleClearSearch,
+            className: "absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none",
+            "aria-label": t.notes.close,
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-3.5 h-3.5" })
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button,
+        {
+          size: "sm",
+          variant: "outline",
+          onClick: handleSearch,
+          className: "rounded-full w-full min-h-[48px] text-base sm:text-sm",
+          "data-ocid": "notes.search_button",
+          children: t.notes.search
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "rounded-xl border border-border overflow-hidden bg-card", children: loading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-4 space-y-3", children: [1, 2, 3].map((i) => /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-10 w-full rounded-lg" }, i)) }) : notes.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "flex flex-col items-center justify-center py-14 text-center px-4",
+        "data-ocid": "notes.empty_state",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(NotebookPen, { className: "w-10 h-10 text-muted-foreground/30 mb-3" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground font-sans", children: searchQuery ? t.notes.noResults : t.notes.noNotes }),
+          !searchQuery && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Button,
+            {
+              size: "sm",
+              onClick: handleOpenCreate,
+              className: "mt-4 bg-gold hover:bg-gold/90 text-black font-sans rounded-full",
+              "data-ocid": "notes.empty_create_button",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "w-4 h-4 mr-1.5" }),
+                t.notes.newNote
+              ]
+            }
+          )
+        ]
+      }
+    ) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "divide-y divide-border/50 md:hidden", children: notes.map((note, idx) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "li",
+        {
+          className: "px-4 py-4 hover:bg-muted/20 transition-colors",
+          "data-ocid": `notes.item.${idx + 1}`,
+          children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-2 min-w-0", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 min-w-0 space-y-1", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => handleOpenEdit(note),
+                  className: "text-sm font-semibold text-foreground hover:text-gold transition-colors text-left block w-full truncate focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded",
+                  title: note.rubrik,
+                  "data-ocid": `notes.rubrik_link.${idx + 1}`,
+                  children: note.rubrik
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-muted-foreground font-mono truncate", children: [
+                note.content.slice(0, 10),
+                note.content.length > 10 ? "…" : ""
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 flex-wrap", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs text-muted-foreground", children: formatDate$1(note.createdAt) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  Badge,
+                  {
+                    variant: "secondary",
+                    className: "text-xs bg-muted/60 text-muted-foreground font-mono",
+                    "data-ocid": `notes.shares_badge.${idx + 1}`,
+                    children: [
+                      note.sharedWith.length,
+                      " ",
+                      t.notes.sharesCol
+                    ]
+                  }
+                )
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-0.5 shrink-0", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => setShareNote(note),
+                  title: t.notes.share,
+                  className: "min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md text-muted-foreground hover:text-gold hover:bg-gold/10 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+                  "aria-label": t.notes.share,
+                  "data-ocid": `notes.share_button.${idx + 1}`,
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(Share2, { className: "w-4 h-4" })
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => handleDelete(note),
+                  disabled: deletingId === note.id,
+                  title: t.notes.delete,
+                  className: "min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-destructive disabled:opacity-50",
+                  "aria-label": t.notes.delete,
+                  "data-ocid": `notes.delete_button.${idx + 1}`,
+                  children: deletingId === note.id ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-4 h-4" })
+                }
+              )
+            ] })
+          ] })
+        },
+        note.id
+      )) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden md:block overflow-x-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full text-sm", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("thead", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { className: "border-b border-border bg-muted/30", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide", children: t.notes.rubrikCol }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide", children: t.notes.previewCol }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide", children: t.notes.dateCol }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-center px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide", children: t.notes.sharesCol }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("th", { className: "text-right px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide", children: t.notes.actionsCol })
+        ] }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { className: "divide-y divide-border/50", children: notes.map((note, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "tr",
+          {
+            className: "hover:bg-muted/20 transition-colors",
+            "data-ocid": `notes.item.${idx + 1}`,
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-4 py-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => handleOpenEdit(note),
+                  className: "text-sm font-medium text-foreground hover:text-gold transition-colors text-left max-w-[160px] truncate block focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded",
+                  title: note.rubrik,
+                  "data-ocid": `notes.rubrik_link.${idx + 1}`,
+                  children: note.rubrik
+                }
+              ) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-4 py-3", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs text-muted-foreground font-mono", children: [
+                note.content.slice(0, 10),
+                note.content.length > 10 ? "…" : ""
+              ] }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-4 py-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs text-muted-foreground", children: formatDate$1(note.createdAt) }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-4 py-3 text-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Badge,
+                {
+                  variant: "secondary",
+                  className: "text-xs bg-muted/60 text-muted-foreground font-mono",
+                  "data-ocid": `notes.shares_badge.${idx + 1}`,
+                  children: note.sharedWith.length
+                }
+              ) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("td", { className: "px-4 py-3", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-end gap-1", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: () => setShareNote(note),
+                    title: t.notes.share,
+                    className: "min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md text-muted-foreground hover:text-gold hover:bg-gold/10 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold",
+                    "aria-label": t.notes.share,
+                    "data-ocid": `notes.share_button.${idx + 1}`,
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(Share2, { className: "w-3.5 h-3.5" })
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: () => handleDelete(note),
+                    disabled: deletingId === note.id,
+                    title: t.notes.delete,
+                    className: "min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-destructive disabled:opacity-50",
+                    "aria-label": t.notes.delete,
+                    "data-ocid": `notes.delete_button.${idx + 1}`,
+                    children: deletingId === note.id ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-3.5 h-3.5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3.5 h-3.5" })
+                  }
+                )
+              ] }) })
+            ]
+          },
+          note.id
+        )) })
+      ] }) })
+    ] }) }),
+    !loading && totalCount > PAGE_SIZE && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-3", "data-ocid": "notes.pagination", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm text-muted-foreground text-center", children: t.notes.pageOf.replace("{page}", String(page)).replace("{total}", String(totalPages)) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-center gap-2 w-full", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Button,
+          {
+            size: "sm",
+            variant: "outline",
+            onClick: () => setPage((p2) => Math.max(1, p2 - 1)),
+            disabled: page <= 1,
+            className: "rounded-full min-h-[48px] min-w-[48px] p-0 flex-1 sm:flex-none",
+            "data-ocid": "notes.pagination_prev",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronLeft, { className: "w-4 h-4" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sr-only", children: t.notes.prev })
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Button,
+          {
+            size: "sm",
+            variant: "outline",
+            onClick: () => setPage((p2) => Math.min(totalPages, p2 + 1)),
+            disabled: page >= totalPages,
+            className: "rounded-full min-h-[48px] min-w-[48px] p-0 flex-1 sm:flex-none",
+            "data-ocid": "notes.pagination_next",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "w-4 h-4" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sr-only", children: t.notes.next })
+            ]
+          }
+        )
+      ] })
+    ] }),
+    noteDialogOpen && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      NoteDialog,
+      {
+        note: editingNote,
+        onSave: handleSaveNote,
+        onClose: () => setNoteDialogOpen(false),
+        isSaving
+      }
+    ),
+    shareNote && notesActor && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      ShareDialog,
+      {
+        note: shareNote,
+        onClose: () => setShareNote(null),
+        actor: notesActor
+      }
+    )
   ] });
 }
 function formatDate(ts) {
@@ -53321,7 +57706,7 @@ function MyPagesProfile({
                 variant: "ghost",
                 size: "icon",
                 onClick: handleCopyPrincipal,
-                className: "shrink-0 h-9 w-9",
+                className: "shrink-0 min-h-[44px] h-11 w-11",
                 "aria-label": "Copy principal ID",
                 "data-ocid": "profile.button",
                 children: copied ? /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "w-4 h-4 text-green-600" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Copy, { className: "w-4 h-4 text-muted-foreground" })
@@ -53342,12 +57727,12 @@ function MyPagesProfile({
         /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-10 w-full" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-10 w-full" })
       ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             Label$1,
             {
               htmlFor: "profile-name",
-              className: "font-sans text-sm font-medium",
+              className: "font-sans text-sm font-semibold leading-6",
               children: t.myPages.name
             }
           ),
@@ -53358,17 +57743,17 @@ function MyPagesProfile({
               value: name,
               onChange: (e) => setName(e.target.value),
               placeholder: t.myPages.name,
-              className: "font-sans text-sm",
+              className: "font-sans text-base min-h-[48px] py-3 px-4",
               "data-ocid": "profile.input"
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             Label$1,
             {
               htmlFor: "profile-email",
-              className: "font-sans text-sm font-medium",
+              className: "font-sans text-sm font-semibold leading-6",
               children: t.myPages.email
             }
           ),
@@ -53380,17 +57765,17 @@ function MyPagesProfile({
               value: email,
               onChange: (e) => setEmail(e.target.value),
               placeholder: t.myPages.email,
-              className: "font-sans text-sm",
+              className: "font-sans text-base min-h-[48px] py-3 px-4",
               "data-ocid": "profile.input"
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             Label$1,
             {
               htmlFor: "profile-phone",
-              className: "font-sans text-sm font-medium",
+              className: "font-sans text-sm font-semibold leading-6",
               children: t.myPages.phone
             }
           ),
@@ -53402,17 +57787,17 @@ function MyPagesProfile({
               value: phone,
               onChange: (e) => setPhone(e.target.value),
               placeholder: t.myPages.phone,
-              className: "font-sans text-sm",
+              className: "font-sans text-base min-h-[48px] py-3 px-4",
               "data-ocid": "profile.input"
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "pt-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "pt-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
           Button,
           {
             onClick: handleSave,
             disabled: saving || isFetching,
-            className: "bg-gold hover:bg-gold/90 text-black font-sans rounded-full px-6",
+            className: "w-full md:w-auto bg-gold hover:bg-gold/90 text-black font-sans rounded-full px-8 min-h-[52px] md:min-h-[44px] text-base md:text-sm font-semibold",
             "data-ocid": "profile.submit_button",
             children: saving ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 mr-2 animate-spin" }),
@@ -53423,6 +57808,344 @@ function MyPagesProfile({
       ] }) })
     ] })
   ] });
+}
+function toCleanUint8Array(data) {
+  if (data instanceof Uint8Array) {
+    if (data.byteOffset !== 0) {
+      return new Uint8Array(
+        data.buffer.slice(
+          data.byteOffset,
+          data.byteOffset + data.byteLength
+        )
+      );
+    }
+    return new Uint8Array(data);
+  }
+  return new Uint8Array(data);
+}
+function normalizeAudioMime(mimeType, fileName) {
+  var _a3;
+  if (!mimeType || mimeType === "application/octet-stream") {
+    const ext = (_a3 = fileName.split(".").pop()) == null ? void 0 : _a3.toLowerCase();
+    if (ext === "mp3") return "audio/mpeg";
+    if (ext === "wav") return "audio/wav";
+    if (ext === "ogg") return "audio/ogg";
+    if (ext === "flac") return "audio/flac";
+    if (ext === "aac") return "audio/aac";
+    if (ext === "m4a") return "audio/x-m4a";
+    return "audio/mpeg";
+  }
+  if (mimeType === "audio/mp3" || mimeType === "audio/x-mp3")
+    return "audio/mpeg";
+  return mimeType;
+}
+const STORAGE_KEY = "solete_language";
+function detectLang() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored === "es" || stored === "sv" || stored === "en") return stored;
+  const browserLangs = navigator.languages ?? [navigator.language];
+  for (const l of browserLangs) {
+    const code = l.slice(0, 2).toLowerCase();
+    if (code === "es" || code === "sv") return code;
+  }
+  return "en";
+}
+const labels = {
+  en: {
+    loading: "Loading document…",
+    notFound: "Document not found",
+    notFoundMsg: "This link is invalid or the document is no longer available.",
+    sharingIntro: (name) => `${name} is sharing this document with you`,
+    open: "Download",
+    downloading: "Downloading…",
+    error: "Failed to load document. Please try again."
+  },
+  es: {
+    loading: "Cargando documento…",
+    notFound: "Documento no encontrado",
+    notFoundMsg: "Este enlace no es válido o el documento ya no está disponible.",
+    sharingIntro: (name) => `${name} está compartiendo este documento contigo`,
+    open: "Descargar",
+    downloading: "Descargando…",
+    error: "Error al cargar el documento. Por favor, inténtelo de nuevo."
+  },
+  sv: {
+    loading: "Laddar dokument…",
+    notFound: "Dokumentet hittades inte",
+    notFoundMsg: "Den här länken är ogiltig eller dokumentet är inte längre tillgängligt.",
+    sharingIntro: (name) => `${name} delar det här dokumentet med dig`,
+    open: "Ladda ner",
+    downloading: "Laddar ner…",
+    error: "Kunde inte ladda dokumentet. Försök igen."
+  }
+};
+const SHARE_DOWNLOAD_CHUNK_SIZE = 1 * 1024 * 1024;
+async function fetchDocumentBytes(actor, docId) {
+  const chunks = [];
+  let offset2 = BigInt(0);
+  let hasMore = true;
+  while (hasMore) {
+    const result = await actor.getDocumentChunk(
+      docId,
+      offset2,
+      BigInt(SHARE_DOWNLOAD_CHUNK_SIZE)
+    );
+    if ("err" in result) throw new Error(result.err);
+    const { chunk, hasMore: more } = result.ok;
+    const bytes = toCleanUint8Array(chunk);
+    chunks.push(bytes);
+    offset2 += BigInt(bytes.length);
+    hasMore = more;
+  }
+  const totalLen = chunks.reduce((sum, c2) => sum + c2.length, 0);
+  const assembled = new Uint8Array(new ArrayBuffer(totalLen));
+  let pos = 0;
+  for (const c2 of chunks) {
+    assembled.set(c2, pos);
+    pos += c2.length;
+  }
+  return assembled;
+}
+function ShareDocumentPage({ docId }) {
+  const lang = detectLang();
+  const L2 = labels[lang];
+  const [state, setState] = reactExports.useState("loading");
+  const [ownerName, setOwnerName] = reactExports.useState("Someone");
+  const [fileName, setFileName] = reactExports.useState("");
+  const [cachedDocData, setCachedDocData] = reactExports.useState(null);
+  const [downloading, setDownloading] = reactExports.useState(false);
+  const [actor, setActor] = reactExports.useState(null);
+  reactExports.useEffect(() => {
+    let cancelled = false;
+    const init = async () => {
+      try {
+        const config = await loadConfig();
+        const noopUpload = async (_blob) => new Uint8Array();
+        const noopDownload = async (_bytes) => ExternalBlob2.fromBytes(new Uint8Array());
+        const anon = createActor(
+          config.backend_canister_id,
+          noopUpload,
+          noopDownload
+        );
+        if (!cancelled) setActor(anon);
+      } catch {
+        if (!cancelled) setState("error");
+      }
+    };
+    init();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  reactExports.useEffect(() => {
+    if (!actor) return;
+    let cancelled = false;
+    const fetchInfo = async () => {
+      try {
+        const publicDocs = await actor.listPublicDocuments();
+        const match = publicDocs.find((d2) => d2.id === docId);
+        if (!match) {
+          if (!cancelled) setState("notFound");
+          return;
+        }
+        if (!cancelled) {
+          setOwnerName(match.ownerName || "Someone");
+          setFileName(match.fileName);
+        }
+        const bytes = await fetchDocumentBytes(actor, docId);
+        const resolvedMime = match.mimeType.startsWith("audio/") ? normalizeAudioMime(match.mimeType, match.fileName) : match.mimeType || "application/octet-stream";
+        if (!cancelled) {
+          setCachedDocData({
+            data: bytes,
+            mimeType: resolvedMime,
+            fileName: match.fileName
+          });
+          setState("ready");
+        }
+      } catch {
+        if (!cancelled) setState("error");
+      }
+    };
+    fetchInfo();
+    return () => {
+      cancelled = true;
+    };
+  }, [actor, docId]);
+  const handleDownload = async () => {
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      let docData = cachedDocData;
+      if (!docData && actor) {
+        const publicDocs = await actor.listPublicDocuments();
+        const match = publicDocs.find((d2) => d2.id === docId);
+        if (!match) {
+          setState("error");
+          return;
+        }
+        const bytes2 = await fetchDocumentBytes(actor, docId);
+        const resolvedMime2 = match.mimeType.startsWith("audio/") ? normalizeAudioMime(match.mimeType, match.fileName) : match.mimeType || "application/octet-stream";
+        docData = {
+          data: bytes2,
+          mimeType: resolvedMime2,
+          fileName: match.fileName
+        };
+        setCachedDocData(docData);
+      }
+      if (!docData) {
+        setState("error");
+        return;
+      }
+      const { data, mimeType, fileName: name } = docData;
+      const bytes = toCleanUint8Array(data);
+      const resolvedMime = mimeType.startsWith("audio/") ? normalizeAudioMime(mimeType, name) : mimeType || "application/octet-stream";
+      const blob = new Blob([bytes], { type: resolvedMime });
+      const url = URL.createObjectURL(blob);
+      const a2 = document.createElement("a");
+      a2.href = url;
+      a2.download = name;
+      document.body.appendChild(a2);
+      a2.click();
+      document.body.removeChild(a2);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("[SharePage] handleDownload error:", err);
+      setState("error");
+    } finally {
+      setDownloading(false);
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen bg-background flex flex-col", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("header", { className: "bg-card border-b border-border px-6 py-4 flex items-center gap-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "svg",
+        {
+          width: "32",
+          height: "32",
+          viewBox: "0 0 40 40",
+          fill: "none",
+          xmlns: "http://www.w3.org/2000/svg",
+          "aria-hidden": "true",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "20", cy: "20", r: "20", fill: "#1a1a1a" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "20", cy: "20", r: "8", fill: "#C9A84C" }),
+            [0, 45, 90, 135, 180, 225, 270, 315].map((deg) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "line",
+              {
+                x1: "20",
+                y1: "20",
+                x2: 20 + 14 * Math.cos(deg * Math.PI / 180),
+                y2: 20 + 14 * Math.sin(deg * Math.PI / 180),
+                stroke: "#C9A84C",
+                strokeWidth: "2",
+                strokeLinecap: "round"
+              },
+              deg
+            ))
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-serif text-sm font-semibold text-foreground tracking-wide", children: "Solete Vida Group S.L." })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: "flex-1 flex items-center justify-center px-4 py-16", children: [
+      state === "loading" && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "flex flex-col items-center gap-4 text-muted-foreground",
+          "data-ocid": "share.loading",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-8 h-8 animate-spin text-gold" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-sans text-sm", children: L2.loading })
+          ]
+        }
+      ),
+      state === "error" && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "text-center space-y-3 max-w-sm",
+          "data-ocid": "share.error",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-12 h-12 text-muted-foreground/40 mx-auto" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-sans text-sm text-muted-foreground", children: L2.error })
+          ]
+        }
+      ),
+      state === "notFound" && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "text-center space-y-3 max-w-sm",
+          "data-ocid": "share.not_found",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-12 h-12 text-muted-foreground/40 mx-auto" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-serif text-xl font-semibold text-foreground", children: L2.notFound }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-sans text-sm text-muted-foreground", children: L2.notFoundMsg })
+          ]
+        }
+      ),
+      state === "ready" && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: "w-full max-w-md bg-card border border-border rounded-2xl shadow-lg overflow-hidden",
+          "data-ocid": "share.card",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-1 bg-gold w-full" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-8 flex flex-col items-center gap-6 text-center", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-8 h-8 text-gold" }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-sans text-base text-foreground font-medium", children: L2.sharingIntro(ownerName) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "p",
+                  {
+                    className: "font-sans text-sm text-muted-foreground truncate max-w-[280px] mx-auto",
+                    title: fileName,
+                    children: fileName
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: handleDownload,
+                  disabled: downloading,
+                  "data-ocid": "share.download_button",
+                  className: "inline-flex items-center gap-2 px-8 py-3 rounded-full font-sans font-semibold text-sm bg-gold hover:bg-gold/90 text-black transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2",
+                  children: downloading ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "w-4 h-4 animate-spin" }),
+                    L2.downloading
+                  ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "w-4 h-4" }),
+                    L2.open
+                  ] })
+                }
+              )
+            ] })
+          ]
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("footer", { className: "bg-card border-t border-border px-6 py-4 text-center", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-sans text-xs text-muted-foreground", children: [
+      "© ",
+      (/* @__PURE__ */ new Date()).getFullYear(),
+      ".",
+      " ",
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "a",
+        {
+          href: `https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`,
+          target: "_blank",
+          rel: "noopener noreferrer",
+          className: "hover:text-foreground transition-colors",
+          children: "Built with love using caffeine.ai"
+        }
+      )
+    ] }) })
+  ] });
+}
+function getShareDocId() {
+  const hash = window.location.hash;
+  const match = hash.match(/^#\/documents\/(.+)$/);
+  return match ? match[1] : null;
 }
 function resolveHolidayKey(h2) {
   if (typeof h2 === "string") return h2;
@@ -53438,6 +58161,7 @@ function AppContent() {
   const [myPagesTab, setMyPagesTab] = reactExports.useState("profile");
   const [activeHoliday, setActiveHoliday] = reactExports.useState("none");
   const [showSplash, setShowSplash] = reactExports.useState(false);
+  const [mobileOpen, setMobileOpen] = reactExports.useState("profile");
   const { t } = useLanguage();
   const auth = useAuth();
   const { actor, isFetching } = useTypedActor();
@@ -53482,6 +58206,99 @@ function AppContent() {
     auth.logout();
     setCurrentPage("home");
     setMyPagesTab("profile");
+    setMobileOpen("profile");
+  };
+  const handleTabChange = (v2) => {
+    const tab = v2;
+    setMyPagesTab(tab);
+    setMobileOpen(tab);
+  };
+  const handleMobileToggle = (tab) => {
+    setMobileOpen((prev) => {
+      const next = prev === tab ? null : tab;
+      if (next) setMyPagesTab(next);
+      return next;
+    });
+  };
+  const tabDefs = [
+    {
+      value: "profile",
+      labelKey: "profile",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(User, { className: "w-4 h-4" }),
+      ocid: "mypages.tab",
+      condition: true
+    },
+    {
+      value: "admin",
+      labelKey: "users",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(Users, { className: "w-4 h-4" }),
+      ocid: "mypages.tab",
+      condition: auth.isAdmin
+    },
+    {
+      value: "calendar",
+      labelKey: "calendar",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(CalendarDays, { className: "w-4 h-4" }),
+      ocid: "mypages.calendar.tab",
+      condition: auth.isAdmin
+    },
+    {
+      value: "contacts",
+      labelKey: "contacts",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(MessageSquare, { className: "w-4 h-4" }),
+      ocid: "mypages.contacts.tab",
+      condition: auth.isAdmin
+    },
+    {
+      value: "documents",
+      labelKey: "documentsTab",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-4 h-4" }),
+      ocid: "mypages.documents.tab",
+      condition: auth.isLoggedIn
+    },
+    {
+      value: "notes",
+      labelKey: "notesTab",
+      icon: /* @__PURE__ */ jsxRuntimeExports.jsx(BookOpen, { className: "w-4 h-4" }),
+      ocid: "mypages.notes.tab",
+      condition: auth.isLoggedIn
+    }
+  ].filter((tab) => tab.condition !== false);
+  const getTabLabel = (key) => {
+    if (key === "documentsTab") return t.documents.tab;
+    if (key === "notesTab") return t.myPages.notesTab;
+    return t.myPages[key];
+  };
+  const renderTabContent = (tab) => {
+    switch (tab) {
+      case "profile":
+        return /* @__PURE__ */ jsxRuntimeExports.jsx(
+          MyPagesProfile,
+          {
+            principalText: auth.principalText,
+            roleLabel: auth.roleLabel
+          }
+        );
+      case "admin":
+        return auth.isAdmin ? /* @__PURE__ */ jsxRuntimeExports.jsx(MyPagesAdmin, {}) : null;
+      case "calendar":
+        return auth.isAdmin ? /* @__PURE__ */ jsxRuntimeExports.jsx(MyPagesCalendar, {}) : null;
+      case "contacts":
+        return auth.isAdmin ? /* @__PURE__ */ jsxRuntimeExports.jsx(MyPagesContacts, {}) : null;
+      case "documents":
+        return auth.isLoggedIn ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+          MyPagesDocuments,
+          {
+            principalText: auth.principalText,
+            userName: auth.principalText ?? "",
+            userRole: auth.roleLabel
+          }
+        ) : null;
+      case "notes":
+        return auth.isLoggedIn ? /* @__PURE__ */ jsxRuntimeExports.jsx(MyPagesNotes, {}) : null;
+      default:
+        return null;
+    }
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen bg-background", children: [
     showSplash && activeHoliday !== "none" && /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -53510,106 +58327,95 @@ function AppContent() {
     ] }) : (
       /* My Pages */
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-[calc(100vh-72px)] bg-beige", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-10", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-8", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-serif text-3xl font-semibold text-foreground", children: t.myPages.title }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-1.5 w-10 h-0.5 bg-gold" })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden md:block", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
             Tabs,
             {
               value: myPagesTab,
-              onValueChange: (v2) => setMyPagesTab(v2),
+              onValueChange: handleTabChange,
               className: "space-y-6",
               children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-x-auto -mx-1 px-1 pb-0.5", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
                   TabsList,
                   {
-                    className: "bg-card border border-divider shadow-card h-auto p-1 rounded-lg",
+                    className: "bg-card border border-divider shadow-card h-auto p-1 rounded-lg flex flex-nowrap w-max min-w-full",
                     "data-ocid": "mypages.tab",
+                    children: tabDefs.map((tab) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      TabsTrigger,
+                      {
+                        value: tab.value,
+                        className: "font-sans text-sm flex items-center gap-1.5 rounded-md shrink-0 data-[state=active]:bg-gold data-[state=active]:text-black",
+                        "data-ocid": tab.ocid,
+                        children: [
+                          tab.icon,
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: getTabLabel(tab.labelKey) })
+                        ]
+                      },
+                      tab.value
+                    ))
+                  }
+                ) }),
+                tabDefs.map((tab) => /* @__PURE__ */ jsxRuntimeExports.jsx(TabsContent, { value: tab.value, children: renderTabContent(tab.value) }, tab.value))
+              ]
+            }
+          ) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "div",
+            {
+              className: "md:hidden space-y-2",
+              "data-ocid": "mypages.accordion",
+              children: tabDefs.map((tab) => {
+                const isOpen = mobileOpen === tab.value;
+                return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "div",
+                  {
+                    className: `rounded-xl border transition-colors overflow-hidden ${isOpen ? "border-gold/60 shadow-md" : "border-divider bg-card"}`,
+                    "data-ocid": `mypages.accordion.${tab.value}`,
                     children: [
                       /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        TabsTrigger,
+                        "button",
                         {
-                          value: "profile",
-                          className: "font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black",
-                          "data-ocid": "mypages.tab",
+                          type: "button",
+                          onClick: () => handleMobileToggle(tab.value),
+                          className: `w-full flex items-center gap-3 px-5 py-4 min-h-[64px] text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:ring-inset ${isOpen ? "bg-gold text-black" : "bg-card text-foreground active:bg-gold/20"}`,
+                          "aria-expanded": isOpen,
+                          "aria-controls": `accordion-content-${tab.value}`,
+                          "data-ocid": `mypages.accordion_trigger.${tab.value}`,
                           children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(User, { className: "w-4 h-4" }),
-                            t.myPages.profile
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(
+                              "span",
+                              {
+                                className: `shrink-0 ${isOpen ? "text-black" : "text-gold"}`,
+                                children: tab.icon
+                              }
+                            ),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "flex-1 font-sans font-bold text-base", children: getTabLabel(tab.labelKey) }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(
+                              ChevronDown,
+                              {
+                                className: `w-5 h-5 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180 text-black" : "text-muted-foreground"}`
+                              }
+                            )
                           ]
                         }
                       ),
-                      auth.isAdmin && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        TabsTrigger,
+                      isOpen && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "div",
                         {
-                          value: "admin",
-                          className: "font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black",
-                          "data-ocid": "mypages.tab",
-                          children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(Users, { className: "w-4 h-4" }),
-                            t.myPages.users
-                          ]
-                        }
-                      ),
-                      auth.isAdmin && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        TabsTrigger,
-                        {
-                          value: "calendar",
-                          className: "font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black",
-                          "data-ocid": "mypages.calendar.tab",
-                          children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(CalendarDays, { className: "w-4 h-4" }),
-                            t.myPages.calendar
-                          ]
-                        }
-                      ),
-                      auth.isAdmin && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        TabsTrigger,
-                        {
-                          value: "contacts",
-                          className: "font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black",
-                          "data-ocid": "mypages.contacts.tab",
-                          children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(MessageSquare, { className: "w-4 h-4" }),
-                            t.myPages.contacts
-                          ]
-                        }
-                      ),
-                      auth.isLoggedIn && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        TabsTrigger,
-                        {
-                          value: "documents",
-                          className: "font-sans text-sm flex items-center gap-1.5 rounded-md data-[state=active]:bg-gold data-[state=active]:text-black",
-                          "data-ocid": "mypages.documents.tab",
-                          children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-4 h-4" }),
-                            t.documents.tab
-                          ]
+                          id: `accordion-content-${tab.value}`,
+                          className: "px-3 py-5 sm:px-5 bg-background border-t-2 border-gold/30",
+                          children: renderTabContent(tab.value)
                         }
                       )
                     ]
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(TabsContent, { value: "profile", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  MyPagesProfile,
-                  {
-                    principalText: auth.principalText,
-                    roleLabel: auth.roleLabel
-                  }
-                ) }),
-                auth.isAdmin && /* @__PURE__ */ jsxRuntimeExports.jsx(TabsContent, { value: "admin", children: /* @__PURE__ */ jsxRuntimeExports.jsx(MyPagesAdmin, {}) }),
-                auth.isAdmin && /* @__PURE__ */ jsxRuntimeExports.jsx(TabsContent, { value: "calendar", children: /* @__PURE__ */ jsxRuntimeExports.jsx(MyPagesCalendar, {}) }),
-                auth.isAdmin && /* @__PURE__ */ jsxRuntimeExports.jsx(TabsContent, { value: "contacts", children: /* @__PURE__ */ jsxRuntimeExports.jsx(MyPagesContacts, {}) }),
-                auth.isLoggedIn && /* @__PURE__ */ jsxRuntimeExports.jsx(TabsContent, { value: "documents", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  MyPagesDocuments,
-                  {
-                    principalText: auth.principalText,
-                    userName: auth.principalText ?? "",
-                    userRole: auth.roleLabel
-                  }
-                ) })
-              ]
+                  },
+                  tab.value
+                );
+              })
             }
           )
         ] }),
@@ -53620,6 +58426,18 @@ function AppContent() {
   ] });
 }
 function App() {
+  const [docId, setDocId] = reactExports.useState(getShareDocId());
+  reactExports.useEffect(() => {
+    const onHashChange = () => setDocId(getShareDocId());
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+  if (docId) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(LanguageProvider, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ShareDocumentPage, { docId }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Toaster, { richColors: true, position: "top-right" })
+    ] });
+  }
   return /* @__PURE__ */ jsxRuntimeExports.jsx(LanguageProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(AppContent, {}) });
 }
 BigInt.prototype.toJSON = function() {

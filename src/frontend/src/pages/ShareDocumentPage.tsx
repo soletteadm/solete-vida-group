@@ -3,6 +3,44 @@ import { loadConfig } from "@caffeineai/core-infrastructure";
 import { Download, FileText, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+// ─── Byte conversion helper (mirrors MyPagesDocuments.tsx) ───────────────────
+//
+// ICP Candid returns vec nat8 as a plain JavaScript number[], NOT Uint8Array.
+// Passing number[] to new Blob() creates a text blob — that is why files open
+// as HTML. This helper handles number[], Uint8Array, and Uint8Array with a
+// non-zero byteOffset (chunked reassembly) correctly.
+function toCleanUint8Array(data: unknown): Uint8Array<ArrayBuffer> {
+  if (data instanceof Uint8Array) {
+    if (data.byteOffset !== 0) {
+      return new Uint8Array(
+        (data.buffer as ArrayBuffer).slice(
+          data.byteOffset,
+          data.byteOffset + data.byteLength,
+        ),
+      ) as Uint8Array<ArrayBuffer>;
+    }
+    return new Uint8Array(data) as Uint8Array<ArrayBuffer>;
+  }
+  return new Uint8Array(data as ArrayLike<number>) as Uint8Array<ArrayBuffer>;
+}
+
+// Normalise audio MIME: "audio/mp3" → "audio/mpeg", infer from extension, etc.
+function normalizeAudioMime(mimeType: string, fileName: string): string {
+  if (!mimeType || mimeType === "application/octet-stream") {
+    const ext = fileName.split(".").pop()?.toLowerCase();
+    if (ext === "mp3") return "audio/mpeg";
+    if (ext === "wav") return "audio/wav";
+    if (ext === "ogg") return "audio/ogg";
+    if (ext === "flac") return "audio/flac";
+    if (ext === "aac") return "audio/aac";
+    if (ext === "m4a") return "audio/x-m4a";
+    return "audio/mpeg";
+  }
+  if (mimeType === "audio/mp3" || mimeType === "audio/x-mp3")
+    return "audio/mpeg";
+  return mimeType;
+}
+
 // ─── Language detection ───────────────────────────────────────────────────────
 
 const STORAGE_KEY = "solete_language";
@@ -78,6 +116,54 @@ interface AnonActor {
   ): Promise<
     { __kind__: "ok"; ok: DocData } | { __kind__: "err"; err: string }
   >;
+  getDocumentChunk(
+    docId: string,
+    offset: bigint,
+    chunkSize: bigint,
+  ): Promise<
+    | {
+        __kind__: "ok";
+        ok: { chunk: number[]; totalSize: bigint; hasMore: boolean };
+      }
+    | { __kind__: "err"; err: string }
+  >;
+}
+
+// ─── Chunked download helper ──────────────────────────────────────────────────
+//
+// Fetches document bytes in 1MB chunks to avoid IC0504 (payload > 3MB).
+// Assembles all chunks into a single Uint8Array before creating the Blob.
+
+const SHARE_DOWNLOAD_CHUNK_SIZE = 1 * 1024 * 1024; // 1MB
+
+async function fetchDocumentBytes(
+  actor: AnonActor,
+  docId: string,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const chunks: Uint8Array[] = [];
+  let offset = BigInt(0);
+  let hasMore = true;
+  while (hasMore) {
+    const result = await actor.getDocumentChunk(
+      docId,
+      offset,
+      BigInt(SHARE_DOWNLOAD_CHUNK_SIZE),
+    );
+    if ("err" in result) throw new Error(result.err);
+    const { chunk, hasMore: more } = result.ok;
+    const bytes = toCleanUint8Array(chunk);
+    chunks.push(bytes);
+    offset += BigInt(bytes.length);
+    hasMore = more;
+  }
+  const totalLen = chunks.reduce((sum, c) => sum + c.length, 0);
+  const assembled = new Uint8Array(new ArrayBuffer(totalLen));
+  let pos = 0;
+  for (const c of chunks) {
+    assembled.set(c, pos);
+    pos += c.length;
+  }
+  return assembled as Uint8Array<ArrayBuffer>;
 }
 
 type PageState = "loading" | "ready" | "notFound" | "error";
@@ -127,39 +213,42 @@ export default function ShareDocumentPage({ docId }: ShareDocumentPageProps) {
     };
   }, []);
 
-  // PRIMARY: call getDocumentData(docId) — access control is built in.
-  // If it returns { __kind__: "ok" }, the doc is accessible.
-  // SECONDARY: call listPublicDocuments() to get ownerName for display only.
+  // PRIMARY: fetch document info via listPublicDocuments (for ownerName, fileName, mimeType).
+  // SECONDARY: pre-fetch bytes using chunked getDocumentChunk so download is instant.
   useEffect(() => {
     if (!actor) return;
     let cancelled = false;
 
     const fetchInfo = async () => {
       try {
-        const result = await actor.getDocumentData(docId);
+        // Get ownerName, fileName, mimeType from public listing
+        const publicDocs = await actor.listPublicDocuments();
+        const match = publicDocs.find((d) => d.id === docId);
 
-        if (result.__kind__ !== "ok") {
+        if (!match) {
           if (!cancelled) setState("notFound");
           return;
         }
 
-        const docData = result.ok;
-
         if (!cancelled) {
-          setFileName(docData.fileName);
-          setCachedDocData(docData);
-          setState("ready");
+          setOwnerName(match.ownerName || "Someone");
+          setFileName(match.fileName);
         }
 
-        // Secondary: get ownerName from listPublicDocuments — best effort only
-        try {
-          const publicDocs = await actor.listPublicDocuments();
-          const match = publicDocs.find((d) => d.id === docId);
-          if (!cancelled && match?.ownerName) {
-            setOwnerName(match.ownerName);
-          }
-        } catch {
-          // ownerName fallback "Someone" is fine — doc is still accessible
+        // Pre-fetch all bytes using chunked download (avoids IC0504 for large files)
+        const bytes = await fetchDocumentBytes(actor, docId);
+        const resolvedMime = match.mimeType.startsWith("audio/")
+          ? normalizeAudioMime(match.mimeType, match.fileName)
+          : match.mimeType || "application/octet-stream";
+
+        if (!cancelled) {
+          // Store as synthetic DocData for handleDownload to consume
+          setCachedDocData({
+            data: bytes,
+            mimeType: resolvedMime,
+            fileName: match.fileName,
+          });
+          setState("ready");
         }
       } catch {
         if (!cancelled) setState("error");
@@ -172,8 +261,7 @@ export default function ShareDocumentPage({ docId }: ShareDocumentPageProps) {
     };
   }, [actor, docId]);
 
-  // Download — identical logic to handleDownload in MyPagesDocuments.tsx.
-  // Uses cached data; re-fetches only if cache is empty (shouldn't happen).
+  // Download — uses cached bytes; re-fetches via chunked download only if cache is empty.
   const handleDownload = async () => {
     if (downloading) return;
     setDownloading(true);
@@ -181,12 +269,22 @@ export default function ShareDocumentPage({ docId }: ShareDocumentPageProps) {
       let docData = cachedDocData;
 
       if (!docData && actor) {
-        const result = await actor.getDocumentData(docId);
-        if (result.__kind__ !== "ok") {
+        // Re-fetch using chunked download to avoid IC0504 for large files
+        const publicDocs = await actor.listPublicDocuments();
+        const match = publicDocs.find((d) => d.id === docId);
+        if (!match) {
           setState("error");
           return;
         }
-        docData = result.ok;
+        const bytes = await fetchDocumentBytes(actor, docId);
+        const resolvedMime = match.mimeType.startsWith("audio/")
+          ? normalizeAudioMime(match.mimeType, match.fileName)
+          : match.mimeType || "application/octet-stream";
+        docData = {
+          data: bytes,
+          mimeType: resolvedMime,
+          fileName: match.fileName,
+        };
         setCachedDocData(docData);
       }
 
@@ -197,8 +295,12 @@ export default function ShareDocumentPage({ docId }: ShareDocumentPageProps) {
 
       // Exact same byte→Blob→anchor pattern as MyPagesDocuments handleDownload
       const { data, mimeType, fileName: name } = docData;
-      const bytes = new Uint8Array(data);
-      const blob = new Blob([bytes], { type: mimeType });
+      const bytes = toCleanUint8Array(data);
+      // Normalize audio MIME so MP3s download/play correctly
+      const resolvedMime = mimeType.startsWith("audio/")
+        ? normalizeAudioMime(mimeType, name)
+        : mimeType || "application/octet-stream";
+      const blob = new Blob([bytes], { type: resolvedMime });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -207,7 +309,8 @@ export default function ShareDocumentPage({ docId }: ShareDocumentPageProps) {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch {
+    } catch (err) {
+      console.error("[SharePage] handleDownload error:", err);
       setState("error");
     } finally {
       setDownloading(false);

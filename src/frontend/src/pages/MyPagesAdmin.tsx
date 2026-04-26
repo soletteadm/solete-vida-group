@@ -552,133 +552,250 @@ export default function MyPagesAdmin() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table data-ocid="admin.table">
-                <TableHeader>
-                  <TableRow className="border-divider">
-                    <TableHead className="font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      {t.admin.principal}
-                    </TableHead>
-                    <TableHead className="font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      {t.admin.name}
-                    </TableHead>
-                    <TableHead className="font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      {t.admin.role}
-                    </TableHead>
-                    <TableHead className="font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">
-                      {t.admin.actions}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user, idx) => {
-                    const principalStr = getPrincipalStr(user);
-                    const roleStr = getRoleStr(user.role);
-                    const profileName = getProfileName(user);
-                    const isUpdating = updatingRole === principalStr;
-                    const isBlocked = roleStr === "guest";
+            <>
+              {/* ── Mobile card layout (below md) ── */}
+              <ul
+                className="divide-y divide-divider md:hidden"
+                data-ocid="admin.table"
+              >
+                {users.map((user, idx) => {
+                  const principalStr = getPrincipalStr(user);
+                  const roleStr = getRoleStr(user.role);
+                  const profileName = getProfileName(user);
+                  const isUpdating = updatingRole === principalStr;
+                  const isBlocked = roleStr === "guest";
 
-                    return (
-                      <TableRow
-                        key={principalStr}
-                        className="border-divider hover:bg-beige/50"
-                        data-ocid={`admin.row.${idx + 1}`}
-                      >
-                        <TableCell className="font-mono text-xs text-muted-foreground max-w-[180px]">
+                  return (
+                    <li
+                      key={principalStr}
+                      className="p-4 space-y-3 hover:bg-beige/30 transition-colors"
+                      data-ocid={`admin.row.${idx + 1}`}
+                    >
+                      {/* Name + role badge */}
+                      <div className="flex items-start justify-between gap-2 min-w-0">
+                        <div className="min-w-0 space-y-1">
+                          <p className="font-sans text-sm font-semibold text-foreground truncate">
+                            {profileName || "\u2014"}
+                          </p>
                           <button
                             type="button"
                             title={`${t.adminAccessLog.viewAccessLog}: ${principalStr}`}
                             onClick={() => setLogTarget(user)}
-                            className="flex items-center gap-1.5 hover:text-gold transition-colors duration-150 cursor-pointer group"
+                            className="flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-gold transition-colors group"
                             data-ocid={`admin.principal_button.${idx + 1}`}
                           >
-                            <ClipboardList className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-gold flex-shrink-0" />
-                            <span>{truncatePrincipal(principalStr)}</span>
+                            <ClipboardList className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-gold shrink-0" />
+                            <span className="truncate max-w-[200px]">
+                              {truncatePrincipal(principalStr)}
+                            </span>
                           </button>
-                        </TableCell>
-                        <TableCell className="font-sans text-sm text-foreground">
-                          {profileName || "\u2014"}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant="outline"
-                              className={`text-xs capitalize font-sans ${getRoleBadgeClass(roleStr)}`}
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={`text-xs capitalize font-sans shrink-0 ${getRoleBadgeClass(roleStr)}`}
+                        >
+                          {t.common[roleStr as keyof typeof t.common] ||
+                            roleStr}
+                        </Badge>
+                      </div>
+
+                      {/* Role select + actions */}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <Select
+                          value={roleStr}
+                          onValueChange={(v) =>
+                            handleUpdateRole(principalStr, v)
+                          }
+                          disabled={isUpdating}
+                        >
+                          <SelectTrigger
+                            className="h-8 w-28 font-sans text-xs"
+                            data-ocid={`admin.select.${idx + 1}`}
+                          >
+                            {isUpdating ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <SelectValue />
+                            )}
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">
+                              {t.common.admin}
+                            </SelectItem>
+                            <SelectItem value="user">
+                              {t.common.user}
+                            </SelectItem>
+                            <SelectItem value="guest">
+                              {t.common.guest}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditTarget(user)}
+                            className="min-w-[44px] min-h-[44px] text-muted-foreground hover:text-foreground hover:bg-muted"
+                            data-ocid={`admin.edit_button.${idx + 1}`}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setBlockTarget(principalStr)}
+                            disabled={isBlocked}
+                            className="min-w-[44px] min-h-[44px] text-amber-600 hover:text-amber-600 hover:bg-amber-50"
+                            data-ocid={`admin.secondary_button.${idx + 1}`}
+                          >
+                            <Ban className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setRemoveTarget(principalStr)}
+                            className="min-w-[44px] min-h-[44px] text-destructive hover:text-destructive hover:bg-destructive/10"
+                            data-ocid={`admin.delete_button.${idx + 1}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {/* ── Desktop table layout (md and above) ── */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table data-ocid="admin.table">
+                  <TableHeader>
+                    <TableRow className="border-divider">
+                      <TableHead className="font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        {t.admin.principal}
+                      </TableHead>
+                      <TableHead className="font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        {t.admin.name}
+                      </TableHead>
+                      <TableHead className="font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        {t.admin.role}
+                      </TableHead>
+                      <TableHead className="font-sans text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">
+                        {t.admin.actions}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user, idx) => {
+                      const principalStr = getPrincipalStr(user);
+                      const roleStr = getRoleStr(user.role);
+                      const profileName = getProfileName(user);
+                      const isUpdating = updatingRole === principalStr;
+                      const isBlocked = roleStr === "guest";
+
+                      return (
+                        <TableRow
+                          key={principalStr}
+                          className="border-divider hover:bg-beige/50"
+                          data-ocid={`admin.row.${idx + 1}`}
+                        >
+                          <TableCell className="font-mono text-xs text-muted-foreground max-w-[180px]">
+                            <button
+                              type="button"
+                              title={`${t.adminAccessLog.viewAccessLog}: ${principalStr}`}
+                              onClick={() => setLogTarget(user)}
+                              className="flex items-center gap-1.5 hover:text-gold transition-colors duration-150 cursor-pointer group"
+                              data-ocid={`admin.principal_button.${idx + 1}`}
                             >
-                              {t.common[roleStr as keyof typeof t.common] ||
-                                roleStr}
-                            </Badge>
-                            <Select
-                              value={roleStr}
-                              onValueChange={(v) =>
-                                handleUpdateRole(principalStr, v)
-                              }
-                              disabled={isUpdating}
-                            >
-                              <SelectTrigger
-                                className="h-7 w-24 font-sans text-xs"
-                                data-ocid={`admin.select.${idx + 1}`}
+                              <ClipboardList className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-gold flex-shrink-0" />
+                              <span>{truncatePrincipal(principalStr)}</span>
+                            </button>
+                          </TableCell>
+                          <TableCell className="font-sans text-sm text-foreground">
+                            {profileName || "\u2014"}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant="outline"
+                                className={`text-xs capitalize font-sans ${getRoleBadgeClass(roleStr)}`}
                               >
-                                {isUpdating ? (
-                                  <Loader2 className="w-3 h-3 animate-spin" />
-                                ) : (
-                                  <SelectValue />
-                                )}
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="admin">
-                                  {t.common.admin}
-                                </SelectItem>
-                                <SelectItem value="user">
-                                  {t.common.user}
-                                </SelectItem>
-                                <SelectItem value="guest">
-                                  {t.common.guest}
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setEditTarget(user)}
-                              className="text-muted-foreground hover:text-foreground hover:bg-muted font-sans text-xs"
-                              data-ocid={`admin.edit_button.${idx + 1}`}
-                            >
-                              <Pencil className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setBlockTarget(principalStr)}
-                              disabled={isBlocked}
-                              className="text-amber-600 hover:text-amber-600 hover:bg-amber-50 font-sans text-xs"
-                              data-ocid={`admin.secondary_button.${idx + 1}`}
-                            >
-                              <Ban className="w-3.5 h-3.5 mr-1" />
-                              {t.admin.blockUser}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setRemoveTarget(principalStr)}
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10 font-sans text-xs"
-                              data-ocid={`admin.delete_button.${idx + 1}`}
-                            >
-                              <Trash2 className="w-3.5 h-3.5 mr-1" />
-                              {t.admin.removeUser}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+                                {t.common[roleStr as keyof typeof t.common] ||
+                                  roleStr}
+                              </Badge>
+                              <Select
+                                value={roleStr}
+                                onValueChange={(v) =>
+                                  handleUpdateRole(principalStr, v)
+                                }
+                                disabled={isUpdating}
+                              >
+                                <SelectTrigger
+                                  className="h-7 w-24 font-sans text-xs"
+                                  data-ocid={`admin.select.${idx + 1}`}
+                                >
+                                  {isUpdating ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <SelectValue />
+                                  )}
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="admin">
+                                    {t.common.admin}
+                                  </SelectItem>
+                                  <SelectItem value="user">
+                                    {t.common.user}
+                                  </SelectItem>
+                                  <SelectItem value="guest">
+                                    {t.common.guest}
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setEditTarget(user)}
+                                className="text-muted-foreground hover:text-foreground hover:bg-muted font-sans text-xs"
+                                data-ocid={`admin.edit_button.${idx + 1}`}
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setBlockTarget(principalStr)}
+                                disabled={isBlocked}
+                                className="text-amber-600 hover:text-amber-600 hover:bg-amber-50 font-sans text-xs"
+                                data-ocid={`admin.secondary_button.${idx + 1}`}
+                              >
+                                <Ban className="w-3.5 h-3.5 mr-1" />
+                                {t.admin.blockUser}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setRemoveTarget(principalStr)}
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10 font-sans text-xs"
+                                data-ocid={`admin.delete_button.${idx + 1}`}
+                              >
+                                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                                {t.admin.removeUser}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

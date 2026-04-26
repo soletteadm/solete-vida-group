@@ -110,7 +110,8 @@ service : {
   setGuestDocumentUploadPermission: (bool) -> (CallResult);
   getGuestDocumentUploadPermission: () -> (bool) query;
   uploadDocumentWithData: (text, vec nat8, text, bool, opt text) -> (UploadDocumentWithDataResult);
-  getDocumentData: (text) -> (variant { ok: record { data: vec nat8; mimeType: text; fileName: text }; err: text }) query;
+   getDocumentData: (text) -> (variant { ok: record { data: vec nat8; mimeType: text; fileName: text }; err: text }) query;
+   getDocumentChunk: (text, nat, nat) -> (variant { ok: record { chunk: vec nat8; totalSize: nat; hasMore: bool }; err: text }) query;
   createFolder: (text, opt text) -> (CreateFolderResult);
   listMyFolders: (opt text) -> (vec FolderRecord) query;
   deleteFolder: (text) -> (DeleteFolderResult);

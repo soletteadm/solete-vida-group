@@ -70,6 +70,14 @@ export const FolderRecord = IDL.Record({
   'createdAt' : IDL.Int,
   'parentFolderId' : IDL.Opt(IDL.Text),
 });
+export const NoteRecord = IDL.Record({
+  'id' : IDL.Text,
+  'content' : IDL.Text,
+  'rubrik' : IDL.Text,
+  'owner' : IDL.Principal,
+  'createdAt' : IDL.Int,
+  'sharedWith' : IDL.Vec(IDL.Principal),
+});
 export const UserListEntry = IDL.Record({
   'principal' : IDL.Principal,
   'role' : UserRole,
@@ -110,6 +118,11 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
       [],
     ),
+  'createNote' : IDL.Func(
+      [IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+      [],
+    ),
   'deleteContactMessage' : IDL.Func(
       [IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -130,6 +143,11 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
       [],
     ),
+  'deleteNote' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'deleteUserAccessLogEntries' : IDL.Func(
       [IDL.Principal, IDL.Vec(IDL.Text)],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -145,6 +163,20 @@ export const idlService = IDL.Service({
       [],
       [IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text })],
       [],
+    ),
+  'getDocumentChunk' : IDL.Func(
+      [IDL.Text, IDL.Nat, IDL.Nat],
+      [
+        IDL.Variant({
+          'ok' : IDL.Record({
+            'hasMore' : IDL.Bool,
+            'chunk' : IDL.Vec(IDL.Nat8),
+            'totalSize' : IDL.Nat,
+          }),
+          'err' : IDL.Text,
+        }),
+      ],
+      ['query'],
     ),
   'getDocumentData' : IDL.Func(
       [IDL.Text],
@@ -164,6 +196,16 @@ export const idlService = IDL.Service({
   'getMyProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getMyRole' : IDL.Func([], [UserRole], ['query']),
   'getMyStorageUsed' : IDL.Func([], [IDL.Nat], ['query']),
+  'getNoteShares' : IDL.Func(
+      [IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Vec(IDL.Principal), 'err' : IDL.Text })],
+      ['query'],
+    ),
+  'getNotesCount' : IDL.Func(
+      [IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+      ['query'],
+    ),
   'getUserAccessLog' : IDL.Func(
       [IDL.Principal],
       [IDL.Variant({ 'ok' : IDL.Vec(UserAccessLogEntry), 'err' : IDL.Text })],
@@ -182,6 +224,11 @@ export const idlService = IDL.Service({
   'listMyFolders' : IDL.Func(
       [IDL.Opt(IDL.Text)],
       [IDL.Vec(FolderRecord)],
+      ['query'],
+    ),
+  'listNotes' : IDL.Func(
+      [IDL.Nat, IDL.Nat, IDL.Opt(IDL.Text)],
+      [IDL.Variant({ 'ok' : IDL.Vec(NoteRecord), 'err' : IDL.Text })],
       ['query'],
     ),
   'listPublicDocuments' : IDL.Func([], [IDL.Vec(DocumentRecord)], ['query']),
@@ -221,6 +268,11 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
+  'shareNote' : IDL.Func(
+      [IDL.Text, IDL.Principal],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'startChunkedUpload' : IDL.Func(
       [
         IDL.Text,
@@ -244,12 +296,22 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
+  'unshareNote' : IDL.Func(
+      [IDL.Text, IDL.Principal],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
   'updateContactStatus' : IDL.Func(
       [IDL.Text, ContactStatus],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
   'updateMyProfile' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+      [],
+    ),
+  'updateNote' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
@@ -346,6 +408,14 @@ export const idlFactory = ({ IDL }) => {
     'createdAt' : IDL.Int,
     'parentFolderId' : IDL.Opt(IDL.Text),
   });
+  const NoteRecord = IDL.Record({
+    'id' : IDL.Text,
+    'content' : IDL.Text,
+    'rubrik' : IDL.Text,
+    'owner' : IDL.Principal,
+    'createdAt' : IDL.Int,
+    'sharedWith' : IDL.Vec(IDL.Principal),
+  });
   const UserListEntry = IDL.Record({
     'principal' : IDL.Principal,
     'role' : UserRole,
@@ -386,6 +456,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),
+    'createNote' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
+        [],
+      ),
     'deleteContactMessage' : IDL.Func(
         [IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -406,6 +481,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
         [],
       ),
+    'deleteNote' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'deleteUserAccessLogEntries' : IDL.Func(
         [IDL.Principal, IDL.Vec(IDL.Text)],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -421,6 +501,20 @@ export const idlFactory = ({ IDL }) => {
         [],
         [IDL.Variant({ 'ok' : IDL.Vec(IDL.Text), 'err' : IDL.Text })],
         [],
+      ),
+    'getDocumentChunk' : IDL.Func(
+        [IDL.Text, IDL.Nat, IDL.Nat],
+        [
+          IDL.Variant({
+            'ok' : IDL.Record({
+              'hasMore' : IDL.Bool,
+              'chunk' : IDL.Vec(IDL.Nat8),
+              'totalSize' : IDL.Nat,
+            }),
+            'err' : IDL.Text,
+          }),
+        ],
+        ['query'],
       ),
     'getDocumentData' : IDL.Func(
         [IDL.Text],
@@ -440,6 +534,16 @@ export const idlFactory = ({ IDL }) => {
     'getMyProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getMyRole' : IDL.Func([], [UserRole], ['query']),
     'getMyStorageUsed' : IDL.Func([], [IDL.Nat], ['query']),
+    'getNoteShares' : IDL.Func(
+        [IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Vec(IDL.Principal), 'err' : IDL.Text })],
+        ['query'],
+      ),
+    'getNotesCount' : IDL.Func(
+        [IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
+        ['query'],
+      ),
     'getUserAccessLog' : IDL.Func(
         [IDL.Principal],
         [IDL.Variant({ 'ok' : IDL.Vec(UserAccessLogEntry), 'err' : IDL.Text })],
@@ -458,6 +562,11 @@ export const idlFactory = ({ IDL }) => {
     'listMyFolders' : IDL.Func(
         [IDL.Opt(IDL.Text)],
         [IDL.Vec(FolderRecord)],
+        ['query'],
+      ),
+    'listNotes' : IDL.Func(
+        [IDL.Nat, IDL.Nat, IDL.Opt(IDL.Text)],
+        [IDL.Variant({ 'ok' : IDL.Vec(NoteRecord), 'err' : IDL.Text })],
         ['query'],
       ),
     'listPublicDocuments' : IDL.Func([], [IDL.Vec(DocumentRecord)], ['query']),
@@ -497,6 +606,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
+    'shareNote' : IDL.Func(
+        [IDL.Text, IDL.Principal],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'startChunkedUpload' : IDL.Func(
         [
           IDL.Text,
@@ -520,12 +634,22 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
+    'unshareNote' : IDL.Func(
+        [IDL.Text, IDL.Principal],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
     'updateContactStatus' : IDL.Func(
         [IDL.Text, ContactStatus],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
     'updateMyProfile' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
+        [],
+      ),
+    'updateNote' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],

@@ -101,6 +101,7 @@ export interface TranslationMap {
     users: string;
     calendar: string;
     contacts: string;
+    notesTab: string;
     principalId: string;
     name: string;
     email: string;
@@ -113,6 +114,44 @@ export interface TranslationMap {
     registeredAt: string;
     noProfile: string;
     createProfile: string;
+  };
+  // Notes
+  notes: {
+    newNote: string;
+    editNote: string;
+    searchPlaceholder: string;
+    search: string;
+    rubrik: string;
+    rubrikCol: string;
+    previewCol: string;
+    dateCol: string;
+    sharesCol: string;
+    actionsCol: string;
+    content: string;
+    save: string;
+    abort: string;
+    delete: string;
+    share: string;
+    shareButton: string;
+    shareAdded: string;
+    shareRemoved: string;
+    shareWith: string;
+    addShare: string;
+    removeShare: string;
+    noShares: string;
+    shareDialogTitle: string;
+    principalPlaceholder: string;
+    noNotes: string;
+    noResults: string;
+    noteCreated: string;
+    noteSaved: string;
+    noteDeleted: string;
+    confirmDelete: string;
+    pageOf: string;
+    prev: string;
+    next: string;
+    close: string;
+    invalidPrincipal: string;
   };
   // Admin panel
   admin: {
@@ -304,6 +343,7 @@ export interface TranslationMap {
     preview: string;
     play: string;
     close: string;
+    audioLoadError: string;
     // Folder strings
     newFolder: string;
     folderName: string;
@@ -449,6 +489,7 @@ export const translations: Record<Language, TranslationMap> = {
       users: "Users",
       calendar: "Calendar",
       contacts: "Contacts",
+      notesTab: "Notes",
       principalId: "Principal ID",
       name: "Full Name",
       email: "Email Address",
@@ -461,6 +502,43 @@ export const translations: Record<Language, TranslationMap> = {
       registeredAt: "Member Since",
       noProfile: "No profile found.",
       createProfile: "Create Profile",
+    },
+    notes: {
+      newNote: "New Note",
+      editNote: "Edit Note",
+      searchPlaceholder: "Search notes by title or content...",
+      search: "Search",
+      rubrik: "Title",
+      rubrikCol: "Title",
+      previewCol: "Preview",
+      dateCol: "Date",
+      sharesCol: "Shares",
+      actionsCol: "Actions",
+      content: "Content",
+      save: "Save",
+      abort: "Cancel",
+      delete: "Delete",
+      share: "Share",
+      shareButton: "Share",
+      shareAdded: "Note shared successfully.",
+      shareRemoved: "Share removed.",
+      shareWith: "Shared with",
+      addShare: "Share with principal ID",
+      removeShare: "Remove",
+      noShares: "Not shared with anyone yet.",
+      shareDialogTitle: "Share Note",
+      principalPlaceholder: "Enter principal ID…",
+      noNotes: "No notes yet. Create your first note!",
+      noResults: "No notes found matching your search.",
+      noteCreated: "Note created.",
+      noteSaved: "Note saved.",
+      noteDeleted: "Note deleted.",
+      confirmDelete: "Are you sure you want to delete this note?",
+      pageOf: "Page {page} of {total}",
+      prev: "Previous",
+      next: "Next",
+      close: "Close",
+      invalidPrincipal: "Invalid principal ID. Please check and try again.",
     },
     admin: {
       title: "User Management",
@@ -652,6 +730,8 @@ export const translations: Record<Language, TranslationMap> = {
       preview: "Preview",
       play: "Play",
       close: "Close",
+      audioLoadError:
+        "Could not play audio. The file may be too large or unsupported.",
       newFolder: "New Folder",
       folderName: "Folder name",
       createFolder: "Create",
@@ -795,6 +875,7 @@ export const translations: Record<Language, TranslationMap> = {
       users: "Usuarios",
       calendar: "Calendario",
       contacts: "Contactos",
+      notesTab: "Notas",
       principalId: "ID Principal",
       name: "Nombre Completo",
       email: "Correo Electrónico",
@@ -807,6 +888,44 @@ export const translations: Record<Language, TranslationMap> = {
       registeredAt: "Miembro Desde",
       noProfile: "Perfil no encontrado.",
       createProfile: "Crear Perfil",
+    },
+    notes: {
+      newNote: "Nueva Nota",
+      editNote: "Editar Nota",
+      searchPlaceholder: "Buscar notas por título o contenido...",
+      search: "Buscar",
+      rubrik: "Título",
+      rubrikCol: "Título",
+      previewCol: "Vista previa",
+      dateCol: "Fecha",
+      sharesCol: "Compartidos",
+      actionsCol: "Acciones",
+      content: "Contenido",
+      save: "Guardar",
+      abort: "Cancelar",
+      delete: "Eliminar",
+      share: "Compartir",
+      shareButton: "Compartir",
+      shareAdded: "Nota compartida con éxito.",
+      shareRemoved: "Compartir eliminado.",
+      shareWith: "Compartido con",
+      addShare: "Compartir con ID de principal",
+      removeShare: "Eliminar",
+      noShares: "Aún no compartida con nadie.",
+      shareDialogTitle: "Compartir Nota",
+      principalPlaceholder: "Ingrese el ID de principal…",
+      noNotes: "Aún no hay notas. ¡Crea tu primera nota!",
+      noResults: "No se encontraron notas que coincidan con tu búsqueda.",
+      noteCreated: "Nota creada.",
+      noteSaved: "Nota guardada.",
+      noteDeleted: "Nota eliminada.",
+      confirmDelete: "¿Está seguro de que desea eliminar esta nota?",
+      pageOf: "Página {page} de {total}",
+      prev: "Anterior",
+      next: "Siguiente",
+      close: "Cerrar",
+      invalidPrincipal:
+        "ID de principal no válido. Por favor, compruébelo e inténtelo de nuevo.",
     },
     admin: {
       title: "Gestión de Usuarios",
@@ -1001,6 +1120,8 @@ export const translations: Record<Language, TranslationMap> = {
       preview: "Vista previa",
       play: "Reproducir",
       close: "Cerrar",
+      audioLoadError:
+        "No se pudo reproducir el audio. El archivo puede ser demasiado grande o no compatible.",
       newFolder: "Nueva carpeta",
       folderName: "Nombre de carpeta",
       createFolder: "Crear",
@@ -1144,6 +1265,7 @@ export const translations: Record<Language, TranslationMap> = {
       users: "Användare",
       calendar: "Kalender",
       contacts: "Kontakter",
+      notesTab: "Anteckningar",
       principalId: "Huvud-ID",
       name: "Fullständigt Namn",
       email: "E-postadress",
@@ -1156,6 +1278,43 @@ export const translations: Record<Language, TranslationMap> = {
       registeredAt: "Medlem Sedan",
       noProfile: "Ingen profil hittades.",
       createProfile: "Skapa Profil",
+    },
+    notes: {
+      newNote: "Ny Anteckning",
+      editNote: "Redigera Anteckning",
+      searchPlaceholder: "Sök anteckningar efter rubrik eller innehåll...",
+      search: "Sök",
+      rubrik: "Rubrik",
+      rubrikCol: "Rubrik",
+      previewCol: "Förhandsvisning",
+      dateCol: "Datum",
+      sharesCol: "Delningar",
+      actionsCol: "Åtgärder",
+      content: "Innehåll",
+      save: "Spara",
+      abort: "Avbryt",
+      delete: "Radera",
+      share: "Dela",
+      shareButton: "Dela",
+      shareAdded: "Anteckning delad.",
+      shareRemoved: "Delning borttagen.",
+      shareWith: "Delad med",
+      addShare: "Dela med huvud-ID",
+      removeShare: "Ta bort",
+      noShares: "Inte delad med någon ännu.",
+      shareDialogTitle: "Dela Anteckning",
+      principalPlaceholder: "Ange huvud-ID…",
+      noNotes: "Inga anteckningar ännu. Skapa din första anteckning!",
+      noResults: "Inga anteckningar hittades som matchar din sökning.",
+      noteCreated: "Anteckning skapad.",
+      noteSaved: "Anteckning sparad.",
+      noteDeleted: "Anteckning raderad.",
+      confirmDelete: "Är du säker på att du vill radera denna anteckning?",
+      pageOf: "Sida {page} av {total}",
+      prev: "Föregående",
+      next: "Nästa",
+      close: "Stäng",
+      invalidPrincipal: "Ogiltigt principal-ID. Kontrollera och försök igen.",
     },
     admin: {
       title: "Användarhantering",
@@ -1349,6 +1508,8 @@ export const translations: Record<Language, TranslationMap> = {
       preview: "Förhandsvisning",
       play: "Spela",
       close: "Stäng",
+      audioLoadError:
+        "Det gick inte att spela upp ljudet. Filen kan vara för stor eller inte stöds.",
       newFolder: "Ny mapp",
       folderName: "Mappnamn",
       createFolder: "Skapa",

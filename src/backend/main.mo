@@ -1,3 +1,4 @@
+import Array "mo:core/Array";
 import List "mo:core/List";
 import Map "mo:core/Map";
 
@@ -165,6 +166,20 @@ actor {
 
   // userAccessLogs: stores access log entries per principal (max 50 per user).
   stable var userAccessLogs : Map.Map<Principal, [UserAccessLogEntry]> = Map.empty<Principal, [UserAccessLogEntry]>();
+
+  // NoteRecord: a user note with optional sharing.
+  type NoteRecord = {
+    id : Text;
+    owner : Principal;
+    rubrik : Text;
+    content : Text;
+    createdAt : Int;
+    sharedWith : [Principal];
+  };
+
+  // noteRecords: stores all notes keyed by note ID.
+  stable var noteRecords : Map.Map<Text, NoteRecord> = Map.empty<Text, NoteRecord>();
+  stable var noteIdCounter : Nat = 0;
 
   // ---- Migration ----
 
@@ -968,6 +983,45 @@ actor {
     };
   };
 
+  // getDocumentChunk: returns a slice of raw file bytes for a given document.
+  // Use this for large files (>3MB) to avoid the IC reply-size limit (IC0504).
+  // Public documents can be accessed by anyone; private documents only by their owner or an admin.
+  // offset: byte offset to start from; chunkSize: max number of bytes to return.
+  public query ({ caller }) func getDocumentChunk(
+    docId : Text,
+    offset : Nat,
+    chunkSize : Nat,
+  ) : async { #ok : { chunk : [Nat8]; totalSize : Nat; hasMore : Bool }; #err : Text } {
+    switch (documentRecords_v3.get(docId)) {
+      case (null) { return #err("Document not found.") };
+      case (?doc) {
+        if (not doc.isPublic) {
+          if (caller.isAnonymous()) {
+            return #err("Unauthorized.");
+          };
+          if (not Principal.equal(doc.ownerPrincipal, caller) and not isAdmin(caller)) {
+            return #err("Unauthorized.");
+          };
+        };
+        switch (fileBlobs.get(docId)) {
+          case (null) { return #err("Document not found.") };
+          case (?bytes) {
+            let totalSize = bytes.size();
+            let start = offset;
+            if (start >= totalSize) {
+              return #ok({ chunk = []; totalSize; hasMore = false });
+            };
+            let end_ = Nat.min(offset + chunkSize, totalSize);
+            let chunkSize_ = end_ - start;
+            let chunk = Array.tabulate(chunkSize_, func(i : Nat) : Nat8 { bytes[start + i] });
+            let hasMore = end_ < totalSize;
+            return #ok({ chunk; totalSize; hasMore });
+          };
+        };
+      };
+    };
+  };
+
   // ---- Chunked Upload APIs ----
 
   // startChunkedUpload: initiates a multi-chunk upload session.
@@ -1493,9 +1547,230 @@ actor {
     return #ok("Moved " # movedCount.toText() # " items");
   };
 
-  // --> Admin operations, USED ONLY WITH CANDID UI, DO NOT USE admin_* operations in front-end
+  // ---- Notes APIs ----
 
-  // ---- User Access Log APIs ----
+  // createNote: creates a new note owned by the caller.
+  public shared ({ caller }) func createNote(rubrik : Text, content : Text) : async { #ok : Text; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in to create notes.");
+    };
+    let trimmedRubrik = rubrik.trim(#text(" "));
+    if (textLength(trimmedRubrik) == 0) {
+      return #err("Note title (rubrik) is required.");
+    };
+    if (textLength(trimmedRubrik) > 200) {
+      return #err("Note title must be 200 characters or less.");
+    };
+    let safeRubrik = sanitizeText(trimmedRubrik);
+    let safeContent = sanitizeText(content);
+    noteIdCounter += 1;
+    let noteId = "note-" # noteIdCounter.toText() # "-" # Time.now().toText();
+    let note : NoteRecord = {
+      id = noteId;
+      owner = caller;
+      rubrik = safeRubrik;
+      content = safeContent;
+      createdAt = Time.now();
+      sharedWith = [];
+    };
+    noteRecords.add(noteId, note);
+    return #ok(noteId);
+  };
+
+  // updateNote: updates the rubrik and content of a note; only the owner can update.
+  public shared ({ caller }) func updateNote(noteId : Text, rubrik : Text, content : Text) : async { #ok; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in.");
+    };
+    switch (noteRecords.get(noteId)) {
+      case (null) { return #err("Note not found.") };
+      case (?note) {
+        if (not Principal.equal(note.owner, caller)) {
+          return #err("Unauthorized: Only the note owner can update it.");
+        };
+        let trimmedRubrik = rubrik.trim(#text(" "));
+        if (textLength(trimmedRubrik) == 0) {
+          return #err("Note title (rubrik) is required.");
+        };
+        if (textLength(trimmedRubrik) > 200) {
+          return #err("Note title must be 200 characters or less.");
+        };
+        noteRecords.add(noteId, {
+          note with
+          rubrik = sanitizeText(trimmedRubrik);
+          content = sanitizeText(content);
+        });
+        return #ok;
+      };
+    };
+  };
+
+  // deleteNote: deletes a note; only the owner can delete.
+  public shared ({ caller }) func deleteNote(noteId : Text) : async { #ok; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in.");
+    };
+    switch (noteRecords.get(noteId)) {
+      case (null) { return #err("Note not found.") };
+      case (?note) {
+        if (not Principal.equal(note.owner, caller)) {
+          return #err("Unauthorized: Only the note owner can delete it.");
+        };
+        noteRecords.remove(noteId);
+        return #ok;
+      };
+    };
+  };
+
+  // listNotes: returns notes owned by or shared with the caller, optionally filtered by search,
+  // sorted by createdAt descending, with pagination (limit/offset).
+  public query ({ caller }) func listNotes(limit : Nat, offset : Nat, search : ?Text) : async { #ok : [NoteRecord]; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in.");
+    };
+    let searchLower : ?Text = switch (search) {
+      case (null) { null };
+      case (?s) {
+        let trimmed = s.trim(#text(" "));
+        if (textLength(trimmed) == 0) { null } else { ?trimmed.toLower() };
+      };
+    };
+    // Collect visible notes: owned by caller OR shared with caller
+    let all = noteRecords.entries().toArray()
+      .filter(func(pair : (Text, NoteRecord)) : Bool {
+        let note = pair.1;
+        let isOwner = Principal.equal(note.owner, caller);
+        let isShared = note.sharedWith.any(func(p : Principal) : Bool {
+          Principal.equal(p, caller)
+        });
+        if (not isOwner and not isShared) { return false };
+        // Apply search filter
+        switch (searchLower) {
+          case (null) { true };
+          case (?term) {
+            note.rubrik.toLower().contains(#text(term)) or
+            note.content.toLower().contains(#text(term))
+          };
+        };
+      })
+      .map(func(pair : (Text, NoteRecord)) : NoteRecord { pair.1 });
+
+    // Sort by createdAt descending
+    let sorted = all.sort(func(a : NoteRecord, b : NoteRecord) : { #less; #equal; #greater } {
+      Int.compare(b.createdAt, a.createdAt)
+    });
+
+    // Apply pagination
+    let total = sorted.size();
+    let start : Int = offset.toInt();
+    let end_ : Int = (offset + limit).toInt();
+    let page = sorted.sliceToArray(start, if (end_ > total.toInt()) { total.toInt() } else { end_ });
+    return #ok(page);
+  };
+
+  // getNotesCount: returns total count of notes visible to the caller (owned + shared), with optional search.
+  public query ({ caller }) func getNotesCount(search : ?Text) : async { #ok : Nat; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in.");
+    };
+    let searchLower : ?Text = switch (search) {
+      case (null) { null };
+      case (?s) {
+        let trimmed = s.trim(#text(" "));
+        if (textLength(trimmed) == 0) { null } else { ?trimmed.toLower() };
+      };
+    };
+    let count = noteRecords.entries().toArray()
+      .filter(func(pair : (Text, NoteRecord)) : Bool {
+        let note = pair.1;
+        let isOwner = Principal.equal(note.owner, caller);
+        let isShared = note.sharedWith.any(func(p : Principal) : Bool {
+          Principal.equal(p, caller)
+        });
+        if (not isOwner and not isShared) { return false };
+        switch (searchLower) {
+          case (null) { true };
+          case (?term) {
+            note.rubrik.toLower().contains(#text(term)) or
+            note.content.toLower().contains(#text(term))
+          };
+        };
+      })
+      .size();
+    return #ok(count);
+  };
+
+  // shareNote: shares a note with a target principal; only the owner can share.
+  // Prevents duplicates; max 50 shares per note.
+  public shared ({ caller }) func shareNote(noteId : Text, targetPrincipal : Principal) : async { #ok; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in.");
+    };
+    switch (noteRecords.get(noteId)) {
+      case (null) { return #err("Note not found.") };
+      case (?note) {
+        if (not Principal.equal(note.owner, caller)) {
+          return #err("Unauthorized: Only the note owner can share it.");
+        };
+        if (Principal.equal(targetPrincipal, caller)) {
+          return #err("Cannot share a note with yourself.");
+        };
+        // Prevent duplicate shares
+        let alreadyShared = note.sharedWith.any(func(p : Principal) : Bool {
+          Principal.equal(p, targetPrincipal)
+        });
+        if (alreadyShared) {
+          return #err("Note is already shared with this principal.");
+        };
+        if (note.sharedWith.size() >= 50) {
+          return #err("Cannot share with more than 50 principals.");
+        };
+        noteRecords.add(noteId, {
+          note with
+          sharedWith = note.sharedWith.concat([targetPrincipal]);
+        });
+        return #ok;
+      };
+    };
+  };
+
+  // unshareNote: removes a principal from the sharedWith list; only the owner can unshare.
+  public shared ({ caller }) func unshareNote(noteId : Text, targetPrincipal : Principal) : async { #ok; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in.");
+    };
+    switch (noteRecords.get(noteId)) {
+      case (null) { return #err("Note not found.") };
+      case (?note) {
+        if (not Principal.equal(note.owner, caller)) {
+          return #err("Unauthorized: Only the note owner can unshare it.");
+        };
+        let updated = note.sharedWith.filter(func(p : Principal) : Bool {
+          not Principal.equal(p, targetPrincipal)
+        });
+        noteRecords.add(noteId, { note with sharedWith = updated });
+        return #ok;
+      };
+    };
+  };
+
+  // getNoteShares: returns the sharedWith list for a note; only the owner can call.
+  public query ({ caller }) func getNoteShares(noteId : Text) : async { #ok : [Principal]; #err : Text } {
+    if (caller.isAnonymous()) {
+      return #err("Unauthorized: You must be logged in.");
+    };
+    switch (noteRecords.get(noteId)) {
+      case (null) { return #err("Note not found.") };
+      case (?note) {
+        if (not Principal.equal(note.owner, caller)) {
+          return #err("Unauthorized: Only the note owner can view shares.");
+        };
+        return #ok(note.sharedWith);
+      };
+    };
+  };
+
+  // --> Admin operations, USED ONLY WITH CANDID UI, DO NOT USE admin_* operations in front-end
 
   // recordMyAccess: called by frontend after login to record an access event.
   // Keeps at most 50 entries per user (oldest dropped first).

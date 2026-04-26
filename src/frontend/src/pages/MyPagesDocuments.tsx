@@ -30,6 +30,85 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { DocumentRecord, FolderRecord } from "../backend.d";
 
+// ─── Byte conversion helper ───────────────────────────────────────────────────
+//
+// ICP Candid ALWAYS returns vec nat8 as a plain JavaScript number[], NOT as
+// Uint8Array. Passing a number[] directly to new Blob() creates a text blob
+// (the array's .toString()), not binary bytes — that is why files open as HTML.
+// Additionally, chunked reassembly may return a Uint8Array with a non-zero
+// byteOffset, which must be sliced out of the underlying ArrayBuffer.
+// This helper handles all three cases safely.
+function toCleanUint8Array(data: unknown): Uint8Array<ArrayBuffer> {
+  console.log(
+    "[toCleanUint8Array] input type:",
+    typeof data,
+    "| isArray:",
+    Array.isArray(data),
+    "| isUint8Array:",
+    data instanceof Uint8Array,
+    "| length/byteLength:",
+    (data as ArrayLike<number>)?.length ??
+      (data as Uint8Array)?.byteLength ??
+      "n/a",
+  );
+  let result: Uint8Array<ArrayBuffer>;
+  if (data instanceof Uint8Array) {
+    if (data.byteOffset !== 0) {
+      result = new Uint8Array(
+        (data.buffer as ArrayBuffer).slice(
+          data.byteOffset,
+          data.byteOffset + data.byteLength,
+        ),
+      ) as Uint8Array<ArrayBuffer>;
+    } else {
+      // Ensure the buffer is a plain ArrayBuffer (not SharedArrayBuffer)
+      result = new Uint8Array(data) as Uint8Array<ArrayBuffer>;
+    }
+  } else {
+    // Plain number[] from ICP Candid — most common case
+    result = new Uint8Array(
+      data as ArrayLike<number>,
+    ) as Uint8Array<ArrayBuffer>;
+  }
+  console.log(
+    "[toCleanUint8Array] output length:",
+    result.length,
+    "| first 4 bytes:",
+    result.slice(0, 4),
+  );
+  return result;
+}
+
+// Normalise audio MIME types. "audio/mp3" and "audio/x-mp3" are not registered
+// IANA types; browsers (especially Safari) refuse to play them. Always use
+// "audio/mpeg". Also infer from file extension when MIME is missing/generic.
+function normalizeAudioMime(mimeType: string, fileName: string): string {
+  let result: string;
+  if (!mimeType || mimeType === "application/octet-stream") {
+    const ext = fileName.split(".").pop()?.toLowerCase();
+    if (ext === "mp3") result = "audio/mpeg";
+    else if (ext === "wav") result = "audio/wav";
+    else if (ext === "ogg") result = "audio/ogg";
+    else if (ext === "flac") result = "audio/flac";
+    else if (ext === "aac") result = "audio/aac";
+    else if (ext === "m4a") result = "audio/x-m4a";
+    else result = "audio/mpeg";
+  } else if (mimeType === "audio/mp3" || mimeType === "audio/x-mp3") {
+    result = "audio/mpeg";
+  } else {
+    result = mimeType;
+  }
+  console.log(
+    "[normalizeAudioMime] input mimeType:",
+    mimeType,
+    "| fileName:",
+    fileName,
+    "| output:",
+    result,
+  );
+  return result;
+}
+
 // ─── MIME helpers ─────────────────────────────────────────────────────────────
 
 function mimeForFile(file: File): string {
@@ -265,131 +344,142 @@ function MoveModal({
   return (
     <dialog
       open
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent"
       data-ocid="documents.move_modal"
       aria-label={title}
       onClick={onCancel}
       onKeyDown={(e) => e.key === "Escape" && onCancel()}
     >
       <div
-        className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+        className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        {/* Title */}
-        <div className="flex items-center gap-2">
-          <FolderInput className="w-5 h-5 text-gold shrink-0" />
-          <h3 className="font-serif text-base font-semibold text-foreground">
-            {title}
-          </h3>
-        </div>
-        <p className="text-xs text-muted-foreground truncate" title={itemName}>
-          {itemName}
-        </p>
-
-        {/* Back button + current folder name */}
-        {isInsideSubfolder && (
-          <div className="flex items-center gap-2 min-w-0">
-            <button
-              type="button"
-              onClick={navigateBack}
-              className="inline-flex items-center gap-1.5 shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded px-2 py-1 bg-muted/30 hover:bg-muted/60"
-              data-ocid="documents.move_back"
-              aria-label={t.documents.back}
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              {t.documents.back}
-            </button>
-            {currentFolderName && (
-              <span className="flex items-center gap-1 min-w-0 text-xs text-foreground font-medium truncate">
-                <FolderOpen className="w-3.5 h-3.5 text-gold shrink-0" />
-                <span className="truncate">{currentFolderName}</span>
-              </span>
-            )}
+        {/* Title — pinned header */}
+        <div className="flex-shrink-0 px-4 pt-4 sm:px-6 sm:pt-6 pb-2 space-y-1">
+          <div className="flex items-center gap-2">
+            <FolderInput className="w-5 h-5 text-gold shrink-0" />
+            <h3 className="font-serif text-base font-semibold text-foreground">
+              {title}
+            </h3>
           </div>
-        )}
+          <p
+            className="text-xs text-muted-foreground truncate"
+            title={itemName}
+          >
+            {itemName}
+          </p>
+        </div>
 
-        {/* Folder list */}
-        <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
-          {/* Root option — only at root level */}
-          {!isInsideSubfolder && (
-            <label
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
-                selected === "__root__"
-                  ? "bg-gold/20 border border-gold/40"
-                  : "hover:bg-muted/40 border border-transparent"
-              }`}
-            >
-              <input
-                type="radio"
-                name="move-target"
-                value="__root__"
-                checked={selected === "__root__"}
-                onChange={() => setSelected("__root__")}
-                className="accent-gold"
-                data-ocid="documents.move_root_option"
-              />
-              <span className="text-sm text-foreground font-medium">
-                {t.documents.moveRoot}
-              </span>
-            </label>
-          )}
-
-          {/* Loading spinner */}
-          {dialogLoading && (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        {/* Scrollable body */}
+        <div
+          className="flex-1 overflow-y-auto px-4 sm:px-6 space-y-3 py-2"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          {/* Back button + current folder name */}
+          {isInsideSubfolder && (
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                type="button"
+                onClick={navigateBack}
+                className="inline-flex items-center gap-1.5 shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded px-2 py-1 bg-muted/30 hover:bg-muted/60"
+                data-ocid="documents.move_back"
+                aria-label={t.documents.back}
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                {t.documents.back}
+              </button>
+              {currentFolderName && (
+                <span className="flex items-center gap-1 min-w-0 text-xs text-foreground font-medium truncate">
+                  <FolderOpen className="w-3.5 h-3.5 text-gold shrink-0" />
+                  <span className="truncate">{currentFolderName}</span>
+                </span>
+              )}
             </div>
           )}
 
-          {/* Folder rows — radio to select, name to navigate in */}
-          {!dialogLoading &&
-            visibleFolders.map((folder) => (
-              <div
-                key={folder.id}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors ${
-                  selected === folder.id
+          {/* Folder list */}
+          <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+            {/* Root option — only at root level */}
+            {!isInsideSubfolder && (
+              <label
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                  selected === "__root__"
                     ? "bg-gold/20 border border-gold/40"
                     : "hover:bg-muted/40 border border-transparent"
                 }`}
-                data-ocid="documents.move_folder_row"
               >
                 <input
                   type="radio"
                   name="move-target"
-                  value={folder.id}
-                  checked={selected === folder.id}
-                  onChange={() => setSelected(folder.id)}
-                  className="accent-gold shrink-0"
-                  data-ocid="documents.move_folder_option"
+                  value="__root__"
+                  checked={selected === "__root__"}
+                  onChange={() => setSelected("__root__")}
+                  className="accent-gold"
+                  data-ocid="documents.move_root_option"
                 />
-                <FolderOpen className="w-4 h-4 text-gold shrink-0" />
-                {/* Clicking the folder name navigates into it */}
-                <button
-                  type="button"
-                  onClick={() => navigateInto(folder)}
-                  className="flex-1 text-left text-sm text-foreground truncate min-w-0 hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded"
-                  data-ocid="documents.move_folder_navigate"
-                  title={folder.name}
-                >
-                  {folder.name}
-                </button>
-                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
-              </div>
-            ))}
-
-          {/* Empty message inside a subfolder */}
-          {!dialogLoading &&
-            isInsideSubfolder &&
-            visibleFolders.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-3">
-                {t.documents.noDocuments}
-              </p>
+                <span className="text-sm text-foreground font-medium">
+                  {t.documents.moveRoot}
+                </span>
+              </label>
             )}
+
+            {/* Loading spinner */}
+            {dialogLoading && (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              </div>
+            )}
+
+            {/* Folder rows — radio to select, name to navigate in */}
+            {!dialogLoading &&
+              visibleFolders.map((folder) => (
+                <div
+                  key={folder.id}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors ${
+                    selected === folder.id
+                      ? "bg-gold/20 border border-gold/40"
+                      : "hover:bg-muted/40 border border-transparent"
+                  }`}
+                  data-ocid="documents.move_folder_row"
+                >
+                  <input
+                    type="radio"
+                    name="move-target"
+                    value={folder.id}
+                    checked={selected === folder.id}
+                    onChange={() => setSelected(folder.id)}
+                    className="accent-gold shrink-0"
+                    data-ocid="documents.move_folder_option"
+                  />
+                  <FolderOpen className="w-4 h-4 text-gold shrink-0" />
+                  {/* Clicking the folder name navigates into it */}
+                  <button
+                    type="button"
+                    onClick={() => navigateInto(folder)}
+                    className="flex-1 text-left text-sm text-foreground truncate min-w-0 hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded"
+                    data-ocid="documents.move_folder_navigate"
+                    title={folder.name}
+                  >
+                    {folder.name}
+                  </button>
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                </div>
+              ))}
+
+            {/* Empty message inside a subfolder */}
+            {!dialogLoading &&
+              isInsideSubfolder &&
+              visibleFolders.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-3">
+                  {t.documents.noDocuments}
+                </p>
+              )}
+          </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-2 justify-end pt-1">
+        {/* Actions — pinned footer */}
+        <div className="flex-shrink-0 flex gap-2 justify-end px-4 sm:px-6 py-3 border-t border-border/50 bg-card">
           <Button
             type="button"
             variant="outline"
@@ -511,124 +601,130 @@ function BulkMoveModal({
   return (
     <dialog
       open
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent"
       data-ocid="documents.bulk_move_modal"
       aria-label={title}
       onClick={onCancel}
       onKeyDown={(e) => e.key === "Escape" && onCancel()}
     >
       <div
-        className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+        className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        {/* Title */}
-        <div className="flex items-center gap-2">
+        {/* Title — pinned header */}
+        <div className="flex-shrink-0 flex items-center gap-2 px-4 pt-4 sm:px-6 sm:pt-6 pb-3">
           <CheckSquare className="w-5 h-5 text-gold shrink-0" />
           <h3 className="font-serif text-base font-semibold text-foreground">
             {title}
           </h3>
         </div>
 
-        {/* Back button + current folder name */}
-        {isInsideSubfolder && (
-          <div className="flex items-center gap-2 min-w-0">
-            <button
-              type="button"
-              onClick={navigateBack}
-              className="inline-flex items-center gap-1.5 shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded px-2 py-1 bg-muted/30 hover:bg-muted/60"
-              data-ocid="documents.bulk_move_back"
-              aria-label={t.documents.back}
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              {t.documents.back}
-            </button>
-            {currentFolderName && (
-              <span className="flex items-center gap-1 min-w-0 text-xs text-foreground font-medium truncate">
-                <FolderOpen className="w-3.5 h-3.5 text-gold shrink-0" />
-                <span className="truncate">{currentFolderName}</span>
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Folder list */}
-        <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
-          {/* Root option — only at root level */}
-          {!isInsideSubfolder && (
-            <label
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
-                selected === "__root__"
-                  ? "bg-gold/20 border border-gold/40"
-                  : "hover:bg-muted/40 border border-transparent"
-              }`}
-            >
-              <input
-                type="radio"
-                name="bulk-move-target"
-                value="__root__"
-                checked={selected === "__root__"}
-                onChange={() => setSelected("__root__")}
-                className="accent-gold"
-                data-ocid="documents.bulk_move_root_option"
-              />
-              <span className="text-sm text-foreground font-medium">
-                {t.documents.moveRoot}
-              </span>
-            </label>
-          )}
-
-          {dialogLoading && (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+        {/* Scrollable body */}
+        <div
+          className="flex-1 overflow-y-auto px-4 sm:px-6 space-y-3 py-2"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          {/* Back button + current folder name */}
+          {isInsideSubfolder && (
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                type="button"
+                onClick={navigateBack}
+                className="inline-flex items-center gap-1.5 shrink-0 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded px-2 py-1 bg-muted/30 hover:bg-muted/60"
+                data-ocid="documents.bulk_move_back"
+                aria-label={t.documents.back}
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                {t.documents.back}
+              </button>
+              {currentFolderName && (
+                <span className="flex items-center gap-1 min-w-0 text-xs text-foreground font-medium truncate">
+                  <FolderOpen className="w-3.5 h-3.5 text-gold shrink-0" />
+                  <span className="truncate">{currentFolderName}</span>
+                </span>
+              )}
             </div>
           )}
 
-          {!dialogLoading &&
-            visibleFolders.map((folder) => (
-              <div
-                key={folder.id}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors ${
-                  selected === folder.id
+          {/* Folder list */}
+          <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+            {/* Root option — only at root level */}
+            {!isInsideSubfolder && (
+              <label
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                  selected === "__root__"
                     ? "bg-gold/20 border border-gold/40"
                     : "hover:bg-muted/40 border border-transparent"
                 }`}
-                data-ocid="documents.bulk_move_folder_row"
               >
                 <input
                   type="radio"
                   name="bulk-move-target"
-                  value={folder.id}
-                  checked={selected === folder.id}
-                  onChange={() => setSelected(folder.id)}
-                  className="accent-gold shrink-0"
-                  data-ocid="documents.bulk_move_folder_option"
+                  value="__root__"
+                  checked={selected === "__root__"}
+                  onChange={() => setSelected("__root__")}
+                  className="accent-gold"
+                  data-ocid="documents.bulk_move_root_option"
                 />
-                <FolderOpen className="w-4 h-4 text-gold shrink-0" />
-                <button
-                  type="button"
-                  onClick={() => navigateInto(folder)}
-                  className="flex-1 text-left text-sm text-foreground truncate min-w-0 hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded"
-                  data-ocid="documents.bulk_move_folder_navigate"
-                  title={folder.name}
-                >
-                  {folder.name}
-                </button>
-                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
-              </div>
-            ))}
-
-          {!dialogLoading &&
-            isInsideSubfolder &&
-            visibleFolders.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-3">
-                {t.documents.noDocuments}
-              </p>
+                <span className="text-sm text-foreground font-medium">
+                  {t.documents.moveRoot}
+                </span>
+              </label>
             )}
+
+            {dialogLoading && (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              </div>
+            )}
+
+            {!dialogLoading &&
+              visibleFolders.map((folder) => (
+                <div
+                  key={folder.id}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-colors ${
+                    selected === folder.id
+                      ? "bg-gold/20 border border-gold/40"
+                      : "hover:bg-muted/40 border border-transparent"
+                  }`}
+                  data-ocid="documents.bulk_move_folder_row"
+                >
+                  <input
+                    type="radio"
+                    name="bulk-move-target"
+                    value={folder.id}
+                    checked={selected === folder.id}
+                    onChange={() => setSelected(folder.id)}
+                    className="accent-gold shrink-0"
+                    data-ocid="documents.bulk_move_folder_option"
+                  />
+                  <FolderOpen className="w-4 h-4 text-gold shrink-0" />
+                  <button
+                    type="button"
+                    onClick={() => navigateInto(folder)}
+                    className="flex-1 text-left text-sm text-foreground truncate min-w-0 hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold rounded"
+                    data-ocid="documents.bulk_move_folder_navigate"
+                    title={folder.name}
+                  >
+                    {folder.name}
+                  </button>
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                </div>
+              ))}
+
+            {!dialogLoading &&
+              isInsideSubfolder &&
+              visibleFolders.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-3">
+                  {t.documents.noDocuments}
+                </p>
+              )}
+          </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-2 justify-end pt-1">
+        {/* Actions — pinned footer */}
+        <div className="flex-shrink-0 flex gap-2 justify-end px-4 sm:px-6 py-3 border-t border-border/50 bg-card">
           <Button
             type="button"
             variant="outline"
@@ -692,7 +788,7 @@ function ImageModal({ url, fileName, onClose }: ImageModalProps) {
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
       <div
-        className="relative max-w-4xl max-h-[90vh] w-full flex flex-col items-center gap-3"
+        className="relative w-full max-w-4xl max-h-[90vh] flex flex-col items-center gap-3 px-2 sm:px-0"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
@@ -725,10 +821,18 @@ function ImageModal({ url, fileName, onClose }: ImageModalProps) {
 interface AudioPlayerRowProps {
   url: string;
   fileName: string;
+  hasError?: boolean;
   onClose: () => void;
+  onError: (e: React.SyntheticEvent<HTMLAudioElement>) => void;
 }
 
-function AudioPlayerRow({ url, fileName, onClose }: AudioPlayerRowProps) {
+function AudioPlayerRow({
+  url,
+  fileName,
+  hasError,
+  onClose,
+  onError,
+}: AudioPlayerRowProps) {
   const { t } = useLanguage();
   return (
     <tr data-ocid="documents.audio_player_row">
@@ -738,20 +842,31 @@ function AudioPlayerRow({ url, fileName, onClose }: AudioPlayerRowProps) {
           <span className="text-xs text-muted-foreground truncate min-w-0 flex-1 font-sans">
             {fileName}
           </span>
-          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-          <audio
-            src={url}
-            controls
-            autoPlay={false}
-            className="h-8 flex-1 min-w-0 max-w-xs"
-            style={{ accentColor: "var(--color-gold, #c9a84c)" }}
-          >
-            <track kind="captions" />
-          </audio>
+          {hasError ? (
+            <span
+              className="text-xs text-red-500 font-medium flex-1 min-w-0 font-sans"
+              role="alert"
+              data-ocid="documents.audio_error_state"
+            >
+              {t.documents.audioLoadError}
+            </span>
+          ) : (
+            /* eslint-disable-next-line jsx-a11y/media-has-caption */
+            <audio
+              src={url}
+              controls
+              autoPlay={false}
+              className="h-8 flex-1 min-w-0 max-w-xs"
+              style={{ accentColor: "var(--color-gold, #c9a84c)" }}
+              onError={onError}
+            >
+              <track kind="captions" />
+            </audio>
+          )}
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 w-7 h-7 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+            className="shrink-0 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
             aria-label={t.documents.close}
             data-ocid="documents.audio_player_close"
           >
@@ -798,24 +913,30 @@ function CreateFolderModal({
   return (
     <dialog
       open
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 m-0 w-full h-full max-w-none max-h-none border-0 bg-transparent"
       data-ocid="documents.create_folder_modal"
       aria-label={t.documents.newFolder}
       onClick={onCancel}
       onKeyDown={(e) => e.key === "Escape" && onCancel()}
     >
       <div
-        className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+        className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-2">
+        {/* Header — pinned */}
+        <div className="flex-shrink-0 flex items-center gap-2 px-4 pt-4 sm:px-6 sm:pt-6 pb-3">
           <FolderPlus className="w-5 h-5 text-gold" />
           <h3 className="font-serif text-base font-semibold text-foreground">
             {t.documents.newFolder}
           </h3>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Scrollable body */}
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto px-4 sm:px-6 pt-1 pb-2 space-y-4"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
           <div>
             <label
               htmlFor="folder-name-input"
@@ -830,42 +951,44 @@ function CreateFolderModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t.documents.folderName}
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/60 transition"
+              className="w-full rounded-lg border border-input bg-background px-3 py-3 text-base sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/60 transition min-h-[48px]"
               maxLength={100}
               data-ocid="documents.folder_name_input"
               disabled={isCreating}
             />
           </div>
-          <div className="flex gap-2 justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onCancel}
-              disabled={isCreating}
-              className="rounded-full"
-              data-ocid="documents.create_folder_cancel"
-            >
-              {t.documents.cancel}
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={!name.trim() || isCreating}
-              className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full"
-              data-ocid="documents.create_folder_confirm"
-            >
-              {isCreating ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                  {t.documents.creating}
-                </>
-              ) : (
-                t.documents.createFolder
-              )}
-            </Button>
-          </div>
         </form>
+        {/* Actions — pinned footer */}
+        <div className="flex-shrink-0 flex gap-2 justify-end px-4 sm:px-6 py-3 border-t border-border/50 bg-card">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onCancel}
+            disabled={isCreating}
+            className="rounded-full min-h-[44px] px-5"
+            data-ocid="documents.create_folder_cancel"
+          >
+            {t.documents.cancel}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            disabled={!name.trim() || isCreating}
+            onClick={handleSubmit}
+            className="bg-gold hover:bg-gold/90 text-black font-sans rounded-full min-h-[44px] px-5"
+            data-ocid="documents.create_folder_confirm"
+          >
+            {isCreating ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                {t.documents.creating}
+              </>
+            ) : (
+              t.documents.createFolder
+            )}
+          </Button>
+        </div>
       </div>
     </dialog>
   );
@@ -892,6 +1015,17 @@ interface ExtendedActor {
     | {
         __kind__: "ok";
         ok: { data: Uint8Array; mimeType: string; fileName: string };
+      }
+    | { __kind__: "err"; err: string }
+  >;
+  getDocumentChunk(
+    docId: string,
+    offset: bigint,
+    chunkSize: bigint,
+  ): Promise<
+    | {
+        __kind__: "ok";
+        ok: { chunk: number[]; totalSize: bigint; hasMore: boolean };
       }
     | { __kind__: "err"; err: string }
   >;
@@ -945,6 +1079,45 @@ interface ExtendedActor {
   >;
 }
 
+// ─── Chunked download helper ──────────────────────────────────────────────────
+//
+// Fetches a document in 1MB chunks and assembles them into a single Uint8Array.
+// Replaces single getDocumentData call to avoid IC0504 (payload > 3MB) for
+// large files. toCleanUint8Array is applied to each chunk before accumulation.
+
+const DOWNLOAD_CHUNK_SIZE = 1 * 1024 * 1024; // 1MB
+
+async function fetchDocumentBytes(
+  extActor: ExtendedActor,
+  docId: string,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const chunks: Uint8Array[] = [];
+  let offset = BigInt(0);
+  let hasMore = true;
+  while (hasMore) {
+    const result = await extActor.getDocumentChunk(
+      docId,
+      offset,
+      BigInt(DOWNLOAD_CHUNK_SIZE),
+    );
+    if ("err" in result) throw new Error(result.err);
+    const { chunk, hasMore: more } = result.ok;
+    const bytes = toCleanUint8Array(chunk);
+    chunks.push(bytes);
+    offset += BigInt(bytes.length);
+    hasMore = more;
+  }
+  // Assemble all chunks into one contiguous Uint8Array
+  const totalLen = chunks.reduce((sum, c) => sum + c.length, 0);
+  const assembled = new Uint8Array(new ArrayBuffer(totalLen));
+  let pos = 0;
+  for (const c of chunks) {
+    assembled.set(c, pos);
+    pos += c.length;
+  }
+  return assembled as Uint8Array<ArrayBuffer>;
+}
+
 // ─── Preview state types ──────────────────────────────────────────────────────
 
 interface ImagePreviewState {
@@ -956,6 +1129,7 @@ interface AudioPlayerState {
   docId: string;
   url: string;
   fileName: string;
+  hasError?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -1311,23 +1485,43 @@ export default function MyPagesDocuments({
       if (!extActor) return;
       setDownloadingId(doc.id);
       try {
-        const result = await extActor.getDocumentData(doc.id);
-        if ("ok" in result) {
-          const { data, mimeType, fileName } = result.ok;
-          const bytes = new Uint8Array(data);
-          const blob = new Blob([bytes], { type: mimeType });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = fileName;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        } else {
-          toast.error(`${t.common.error}: ${result.err}`);
-        }
-      } catch {
+        console.log("[Download] fetching bytes for:", doc.id);
+        const bytes = await fetchDocumentBytes(extActor, doc.id);
+        console.log(
+          "[Download] assembled bytes length:",
+          bytes.length,
+          "| first 4 bytes:",
+          bytes.slice(0, 4),
+        );
+        const mimeType = doc.mimeType || "application/octet-stream";
+        const fileName = doc.fileName;
+        console.log("[Download] mimeType:", mimeType, "| fileName:", fileName);
+        // Normalize MIME so audio files download with the correct type
+        const resolvedMime = mimeType.startsWith("audio/")
+          ? normalizeAudioMime(mimeType, fileName)
+          : mimeType;
+        const blob = new Blob([bytes], { type: resolvedMime });
+        console.log(
+          "[Download] blob size:",
+          blob.size,
+          "| blob type:",
+          blob.type,
+        );
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error(
+          "[Download] FULL ERROR:",
+          err,
+          "| stack:",
+          (err as Error)?.stack,
+        );
         toast.error(t.common.error);
       } finally {
         setDownloadingId(null);
@@ -1380,19 +1574,16 @@ export default function MyPagesDocuments({
       if (!extActor) return;
       setPreviewingId(doc.id);
       try {
-        const result = await extActor.getDocumentData(doc.id);
-        if ("ok" in result) {
-          const { data, mimeType, fileName } = result.ok;
-          const bytes = new Uint8Array(data);
-          const blob = new Blob([bytes], { type: mimeType });
-          if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
-          const url = URL.createObjectURL(blob);
-          imageUrlRef.current = url;
-          setImagePreview({ url, fileName });
-        } else {
-          toast.error(`${t.common.error}: ${result.err}`);
-        }
-      } catch {
+        const bytes = await fetchDocumentBytes(extActor, doc.id);
+        const blob = new Blob([bytes], {
+          type: doc.mimeType || "application/octet-stream",
+        });
+        if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
+        const url = URL.createObjectURL(blob);
+        imageUrlRef.current = url;
+        setImagePreview({ url, fileName: doc.fileName });
+      } catch (err) {
+        console.error("[Documents] handleImagePreview error:", err);
         toast.error(t.common.error);
       } finally {
         setPreviewingId(null);
@@ -1415,6 +1606,7 @@ export default function MyPagesDocuments({
     async (doc: DocumentRecord) => {
       if (!extActor) return;
 
+      // Toggle off if already playing this file
       if (audioPlayer?.docId === doc.id) {
         if (audioUrlRef.current) {
           URL.revokeObjectURL(audioUrlRef.current);
@@ -1424,6 +1616,7 @@ export default function MyPagesDocuments({
         return;
       }
 
+      // Close any currently open player and revoke its URL
       if (audioUrlRef.current) {
         URL.revokeObjectURL(audioUrlRef.current);
         audioUrlRef.current = null;
@@ -1432,24 +1625,69 @@ export default function MyPagesDocuments({
 
       setPlayingId(doc.id);
       try {
-        const result = await extActor.getDocumentData(doc.id);
-        if ("ok" in result) {
-          const { data, mimeType, fileName } = result.ok;
-          const bytes = new Uint8Array(data);
-          const blob = new Blob([bytes], { type: mimeType });
-          const url = URL.createObjectURL(blob);
-          audioUrlRef.current = url;
-          setAudioPlayer({ docId: doc.id, url, fileName });
-        } else {
-          toast.error(`${t.common.error}: ${result.err}`);
-        }
-      } catch {
+        console.log("[AudioPlay] fetching bytes for:", doc.id);
+        const cleanBytes = await fetchDocumentBytes(extActor, doc.id);
+        console.log(
+          "[AudioPlay] assembled bytes length:",
+          cleanBytes.length,
+          "| first 4 bytes:",
+          cleanBytes.slice(0, 4),
+        );
+        // Normalize audio MIME (audio/mp3 → audio/mpeg, infer from extension, etc.)
+        const resolvedMime = normalizeAudioMime(doc.mimeType, doc.fileName);
+        console.log("[AudioPlay] normalized mime:", resolvedMime);
+        const blob = new Blob([cleanBytes], { type: resolvedMime });
+        console.log(
+          "[AudioPlay] blob size:",
+          blob.size,
+          "| blob type:",
+          blob.type,
+        );
+        const url = URL.createObjectURL(blob);
+        audioUrlRef.current = url;
+        setAudioPlayer({
+          docId: doc.id,
+          url,
+          fileName: doc.fileName,
+          hasError: false,
+        });
+      } catch (err) {
+        console.error(
+          "[AudioPlay] FULL ERROR:",
+          err,
+          "| stack:",
+          (err as Error)?.stack,
+        );
         toast.error(t.common.error);
       } finally {
         setPlayingId(null);
       }
     },
     [extActor, t, audioPlayer],
+  );
+
+  const handleAudioError = useCallback(
+    (e: React.SyntheticEvent<HTMLAudioElement>) => {
+      const audioEl = e.currentTarget;
+      const err = audioEl.error;
+      console.error(
+        "[AudioPlayer] onError event fired",
+        "| error object:",
+        err,
+        "| code:",
+        err?.code,
+        "| message:",
+        err?.message,
+        "| src (first 120 chars):",
+        audioEl.src?.slice(0, 120),
+        "| networkState:",
+        audioEl.networkState,
+        "| readyState:",
+        audioEl.readyState,
+      );
+      setAudioPlayer((prev) => (prev ? { ...prev, hasError: true } : null));
+    },
+    [],
   );
 
   const handleCloseAudioPlayer = useCallback(() => {
@@ -1467,25 +1705,20 @@ export default function MyPagesDocuments({
       if (!extActor) return;
       setDownloadingId(doc.id);
       try {
-        const result = await extActor.getDocumentData(doc.id);
-        if ("ok" in result) {
-          const { data, mimeType } = result.ok;
-          const bytes = new Uint8Array(data);
-          const blob = new Blob([bytes], {
-            type: mimeType || "application/octet-stream",
-          });
-          const url = URL.createObjectURL(blob);
-          const tab = window.open(url, "_blank");
-          // Revoke after a short delay to allow the new tab to load
-          setTimeout(() => URL.revokeObjectURL(url), 10000);
-          if (!tab) {
-            // Pop-ups blocked — fall back to download
-            await handleDownload(doc);
-          }
-        } else {
-          toast.error(`${t.common.error}: ${result.err}`);
+        const bytes = await fetchDocumentBytes(extActor, doc.id);
+        const blob = new Blob([bytes], {
+          type: doc.mimeType || "application/octet-stream",
+        });
+        const url = URL.createObjectURL(blob);
+        const tab = window.open(url, "_blank");
+        // Revoke after a short delay to allow the new tab to load
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+        if (!tab) {
+          // Pop-ups blocked — fall back to download
+          await handleDownload(doc);
         }
-      } catch {
+      } catch (err) {
+        console.error("[Documents] handleOpenFile error:", err);
         toast.error(t.common.error);
       } finally {
         setDownloadingId(null);
@@ -1791,7 +2024,7 @@ export default function MyPagesDocuments({
       {/* Upload section */}
       <Card className="border border-divider shadow-card">
         <CardHeader>
-          <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <CardTitle className="font-serif text-lg text-foreground flex items-center gap-2">
               <Upload className="w-5 h-5 text-gold" />
               {t.documents.uploadTitle}
@@ -1801,7 +2034,7 @@ export default function MyPagesDocuments({
               variant="outline"
               size="sm"
               onClick={() => setShowCreateFolderModal(true)}
-              className="rounded-full border-gold/40 text-foreground hover:bg-gold/10 gap-1.5"
+              className="rounded-full border-gold/40 text-foreground hover:bg-gold/10 gap-1.5 self-start sm:self-auto"
               data-ocid="documents.new_folder_button"
             >
               <FolderPlus className="w-4 h-4 text-gold" />
@@ -1950,110 +2183,72 @@ export default function MyPagesDocuments({
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm font-sans">
-                <thead>
-                  <tr className="border-b border-divider">
-                    {/* Select-all checkbox */}
-                    <th
-                      className="py-3 pr-2 w-8 text-left"
-                      aria-label="Select all"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={
-                          totalSelected > 0 &&
-                          totalSelected === documents.length + folders.length
-                        }
-                        ref={(el) => {
-                          if (el) {
-                            el.indeterminate =
-                              totalSelected > 0 &&
-                              totalSelected < documents.length + folders.length;
-                          }
-                        }}
-                        onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="w-4 h-4 accent-gold cursor-pointer rounded"
-                        data-ocid="documents.select_all"
-                        aria-label="Select all items"
-                      />
-                    </th>
-                    <th className="text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-                      {t.documents.fileName}
-                    </th>
-                    <th className="text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-                      {t.documents.fileSize}
-                    </th>
-                    <th className="text-right py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-                      {t.documents.actions}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* ── Folder rows (shown before files) ── */}
-                  {folders.map((folder) => (
-                    <tr
-                      key={`folder-${folder.id}`}
-                      className={`border-b border-divider/50 hover:bg-gold/5 transition-colors ${
-                        selectedFolderIds.has(folder.id)
-                          ? "bg-gold/10"
-                          : "bg-muted/10"
-                      }`}
-                      data-ocid="documents.folder_row"
-                    >
-                      {/* Folder checkbox */}
-                      <td className="py-3 pr-2 w-8">
+            <>
+              {/* ── Mobile card list (< md) ── */}
+              <div
+                className="md:hidden space-y-3"
+                data-ocid="documents.card_list"
+              >
+                {/* Folder cards */}
+                {folders.map((folder) => (
+                  <div
+                    key={`folder-card-${folder.id}`}
+                    className={`rounded-xl border border-divider p-3 transition-colors ${
+                      selectedFolderIds.has(folder.id)
+                        ? "bg-gold/10 border-gold/40"
+                        : "bg-muted/10"
+                    }`}
+                    data-ocid="documents.folder_card"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      {/* Checkbox */}
+                      <div className="min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0">
                         <input
                           type="checkbox"
                           checked={selectedFolderIds.has(folder.id)}
                           onChange={() => handleToggleFolderSelect(folder.id)}
                           className="w-4 h-4 accent-gold cursor-pointer rounded"
-                          data-ocid="documents.folder_checkbox"
                           aria-label={`Select folder ${folder.name}`}
                         />
-                      </td>
-
-                      {/* Folder name */}
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center gap-2 min-w-0">
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {/* Folder name */}
+                        <button
+                          type="button"
+                          className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-gold transition-colors truncate max-w-full text-left"
+                          onClick={() => navigateIntoFolderWithClear(folder)}
+                          data-ocid="documents.folder_name_link"
+                        >
                           <FolderOpen className="w-4 h-4 text-gold shrink-0" />
-                          <button
-                            type="button"
-                            className="truncate max-w-[200px] font-medium text-foreground cursor-pointer hover:underline hover:text-gold transition-colors text-left bg-transparent border-0 p-0"
-                            title={folder.name}
-                            onClick={() => navigateIntoFolderWithClear(folder)}
-                            data-ocid="documents.folder_name_link"
-                            aria-label={`${t.documents.openFolder} ${folder.name}`}
-                          >
-                            {folder.name}
-                          </button>
-                        </div>
-                      </td>
-
-                      {/* No size for folders */}
-                      <td className="py-3 pr-4 text-muted-foreground">—</td>
-
-                      {/* Folder actions */}
-                      <td className="py-3 text-right">
-                        <div className="inline-flex items-center gap-1.5 justify-end">
-                          {/* Open button */}
+                          <span className="truncate">{folder.name}</span>
+                        </button>
+                        {/* Actions row */}
+                        <div className="mt-2.5 flex flex-wrap gap-2">
                           <button
                             type="button"
                             onClick={() => navigateIntoFolderWithClear(folder)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-gold/15 hover:bg-gold/25 text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+                            className="inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium bg-gold/15 hover:bg-gold/25 text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
                             data-ocid="documents.folder_open"
                             aria-label={`${t.documents.openFolder} ${folder.name}`}
                           >
                             <FolderOpen className="w-3.5 h-3.5" />
                             {t.documents.openFolder}
                           </button>
-
-                          {/* Delete folder button */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenMoveFolder(folder)}
+                            className="inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+                            data-ocid="documents.folder_move"
+                            aria-label={`${t.documents.moveFolder} ${folder.name}`}
+                          >
+                            <FolderInput className="w-3.5 h-3.5" />
+                            {t.documents.moveFolder}
+                          </button>
                           <button
                             type="button"
                             onClick={() => handleDeleteFolder(folder)}
                             disabled={deletingFolderId === folder.id}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 disabled:opacity-50"
+                            className="inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 disabled:opacity-50"
                             data-ocid="documents.folder_delete"
                             aria-label={`${t.documents.deleteFolder} ${folder.name}`}
                           >
@@ -2064,96 +2259,74 @@ export default function MyPagesDocuments({
                             )}
                             {t.documents.deleteFolder}
                           </button>
-
-                          {/* Move folder button */}
-                          <button
-                            type="button"
-                            onClick={() => handleOpenMoveFolder(folder)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
-                            data-ocid="documents.folder_move"
-                            aria-label={`${t.documents.moveFolder} ${folder.name}`}
-                          >
-                            <FolderInput className="w-3.5 h-3.5" />
-                            {t.documents.moveFolder}
-                          </button>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
 
-                  {/* ── File rows ── */}
-                  {documents.map((doc) => {
-                    const docWithSize = doc as DocumentRecord & {
-                      fileSize?: bigint;
-                    };
-                    const isImage = doc.mimeType?.startsWith("image/");
-                    const isAudio = doc.mimeType?.startsWith("audio/");
-                    const isAudioActive = audioPlayer?.docId === doc.id;
+                {/* File cards */}
+                {documents.map((doc) => {
+                  const docWithSize = doc as DocumentRecord & {
+                    fileSize?: bigint;
+                  };
+                  const isImage = doc.mimeType?.startsWith("image/");
+                  const isAudio = doc.mimeType?.startsWith("audio/");
+                  const isAudioActive = audioPlayer?.docId === doc.id;
 
-                    return (
-                      <React.Fragment key={doc.id}>
-                        <tr
-                          className={`border-b border-divider/50 hover:bg-muted/20 transition-colors ${
-                            selectedDocIds.has(doc.id) ? "bg-gold/5" : ""
-                          }`}
-                          data-ocid="documents.row"
-                        >
-                          {/* File checkbox */}
-                          <td className="py-3 pr-2 w-8">
+                  return (
+                    <React.Fragment key={`card-${doc.id}`}>
+                      <div
+                        className={`rounded-xl border border-divider p-3 transition-colors ${
+                          selectedDocIds.has(doc.id)
+                            ? "bg-gold/10 border-gold/40"
+                            : "bg-muted/10"
+                        }`}
+                        data-ocid="documents.file_card"
+                      >
+                        <div className="flex items-start gap-2.5">
+                          {/* Checkbox */}
+                          <div className="min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0">
                             <input
                               type="checkbox"
                               checked={selectedDocIds.has(doc.id)}
                               onChange={() => handleToggleDocSelect(doc.id)}
                               className="w-4 h-4 accent-gold cursor-pointer rounded"
-                              data-ocid="documents.file_checkbox"
                               aria-label={`Select file ${doc.fileName}`}
                             />
-                          </td>
-
-                          {/* Filename */}
-                          <td className="py-3 pr-4">
-                            <div className="flex items-center gap-2 min-w-0">
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            {/* Filename + size */}
+                            <button
+                              type="button"
+                              className="flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-gold transition-colors text-left w-full"
+                              onClick={() => {
+                                if (isImage) handleImagePreview(doc);
+                                else if (isAudio) handleAudioPlay(doc);
+                                else handleOpenFile(doc);
+                              }}
+                              data-ocid="documents.filename_link"
+                            >
                               <FileText className="w-4 h-4 text-gold shrink-0" />
-                              <button
-                                type="button"
-                                className="truncate max-w-[200px] text-left cursor-pointer hover:underline hover:text-gold transition-colors bg-transparent border-0 p-0"
-                                title={doc.fileName}
-                                onClick={() => {
-                                  if (isImage) {
-                                    handleImagePreview(doc);
-                                  } else if (isAudio) {
-                                    handleAudioPlay(doc);
-                                  } else {
-                                    handleOpenFile(doc);
-                                  }
-                                }}
-                                data-ocid="documents.filename_link"
-                                aria-label={`${doc.fileName}`}
-                              >
-                                {doc.fileName}
-                              </button>
-                            </div>
-                          </td>
-
-                          {/* Size */}
-                          <td className="py-3 pr-4 text-muted-foreground whitespace-nowrap">
-                            {docWithSize.fileSize != null
-                              ? `${(Number(docWithSize.fileSize) / 1024).toFixed(0)} KB`
-                              : "—"}
-                          </td>
-
-                          {/* Actions */}
-                          <td className="py-3 text-right">
-                            <div className="inline-flex items-center gap-1.5 justify-end flex-wrap">
-                              {/* Image preview button */}
+                              <span className="truncate">{doc.fileName}</span>
+                            </button>
+                            {docWithSize.fileSize != null && (
+                              <p className="mt-0.5 text-xs text-muted-foreground ml-6">
+                                {(Number(docWithSize.fileSize) / 1024).toFixed(
+                                  0,
+                                )}{" "}
+                                KB
+                              </p>
+                            )}
+                            {/* Actions row */}
+                            <div className="mt-2.5 flex flex-wrap gap-2">
                               {isImage && (
                                 <button
                                   type="button"
                                   onClick={() => handleImagePreview(doc)}
                                   disabled={previewingId === doc.id}
-                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-gold/15 hover:bg-gold/25 text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50"
+                                  className="inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium bg-gold/15 hover:bg-gold/25 text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50"
                                   data-ocid="documents.preview_button"
-                                  aria-label={`${t.documents.preview} ${doc.fileName}`}
                                 >
                                   {previewingId === doc.id ? (
                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -2163,20 +2336,13 @@ export default function MyPagesDocuments({
                                   {t.documents.preview}
                                 </button>
                               )}
-
-                              {/* Audio play button */}
                               {isAudio && (
                                 <button
                                   type="button"
                                   onClick={() => handleAudioPlay(doc)}
                                   disabled={playingId === doc.id}
-                                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50 ${
-                                    isAudioActive
-                                      ? "bg-gold/30 text-foreground"
-                                      : "bg-gold/15 hover:bg-gold/25 text-foreground"
-                                  }`}
+                                  className={`inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50 ${isAudioActive ? "bg-gold/30 text-foreground" : "bg-gold/15 hover:bg-gold/25 text-foreground"}`}
                                   data-ocid="documents.play_button"
-                                  aria-label={`${t.documents.play} ${doc.fileName}`}
                                   aria-pressed={isAudioActive}
                                 >
                                   {playingId === doc.id ? (
@@ -2189,15 +2355,12 @@ export default function MyPagesDocuments({
                                     : t.documents.play}
                                 </button>
                               )}
-
-                              {/* Download button */}
                               <button
                                 type="button"
                                 onClick={() => handleDownload(doc)}
                                 disabled={downloadingId === doc.id}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50"
+                                className="inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50"
                                 data-ocid="documents.download_link"
-                                aria-label={`${t.documents.download} ${doc.fileName}`}
                               >
                                 {downloadingId === doc.id ? (
                                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -2206,33 +2369,23 @@ export default function MyPagesDocuments({
                                 )}
                                 {t.documents.download}
                               </button>
-
-                              {/* Share button */}
                               <button
                                 type="button"
                                 onClick={() => handleShare(doc)}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+                                className="inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
                                 data-ocid="documents.share_button"
-                                aria-label={`${t.documents.share} ${doc.fileName}`}
                               >
                                 <Link className="w-3.5 h-3.5" />
                                 {copiedId === doc.id
                                   ? t.documents.copied
                                   : t.documents.share}
                               </button>
-
-                              {/* Public/Private toggle */}
                               <button
                                 type="button"
                                 onClick={() => handleTogglePublic(doc)}
                                 disabled={togglingPublicId === doc.id}
-                                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50 ${
-                                  doc.isPublic
-                                    ? "bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300"
-                                    : "bg-muted/50 hover:bg-muted text-foreground"
-                                }`}
+                                className={`inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50 ${doc.isPublic ? "bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300" : "bg-muted/50 hover:bg-muted text-foreground"}`}
                                 data-ocid="documents.public_toggle"
-                                aria-label={`${doc.isPublic ? t.documents.public : t.documents.private} — ${doc.fileName}`}
                                 aria-pressed={doc.isPublic}
                               >
                                 {togglingPublicId === doc.id ? (
@@ -2246,37 +2399,407 @@ export default function MyPagesDocuments({
                                   ? t.documents.public
                                   : t.documents.private}
                               </button>
-
-                              {/* Move file button */}
                               <button
                                 type="button"
                                 onClick={() => handleOpenMove(doc)}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+                                className="inline-flex items-center gap-1 px-3 min-h-[44px] rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
                                 data-ocid="documents.move_button"
-                                aria-label={`${t.documents.moveFile} ${doc.fileName}`}
                               >
                                 <FolderInput className="w-3.5 h-3.5" />
                                 {t.documents.moveFile}
                               </button>
                             </div>
-                          </td>
-                        </tr>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Inline audio player for mobile card */}
+                      {isAudioActive && audioPlayer && (
+                        <div className="rounded-xl border border-gold/20 bg-muted/30 px-4 py-3 flex items-center gap-3">
+                          <Music className="w-4 h-4 text-gold shrink-0" />
+                          <span className="text-xs text-muted-foreground truncate min-w-0 flex-1 font-sans">
+                            {audioPlayer.fileName}
+                          </span>
+                          {audioPlayer.hasError ? (
+                            <span
+                              className="text-xs text-red-500 font-medium flex-1 min-w-0 font-sans"
+                              role="alert"
+                            >
+                              {t.documents.audioLoadError}
+                            </span>
+                          ) : (
+                            /* eslint-disable-next-line jsx-a11y/media-has-caption */
+                            <audio
+                              src={audioPlayer.url}
+                              controls
+                              autoPlay={false}
+                              className="h-8 flex-1 min-w-0 max-w-full"
+                              style={{
+                                accentColor: "var(--color-gold, #c9a84c)",
+                              }}
+                              onError={handleAudioError}
+                            >
+                              <track kind="captions" />
+                            </audio>
+                          )}
+                          <button
+                            type="button"
+                            onClick={handleCloseAudioPlayer}
+                            className="shrink-0 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+                            aria-label={t.documents.close}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
 
-                        {/* Inline audio player row */}
-                        {isAudioActive && audioPlayer && (
-                          <AudioPlayerRow
-                            key={`audio-${doc.id}`}
-                            url={audioPlayer.url}
-                            fileName={audioPlayer.fileName}
-                            onClose={handleCloseAudioPlayer}
-                          />
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+              {/* ── Desktop table (≥ md) ── */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm font-sans">
+                  <thead>
+                    <tr className="border-b border-divider">
+                      {/* Select-all checkbox */}
+                      <th
+                        className="py-3 pr-2 w-8 text-left"
+                        aria-label="Select all"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={
+                            totalSelected > 0 &&
+                            totalSelected === documents.length + folders.length
+                          }
+                          ref={(el) => {
+                            if (el) {
+                              el.indeterminate =
+                                totalSelected > 0 &&
+                                totalSelected <
+                                  documents.length + folders.length;
+                            }
+                          }}
+                          onChange={(e) => handleSelectAll(e.target.checked)}
+                          className="w-4 h-4 accent-gold cursor-pointer rounded"
+                          data-ocid="documents.select_all"
+                          aria-label="Select all items"
+                        />
+                      </th>
+                      <th className="text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
+                        {t.documents.fileName}
+                      </th>
+                      <th className="text-left py-3 pr-4 font-semibold text-muted-foreground text-xs uppercase tracking-wide hidden sm:table-cell">
+                        {t.documents.fileSize}
+                      </th>
+                      <th className="text-right py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
+                        {t.documents.actions}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* ── Folder rows (shown before files) ── */}
+                    {folders.map((folder) => (
+                      <tr
+                        key={`folder-${folder.id}`}
+                        className={`border-b border-divider/50 hover:bg-gold/5 transition-colors ${
+                          selectedFolderIds.has(folder.id)
+                            ? "bg-gold/10"
+                            : "bg-muted/10"
+                        }`}
+                        data-ocid="documents.folder_row"
+                      >
+                        {/* Folder checkbox */}
+                        <td className="py-2 pr-2 w-10">
+                          <div className="min-w-[44px] min-h-[44px] flex items-center justify-center">
+                            <input
+                              type="checkbox"
+                              checked={selectedFolderIds.has(folder.id)}
+                              onChange={() =>
+                                handleToggleFolderSelect(folder.id)
+                              }
+                              className="w-4 h-4 accent-gold cursor-pointer rounded"
+                              data-ocid="documents.folder_checkbox"
+                              aria-label={`Select folder ${folder.name}`}
+                            />
+                          </div>
+                        </td>
+
+                        {/* Folder name */}
+                        <td className="py-3 pr-4">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FolderOpen className="w-4 h-4 text-gold shrink-0" />
+                            <button
+                              type="button"
+                              className="truncate max-w-[200px] font-medium text-foreground cursor-pointer hover:underline hover:text-gold transition-colors text-left bg-transparent border-0 p-0"
+                              title={folder.name}
+                              onClick={() =>
+                                navigateIntoFolderWithClear(folder)
+                              }
+                              data-ocid="documents.folder_name_link"
+                              aria-label={`${t.documents.openFolder} ${folder.name}`}
+                            >
+                              {folder.name}
+                            </button>
+                          </div>
+                        </td>
+
+                        {/* No size for folders */}
+                        <td className="py-3 pr-4 text-muted-foreground hidden sm:table-cell">
+                          —
+                        </td>
+
+                        {/* Folder actions */}
+                        <td className="py-3 text-right">
+                          <div className="inline-flex items-center gap-1.5 justify-end">
+                            {/* Open button */}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                navigateIntoFolderWithClear(folder)
+                              }
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-gold/15 hover:bg-gold/25 text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+                              data-ocid="documents.folder_open"
+                              aria-label={`${t.documents.openFolder} ${folder.name}`}
+                            >
+                              <FolderOpen className="w-3.5 h-3.5" />
+                              {t.documents.openFolder}
+                            </button>
+
+                            {/* Delete folder button */}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteFolder(folder)}
+                              disabled={deletingFolderId === folder.id}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/20 dark:hover:bg-red-900/40 dark:text-red-400 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 disabled:opacity-50"
+                              data-ocid="documents.folder_delete"
+                              aria-label={`${t.documents.deleteFolder} ${folder.name}`}
+                            >
+                              {deletingFolderId === folder.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
+                              {t.documents.deleteFolder}
+                            </button>
+
+                            {/* Move folder button */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenMoveFolder(folder)}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+                              data-ocid="documents.folder_move"
+                              aria-label={`${t.documents.moveFolder} ${folder.name}`}
+                            >
+                              <FolderInput className="w-3.5 h-3.5" />
+                              {t.documents.moveFolder}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+
+                    {/* ── File rows ── */}
+                    {documents.map((doc) => {
+                      const docWithSize = doc as DocumentRecord & {
+                        fileSize?: bigint;
+                      };
+                      const isImage = doc.mimeType?.startsWith("image/");
+                      const isAudio = doc.mimeType?.startsWith("audio/");
+                      const isAudioActive = audioPlayer?.docId === doc.id;
+
+                      return (
+                        <React.Fragment key={doc.id}>
+                          <tr
+                            className={`border-b border-divider/50 hover:bg-muted/20 transition-colors ${
+                              selectedDocIds.has(doc.id) ? "bg-gold/5" : ""
+                            }`}
+                            data-ocid="documents.row"
+                          >
+                            {/* File checkbox */}
+                            <td className="py-2 pr-2 w-10">
+                              <div className="min-w-[44px] min-h-[44px] flex items-center justify-center">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedDocIds.has(doc.id)}
+                                  onChange={() => handleToggleDocSelect(doc.id)}
+                                  className="w-4 h-4 accent-gold cursor-pointer rounded"
+                                  data-ocid="documents.file_checkbox"
+                                  aria-label={`Select file ${doc.fileName}`}
+                                />
+                              </div>
+                            </td>
+
+                            {/* Filename */}
+                            <td className="py-3 pr-4">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FileText className="w-4 h-4 text-gold shrink-0" />
+                                <button
+                                  type="button"
+                                  className="truncate max-w-[200px] text-left cursor-pointer hover:underline hover:text-gold transition-colors bg-transparent border-0 p-0"
+                                  title={doc.fileName}
+                                  onClick={() => {
+                                    if (isImage) {
+                                      handleImagePreview(doc);
+                                    } else if (isAudio) {
+                                      handleAudioPlay(doc);
+                                    } else {
+                                      handleOpenFile(doc);
+                                    }
+                                  }}
+                                  data-ocid="documents.filename_link"
+                                  aria-label={`${doc.fileName}`}
+                                >
+                                  {doc.fileName}
+                                </button>
+                              </div>
+                            </td>
+
+                            {/* Size */}
+                            <td className="py-3 pr-4 text-muted-foreground whitespace-nowrap hidden sm:table-cell">
+                              {docWithSize.fileSize != null
+                                ? `${(Number(docWithSize.fileSize) / 1024).toFixed(0)} KB`
+                                : "—"}
+                            </td>
+
+                            {/* Actions */}
+                            <td className="py-3 text-right">
+                              <div className="inline-flex items-center gap-1.5 justify-end flex-wrap">
+                                {/* Image preview button */}
+                                {isImage && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleImagePreview(doc)}
+                                    disabled={previewingId === doc.id}
+                                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-gold/15 hover:bg-gold/25 text-foreground transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50"
+                                    data-ocid="documents.preview_button"
+                                    aria-label={`${t.documents.preview} ${doc.fileName}`}
+                                  >
+                                    {previewingId === doc.id ? (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                      <Eye className="w-3.5 h-3.5" />
+                                    )}
+                                    {t.documents.preview}
+                                  </button>
+                                )}
+
+                                {/* Audio play button */}
+                                {isAudio && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAudioPlay(doc)}
+                                    disabled={playingId === doc.id}
+                                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50 ${
+                                      isAudioActive
+                                        ? "bg-gold/30 text-foreground"
+                                        : "bg-gold/15 hover:bg-gold/25 text-foreground"
+                                    }`}
+                                    data-ocid="documents.play_button"
+                                    aria-label={`${t.documents.play} ${doc.fileName}`}
+                                    aria-pressed={isAudioActive}
+                                  >
+                                    {playingId === doc.id ? (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                      <Music className="w-3.5 h-3.5" />
+                                    )}
+                                    {isAudioActive
+                                      ? t.documents.close
+                                      : t.documents.play}
+                                  </button>
+                                )}
+
+                                {/* Download button */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownload(doc)}
+                                  disabled={downloadingId === doc.id}
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50"
+                                  data-ocid="documents.download_link"
+                                  aria-label={`${t.documents.download} ${doc.fileName}`}
+                                >
+                                  {downloadingId === doc.id ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : (
+                                    <Download className="w-3.5 h-3.5" />
+                                  )}
+                                  {t.documents.download}
+                                </button>
+
+                                {/* Share button */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleShare(doc)}
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+                                  data-ocid="documents.share_button"
+                                  aria-label={`${t.documents.share} ${doc.fileName}`}
+                                >
+                                  <Link className="w-3.5 h-3.5" />
+                                  {copiedId === doc.id
+                                    ? t.documents.copied
+                                    : t.documents.share}
+                                </button>
+
+                                {/* Public/Private toggle */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleTogglePublic(doc)}
+                                  disabled={togglingPublicId === doc.id}
+                                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold disabled:opacity-50 ${
+                                    doc.isPublic
+                                      ? "bg-emerald-100 hover:bg-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 dark:text-emerald-300"
+                                      : "bg-muted/50 hover:bg-muted text-foreground"
+                                  }`}
+                                  data-ocid="documents.public_toggle"
+                                  aria-label={`${doc.isPublic ? t.documents.public : t.documents.private} — ${doc.fileName}`}
+                                  aria-pressed={doc.isPublic}
+                                >
+                                  {togglingPublicId === doc.id ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : doc.isPublic ? (
+                                    <Globe className="w-3.5 h-3.5" />
+                                  ) : (
+                                    <Lock className="w-3.5 h-3.5" />
+                                  )}
+                                  {doc.isPublic
+                                    ? t.documents.public
+                                    : t.documents.private}
+                                </button>
+
+                                {/* Move file button */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenMove(doc)}
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 hover:bg-muted transition-colors text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold"
+                                  data-ocid="documents.move_button"
+                                  aria-label={`${t.documents.moveFile} ${doc.fileName}`}
+                                >
+                                  <FolderInput className="w-3.5 h-3.5" />
+                                  {t.documents.moveFile}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+
+                          {/* Inline audio player row */}
+                          {isAudioActive && audioPlayer && (
+                            <AudioPlayerRow
+                              key={`audio-${doc.id}`}
+                              url={audioPlayer.url}
+                              fileName={audioPlayer.fileName}
+                              hasError={audioPlayer.hasError}
+                              onClose={handleCloseAudioPlayer}
+                              onError={handleAudioError}
+                            />
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

@@ -44,6 +44,14 @@ export interface UserListEntry {
     role: UserRole;
     profile?: UserProfile;
 }
+export interface NoteRecord {
+    id: string;
+    content: string;
+    rubrik: string;
+    owner: Principal;
+    createdAt: bigint;
+    sharedWith: Array<Principal>;
+}
 export interface UserProfile {
     name: string;
     email: string;
@@ -120,6 +128,13 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    createNote(rubrik: string, content: string): Promise<{
+        __kind__: "ok";
+        ok: string;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     deleteContactMessage(id: string): Promise<{
         __kind__: "ok";
         ok: null;
@@ -148,6 +163,13 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    deleteNote(noteId: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     deleteUserAccessLogEntries(target: Principal, entryIds: Array<string>): Promise<{
         __kind__: "ok";
         ok: null;
@@ -170,6 +192,17 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    getDocumentChunk(docId: string, offset: bigint, chunkSize: bigint): Promise<{
+        __kind__: "ok";
+        ok: {
+            hasMore: boolean;
+            chunk: Uint8Array;
+            totalSize: bigint;
+        };
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     getDocumentData(docId: string): Promise<{
         __kind__: "ok";
         ok: {
@@ -185,6 +218,20 @@ export interface backendInterface {
     getMyProfile(): Promise<UserProfile | null>;
     getMyRole(): Promise<UserRole>;
     getMyStorageUsed(): Promise<bigint>;
+    getNoteShares(noteId: string): Promise<{
+        __kind__: "ok";
+        ok: Array<Principal>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    getNotesCount(search: string | null): Promise<{
+        __kind__: "ok";
+        ok: bigint;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     getUserAccessLog(target: Principal): Promise<{
         __kind__: "ok";
         ok: Array<UserAccessLogEntry>;
@@ -201,6 +248,13 @@ export interface backendInterface {
     }>;
     listMyDocuments(parentFolderId: string | null): Promise<Array<DocumentRecord>>;
     listMyFolders(parentFolderId: string | null): Promise<Array<FolderRecord>>;
+    listNotes(limit: bigint, offset: bigint, search: string | null): Promise<{
+        __kind__: "ok";
+        ok: Array<NoteRecord>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     listPublicDocuments(): Promise<Array<DocumentRecord>>;
     listUsers(): Promise<{
         __kind__: "ok";
@@ -252,6 +306,13 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    shareNote(noteId: string, targetPrincipal: Principal): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     startChunkedUpload(sessionId: string, fileName: string, mimeType: string, isPublic: boolean, parentFolderId: string | null, totalChunks: bigint, totalFileSize: bigint): Promise<{
         __kind__: "ok";
         ok: string;
@@ -273,6 +334,13 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    unshareNote(noteId: string, targetPrincipal: Principal): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
     updateContactStatus(id: string, status: ContactStatus): Promise<{
         __kind__: "ok";
         ok: null;
@@ -281,6 +349,13 @@ export interface backendInterface {
         err: string;
     }>;
     updateMyProfile(name: string, email: string, phone: string): Promise<{
+        __kind__: "ok";
+        ok: null;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    updateNote(noteId: string, rubrik: string, content: string): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
